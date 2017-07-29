@@ -1,0 +1,73 @@
+# ---
+#
+# apiVersion: extensions/v1beta1
+# kind: Deployment
+# metadata:
+#   name: jaeger-query
+#   namespace: tracing
+# spec:
+#   replicas: 1
+#   selector:
+#     name: jaeger-query
+#   strategy:
+#     type: Recreate
+#   selector:
+#     matchLabels:
+#       name: jaeger-query
+#   template:
+#     metadata:
+#       labels:
+#         name: jaeger-query
+#         jaeger-infra: query
+#     spec:
+#       containers:
+#       - name: jaeger-query
+#         image: registry.nmlv.nml.com/epitropos/jaegertracing/jaeger-query:latest
+#         imagePullPolicy: Always
+#         command:
+#         - /go/bin/query-linux
+#         args:
+#         - -cassandra.connections-per-host=2
+#         - -cassandra.keyspace=jaeger_v1_test
+#         - -cassandra.max-retry-attempts=3
+#         - -cassandra.port=9042
+#         - -cassandra.proto-version=4
+#         - -cassandra.servers=jaeger-cassandra.tracing.svc.cluster.local
+#         - -cassandra.socket-keep-alive=0h0m0s
+#         - -cassandra.timeout=0h1m0s
+#         - -dependency-storage.data-frequency=24h0m0s
+#         - -dependency-storage.type=cassandra
+#         - -log-level=info
+#         - -query.port=16686
+#         - -query.prefix=api
+#         - -query.static-files=jaeger-ui-build/build/
+#         - -runtime-metrics-frequency=0h0m1s
+#         - -span-storage.type=cassandra
+#         ports:
+#         - containerPort: 16686
+#           protocol: TCP
+#         resources: {}
+#         readinessProbe:
+#           httpGet:
+#             path: /
+#             port: 16686
+#           initialDelaySeconds: 5
+#
+# ---
+#
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: jaeger-query
+#   namespace: tracing
+#   labels:
+#     jaeger-infra: query
+# spec:
+#   ports:
+#   - name: query-https
+#     port: 80
+#     protocol: TCP
+#     targetPort: 16686
+#   selector:
+#     name: jaeger-query
+#   type: NodePort

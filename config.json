@@ -1,0 +1,6 @@
+{
+  "headers": {
+    "x-nm-deploy": "stable"
+  },
+  "api-key-header-name": "apikey"
+}

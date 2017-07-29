@@ -1,0 +1,12 @@
+description: simple helm chart for Jaeger
+engine: gotpl
+home: http://jaeger.readthedocs.io/en/latest/
+keywords:
+- jaeger
+- uber
+- opentracing
+maintainers:
+- email: frankgreco@northwesternmutual.com
+  name: Frank B Greco Jr
+name: jaeger
+version: 1.0.0

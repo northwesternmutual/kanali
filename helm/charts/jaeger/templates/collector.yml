@@ -1,0 +1,75 @@
+# ---
+#
+# apiVersion: extensions/v1beta1
+# kind: Deployment
+# metadata:
+#   name: jaeger-collector
+#   namespace: tracing
+# spec:
+#   replicas: 1
+#   selector:
+#     name: jaeger-collector
+#   strategy:
+#     type: Recreate
+#   selector:
+#     matchLabels:
+#       name: jaeger-collector
+#   template:
+#     metadata:
+#       labels:
+#         name: jaeger-collector
+#         jaeger-infra: collector
+#     spec:
+#       containers:
+#       - name: jaeger-collector
+#         image: registry.nmlv.nml.com/epitropos/jaegertracing/jaeger-collector:latest
+#         command:
+#         - /go/bin/collector-linux
+#         args:
+#         - -cassandra.connections-per-host=2
+#         - -cassandra.keyspace=jaeger_v1_test
+#         - -cassandra.max-retry-attempts=5
+#         - -cassandra.port=9042
+#         - -cassandra.proto-version=4
+#         - -cassandra.servers=jaeger-cassandra.tracing.svc.cluster.local
+#         - -cassandra.socket-keep-alive=0h0m0s
+#         - -cassandra.timeout=0h1m0s
+#         - -collector.http-port=14268
+#         - -collector.num-workers=50
+#         - -collector.port=14267
+#         - -collector.queue-size=2000
+#         - -collector.write-cache-ttl=12h0m0s
+#         - -dependency-storage.data-frequency=24h0m0s
+#         - -dependency-storage.type=cassandra
+#         - -log-level=debug
+#         - -runtime-metrics-frequency=0h0m1s
+#         - -span-storage.type=cassandra
+#         ports:
+#         - containerPort: 14267
+#           protocol: UDP
+#         - containerPort: 14268
+#           protocol: TCP
+#         imagePullPolicy: Always
+#
+# ---
+#
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: jaeger-collector
+#   namespace: tracing
+#   labels:
+#     jaeger-infra: collector
+# spec:
+#   ports:
+#   - name: port-one
+#     port: 14267
+#     protocol: TCP
+#     targetPort: 14267
+#   - name: port-two
+#     port: 14268
+#     protocol: TCP
+#     targetPort: 14268
+#   selector:
+#     name: jaeger-collector
+#   type: ClusterIP

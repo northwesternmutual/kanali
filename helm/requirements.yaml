@@ -1,0 +1,12 @@
+---
+
+dependencies:
+- name: influxdb
+  version: 0.4.1
+  repository: https://github.com/kubernetes/charts/tree/master/stable/influxdb
+- name: grafana
+  version: 0.3.6
+  repository: https://github.com/kubernetes/charts/tree/master/stable/grafana
+- name: jaeger
+  version: 1.0.0
+  repository: file://./charts/jaeger

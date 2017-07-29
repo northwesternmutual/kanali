@@ -1,0 +1,14 @@
+description: Scalable datastore for metrics, events, and real-time analytics.
+engine: gotpl
+home: https://www.influxdata.com/time-series-platform/influxdb/
+keywords:
+- influxdb
+- database
+- timeseries
+maintainers:
+- email: jack@influxdb.com
+  name: Jack Zampolin
+name: influxdb
+sources:
+- https://github.com/influxdata/influxdb
+version: 0.4.1

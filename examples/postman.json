@@ -1,0 +1,435 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Kanali",
+		"_postman_id": "e34feda2-3453-ff11-446b-fdb0208a4c32",
+		"description": "Welcome to the [Kanali](https://github.com/northwesternmutual/kanali) tutorial!\n\n#### Prerequisites\nThis turorial requires a running deployment of Kanali as well as the presence of two variables in your Postman environment. Find deployment instructions [here](https://github.com/northwesternmutual/kanali#installation). Run these shell commands to extract the appropiate variable values:\n\n**`minikube_ip`**: `$ minikube ip`  \n**`kanali_port`**: `$ minikube service kanali --format=\"{{.Port}}\"`\n\nSelf-signed certificates are used for purposes of this tutorial. Hence, you may need to turn off *SSL Verification* in your Postman client.\n\n#### Developer Tools\n\nEach request below demonstrates a single Kanali feature. To enhance your learning experience, open the developer tools that were deployed if you followed the recommended installation instructions. Run these shell commands to open both tools in your browser:\n\n###### Grafana\n`$ open $(minikube service kanali-grafana --url)/dashboard/file/kanali.json`\n\n###### Jaeger\n`$ open $(minikube service jaeger-all-in-one --url)`\n\n#### Tutorial Format\n\nEach example below has three parts:\n\n* **Deploy**: The shell command to run to deploy the corresponding example.\n* **Config**: The Kanali config file(s) that were used in the example\n* **Explanation**: Detailed examplantion stating how the configuration achieved the observed result.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Ingress",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-one/foo",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "#### Deploy\n\n`$ kubectl apply -f  https://github.com/northwesternmutual/kanali/raw/master/examples/exampleOne.yaml`\n\n#### Config\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiProxy\nmetadata:\n  name: example-one\n  namespace: application\nspec:\n  path: /api/v1/example-one\n  target: /\n  service:\n    port: 8080\n    name: example-one\n```\n\n#### Explanation\n\nIncoming requests are proxied over port `8080` to a Kubernetes service named *example-one* in the *application* namespace. "
+			},
+			"response": [
+				{
+					"id": "f9c29779-4011-4087-86c1-e9a3dfc199a4",
+					"name": "Basic Example",
+					"originalRequest": {
+						"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-one/foo",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"_postman_previewtype": "text",
+					"header": [
+						{
+							"key": "Content-Length",
+							"value": "13",
+							"name": "Content-Length",
+							"description": ""
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": ""
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 05 Jun 2017 16:47:11 GMT",
+							"name": "Date",
+							"description": ""
+						}
+					],
+					"cookie": [],
+					"responseTime": "31",
+					"body": "{\"msg\":\"bar\"}"
+				}
+			]
+		},
+		{
+			"name": "Dynamic Service Discovery",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-two/foo",
+				"method": "GET",
+				"header": [
+					{
+						"key": "deployment",
+						"value": "production",
+						"description": ""
+					},
+					{
+						"key": "app",
+						"value": "example-two",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "#### Deploy\n\n`$ kubectl apply -f  https://github.com/northwesternmutual/kanali/raw/master/examples/exampleTwo.yaml`\n\n#### Config\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiProxy\nmetadata:\n  name: example-two\n  namespace: application\nspec:\n  path: /api/v1/example-two\n  target: /\n  service:\n    port: 8080\n    labels:\n    - name: app\n      value: example-two\n    - name: release\n      header: deployment\n```\n\n#### Explanation\n\nIncoming requests are proxied over port `8080` to a Kubernetes service in the *application* namespace. The service must have at least two metadata labels. One with a key of *app* and a value of *example-two*. Another with a key of *release* and the value must match the value of the HTTP header named *deployment*. "
+			},
+			"response": [
+				{
+					"id": "fb977734-cf30-4022-bb69-fdebe144d1ba",
+					"name": "Dynamic Service Discovery Example",
+					"originalRequest": {
+						"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-two/foo",
+						"method": "GET",
+						"header": [
+							{
+								"key": "deployment",
+								"value": "production",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"_postman_previewtype": "text",
+					"header": [
+						{
+							"key": "Content-Length",
+							"value": "13",
+							"name": "Content-Length",
+							"description": ""
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": ""
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 05 Jun 2017 16:49:50 GMT",
+							"name": "Date",
+							"description": ""
+						}
+					],
+					"cookie": [],
+					"responseTime": "26",
+					"body": "{\"msg\":\"bar\"}"
+				}
+			]
+		},
+		{
+			"name": "Mock Responses",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-three/accounts",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "#### Deploy\n\n`$ kubectl apply -f  https://github.com/northwesternmutual/kanali/raw/master/examples/exampleThree.yaml`\n\n#### Config\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiProxy\nmetadata:\n  name: example-three\n  namespace: application\nspec:\n  path: /api/v1/example-three\n  target: /\n  mock:\n    configMapName: example-three\n  service:\n    port: 8080\n    name: example-three\n```\n\n\n```yaml\nkind: ConfigMap\napiVersion: v1\nmetadata:\n  name: example-three\n  namespace: application\ndata:\n  response: |-\n    [{\n        \"route\": \"/accounts\",\n        \"code\": 200,\n        \"method\": \"GET\",\n        \"body\": [{\n            \"id\": \"1\",\n            \"balance\": \"$500.00\"\n        },\n        {\n            \"id\": \"2\",\n            \"balance\": \"$1000.00\"\n        }]\n    }]\n```\n\n#### Explanation\n\nIncoming requests are proxied over port `8080` to a Kubernetes service named *example-three* in the *application* namespace...EXCEPT when Kanali is started with the `--enable-mock` flag. In this case, a mock response if returned from the matching `ConfigMap` instead of being proxied to the backend service. A few thigns to note:\n* The format of the `ConfigMap` *data* value matters\n* Plugins, if any, are still executed"
+			},
+			"response": [
+				{
+					"id": "95591702-17ad-436a-a182-4a0792fc71be",
+					"name": "Mock Responses Example",
+					"originalRequest": {
+						"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-three/accounts",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"_postman_previewtype": "text",
+					"header": [
+						{
+							"key": "Content-Length",
+							"value": "64",
+							"name": "Content-Length",
+							"description": ""
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": ""
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 05 Jun 2017 16:51:21 GMT",
+							"name": "Date",
+							"description": ""
+						}
+					],
+					"cookie": [],
+					"responseTime": "26",
+					"body": "[{\"balance\":\"$500.00\",\"id\":\"1\"},{\"balance\":\"$1000.00\",\"id\":\"2\"}]"
+				}
+			]
+		},
+		{
+			"name": "SSL",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-four/foo",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "#### Deploy\n\n`$ kubectl apply -f  https://github.com/northwesternmutual/kanali/raw/master/examples/exampleFour.yaml`\n\n#### Config\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiProxy\nmetadata:\n  name: example-four\n  namespace: application\nspec:\n  path: /api/v1/example-four\n  target: /\n  service:\n    port: 8080\n    name: example-four\n  ssl:\n    secretName: example-four\n```\n\n#### Explanation\n\nIncoming requests are proxied over port `8080` to a Kubernetes service named *example-four* in the *application* namespace. The backend connection between Kanali and the Kubernetes service is secured with SSL. The corresponding secret must live in the same namespace as the `ApiProxy` and must be of type `kubernetes.io/tls`. If the secret contains a `tls.ca` data field, mutal SSL is used."
+			},
+			"response": [
+				{
+					"id": "3b8c969e-3622-41ce-a8d8-997b82f5c5dd",
+					"name": "SSL Example",
+					"originalRequest": {
+						"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-four/foo",
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "plain",
+					"_postman_previewtype": "text",
+					"header": [
+						{
+							"key": "Connection",
+							"value": "keep-alive",
+							"name": "Connection",
+							"description": ""
+						},
+						{
+							"key": "Content-Length",
+							"value": "13",
+							"name": "Content-Length",
+							"description": ""
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/plain; charset=utf-8",
+							"name": "Content-Type",
+							"description": ""
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 05 Jun 2017 20:20:20 GMT",
+							"name": "Date",
+							"description": ""
+						}
+					],
+					"cookie": [],
+					"responseTime": "91",
+					"body": "Hello World!\n"
+				}
+			]
+		},
+		{
+			"name": "SNI",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-five/foo",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Host",
+						"value": "foo.bar.com",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "#### Deploy\n\n`$ kubectl apply -f  https://github.com/northwesternmutual/kanali/raw/master/examples/exampleFive.yaml`\n\n#### Config\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiProxy\nmetadata:\n  name: example-five\n  namespace: application\nspec:\n  path: /api/v1/example-five\n  target: /\n  hosts:\n  - name: foo.bar.com\n    ssl:\n      secretName: example-five\n  service:\n    port: 8080\n    name: example-five\n```\n\n#### Explanation\n\nIncoming requests are proxied over port `8080` to a Kubernetes service named *example-five* in the *application* namespace. The connection between Kanali and the backend Kubernetes service is secured with an SSL connection as defined in the host specific secret. If the host does not match any item in the array, HTTP is used."
+			},
+			"response": [
+				{
+					"id": "a1376d0b-b4ae-4e6f-85fb-7f4c70e33fb9",
+					"name": "SNI Example",
+					"originalRequest": {
+						"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-five/foo",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Host",
+								"value": "foo.bar.com",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "",
+					"_postman_previewtype": "parsed",
+					"header": [],
+					"cookie": [],
+					"responseTime": 0,
+					"body": "Hello World!"
+				}
+			]
+		},
+		{
+			"name": "Api Key",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-six/foo",
+				"method": "GET",
+				"header": [
+					{
+						"key": "apikey",
+						"value": "0HfVWylwxchODd3s4A7D9Zoel0Xo83iQ",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "#### Deploy\n\n`$ kubectl apply -f  https://github.com/northwesternmutual/kanali/raw/master/examples/exampleSix.yaml`\n\n#### Config\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiProxy\nmetadata:\n  name: example-six\n  namespace: application\nspec:\n  path: /api/v1/example-six\n  target: /\n  service:\n    port: 8080\n    name: example-six\n  plugins:\n  - name: apiKey\n```\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiKey\nmetadata:\n  name: janes-apikey\n  namespace: application\nspec:\n  data: 2b06207cce17aeeee93dba801dcfc8055638fe6eb00b0e644c48161bdcd66da42f6951ebc3cca02302f90c0ed2f42ecf28673fe1873af704c023367e3a7113919b8b85bd62384f5261d08fe4af51174141ae2836ab628d1ed58f030fca12c4fe53e8f1c8f836c9026a635ca6d419fb873fdeb621b40cfe336bbbf0c5fc2c352d044ae0f8a59b489a62e468a5b7e090f42127a8ad7a796cb2f67dfd81756d232b19f2522cf911809747c61fbe7f051219fe763e173ab074ae332f25c63bc2d6a5e190ed413f7bf830c006789677a69b4855ce54f06fd2a68d38a5267cec571b0de59198b537212d422cfc188366ce54e5f81a3485f5ead872688efdcdb0a3549b\n```\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiKeyBinding\nmetadata:\n  name: example-six\n  namespace: application\nspec:\n  proxy: example-six\n  keys:\n  - name: janes-apikey\n    defaultRule:\n      granular:\n        verbs:\n        - GET\n```\n\n#### Explanation\n\nIncoming requests are proxied over port `8080` to a Kubernetes service named *example-six* in the *application* namespace. The *apiKey* plugin is envoked for every request corresponding with this proxy. An `ApiKey` spec defines an rsa encrypted apikey. An `ApiKeyBinding` spec *binds* a set of keys to an `ApiProxy`. Each key that is bound can have its own corresponding permissions. In this example, this apikey can only use HTTP GET."
+			},
+			"response": [
+				{
+					"id": "26a5917f-9c5b-4986-9592-dd423354fd1d",
+					"name": "Api Key Example",
+					"originalRequest": {
+						"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-six/foo",
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "0HfVWylwxchODd3s4A7D9Zoel0Xo83iQ",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"_postman_previewtype": "parsed",
+					"header": [],
+					"cookie": [],
+					"responseTime": 0,
+					"body": "{\n\t\"msg\": \"bar\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Fine Grained Access Control",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-seven/",
+				"method": "GET",
+				"header": [
+					{
+						"key": "apikey",
+						"value": "0HfVWylwxchODd3s4A7D9Zoel0Xo83iQ",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "#### Deploy\n\n`$ kubectl apply -f  https://github.com/northwesternmutual/kanali/raw/master/examples/exampleSeven.yaml`\n\n#### Config\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiProxy\nmetadata:\n  name: example-seven\n  namespace: application\nspec:\n  path: /api/v1/example-seven\n  target: /\n  service:\n    port: 8080\n    name: example-seven\n  plugins:\n  - name: apiKey\n```\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiKey\nmetadata:\n  name: bobs-apikey\n  namespace: application\nspec:\n  data: 2b06207cce17aeeee93dba801dcfc8055638fe6eb00b0e644c48161bdcd66da42f6951ebc3cca02302f90c0ed2f42ecf28673fe1873af704c023367e3a7113919b8b85bd62384f5261d08fe4af51174141ae2836ab628d1ed58f030fca12c4fe53e8f1c8f836c9026a635ca6d419fb873fdeb621b40cfe336bbbf0c5fc2c352d044ae0f8a59b489a62e468a5b7e090f42127a8ad7a796cb2f67dfd81756d232b19f2522cf911809747c61fbe7f051219fe763e173ab074ae332f25c63bc2d6a5e190ed413f7bf830c006789677a69b4855ce54f06fd2a68d38a5267cec571b0de59198b537212d422cfc188366ce54e5f81a3485f5ead872688efdcdb0a3549b\n```\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiKeyBinding\nmetadata:\n  name: example-seven\n  namespace: application\nspec:\n  proxy: example-seven\n  keys:\n  - name: bobs-apikey\n    defaultRule:\n      global: true\n    subpaths:\n    - path: /foo\n      rule:\n        granular:\n          verbs:\n          - POST\n```\n\n#### Explanation\n\nIncoming requests are proxied over port `8080` to a Kubernetes service named *example-seven* in the *application* namespace. The *apiKey* plugin is envoked for every request corresponding with this proxy. An `ApiKey` spec defines an rsa encrypted apikey. An `ApiKeyBinding` spec *binds* a set of keys to an `ApiProxy`. Each key that is bound can have its own corresponding permissions. In this example, this apikey has global access except for requests containing the `/foo` subpath. For these requests, only HTTP POST access is granted."
+			},
+			"response": [
+				{
+					"id": "d24937d6-22d5-40bb-9869-45dacf8713e1",
+					"name": "Fine Grained Access Control Example",
+					"originalRequest": {
+						"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-seven/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "0HfVWylwxchODd3s4A7D9Zoel0Xo83iQ",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "",
+					"_postman_previewtype": "parsed",
+					"header": [],
+					"cookie": [],
+					"responseTime": 0,
+					"body": "{\n    \"msg\": \"bar\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Quota Policy",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-eight/foo",
+				"method": "GET",
+				"header": [
+					{
+						"key": "apikey",
+						"value": "0HfVWylwxchODd3s4A7D9Zoel0Xo83iQ",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "*NOTE: this feature is is alpha and may not work as expected.*\n\n#### Deploy\n\n`$ kubectl apply -f  https://github.com/northwesternmutual/kanali/raw/master/examples/exampleEight.yaml`\n\n#### Config\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiProxy\nmetadata:\n  name: example-eight\n  namespace: application\nspec:\n  path: /api/v1/example-eight\n  target: /\n  service:\n    port: 8080\n    name: example-eight\n  plugins:\n  - name: apiKey\n```\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiKey\nmetadata:\n  name: lonzos-apikey\n  namespace: application\nspec:\n  data: 2b06207cce17aeeee93dba801dcfc8055638fe6eb00b0e644c48161bdcd66da42f6951ebc3cca02302f90c0ed2f42ecf28673fe1873af704c023367e3a7113919b8b85bd62384f5261d08fe4af51174141ae2836ab628d1ed58f030fca12c4fe53e8f1c8f836c9026a635ca6d419fb873fdeb621b40cfe336bbbf0c5fc2c352d044ae0f8a59b489a62e468a5b7e090f42127a8ad7a796cb2f67dfd81756d232b19f2522cf911809747c61fbe7f051219fe763e173ab074ae332f25c63bc2d6a5e190ed413f7bf830c006789677a69b4855ce54f06fd2a68d38a5267cec571b0de59198b537212d422cfc188366ce54e5f81a3485f5ead872688efdcdb0a3549b\n```\n\n```yaml\napiVersion: kanali.io/v1\nkind: ApiKeyBinding\nmetadata:\n  name: example-eight\n  namespace: application\nspec:\n  proxy: example-eight\n  keys:\n  - name: lonzos-apikey\n    quota: 3\n    defaultRule:\n      global: true\n```\n\n#### Explanation\n\nIncoming requests are proxied over port `8080` to a Kubernetes service named *example-eight* in the *application* namespace. The *apiKey* plugin is envoked for every request corresponding with this proxy. An `ApiKey` spec defines an rsa encrypted apikey. An `ApiKeyBinding` spec *binds* a set of keys to an `ApiProxy`. Each key that is bound can have its own corresponding permissions. In this example, this apikey has global access. In addition, a quota is defined allowing the apikey a total of `3` requests to this proxy."
+			},
+			"response": []
+		},
+		{
+			"name": "Rate Limiting Policy",
+			"request": {
+				"url": "https://{{minikube_ip}}:{{kanali_port}}/api/v1/example-nine/foo",
+				"method": "GET",
+				"header": [
+					{
+						"key": "apikey",
+						"value": "0HfVWylwxchODd3s4A7D9Zoel0Xo83iQ",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "*NOTE: this feature is is alpha and may not work as expected.*\n\n*Example coming soon!*"
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,19 @@
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: kanali-role
+rules:
+  - apiGroups: ["kanali.io"]
+    resources: ["apikeies", "apiproxies", "apikeybindings"]
+    verbs: ["watch"]
+  - apiGroups: ["extensions"]
+    resources: ["thirdpartyresources"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["services", "secrets"]
+    verbs: ["watch"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["list"]

@@ -1,0 +1,7 @@
+templates/agent.yml
+templates/cassandra.yml
+templates/collector.yml
+templates/jaeger.yml
+templates/namespace.yml
+templates/ui.yml
+templates/.DS_Store
