@@ -13,5 +13,5 @@ install:
 - make install_ci
 
 script:
-- make test
-- make lint
+- make test_ci
+- goveralls -coverprofile=cover.out -service=travis-ci
