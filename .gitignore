@@ -16,5 +16,6 @@ kanali.wiki/
 *.so
 *.pem
 *.log
+LICENSE_*
 .cover/
 *.html
