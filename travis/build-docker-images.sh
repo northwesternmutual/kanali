@@ -24,3 +24,6 @@ else
   echo "skip docker upload - neither master branch nor tag"
   exit 0
 fi
+
+echo "docker upload successfull"
+exit 0
