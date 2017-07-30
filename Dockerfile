@@ -27,7 +27,7 @@ RUN make test && make lint
 # Set project version
 RUN sed -ie "s/changeme/`echo ${COMMIT_HASH}`/g" /go/src/github.com/northwesternmutual/kanali/cmd/version.go
 # download apikey plugin
-RUN curl -O https://github.com/northwesternmutual/kanali-plugin-apikey/raw/master/plugin.go
+RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/master/plugin.go
 # compile plugin
 RUN go build -buildmode=plugin -o apiKey.so plugin.go
 # Build project
