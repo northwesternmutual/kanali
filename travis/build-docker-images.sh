@@ -18,7 +18,7 @@ elif [[ $TRAVIS_BRANCH == "master" ]]; then
   for component in latest ${TRAVIS_COMMIT::8}
   do
     export DOCKER_TAG=${component}
-    bash ./upload-to-docker.sh
+    bash ./travis/upload-to-docker.sh
   done
 else
   echo "skip docker upload - neither master branch nor tag"

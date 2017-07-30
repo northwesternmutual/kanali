@@ -7,7 +7,7 @@ FROM golang:${GO_VERSION} AS build-stage
 # set image maintainer
 MAINTAINER frankgreco@northwesternmutual.com
 # what version of our project are we building
-ARG COMMIT_HASH="unknown version"
+ARG VERSION="unknown version"
 # what version of Glide should we use
 ARG GLIDE_VERSION=0.12.3
 # set our working directory
@@ -21,11 +21,9 @@ RUN wget "https://github.com/Masterminds/glide/releases/download/v${GLIDE_VERSIO
     && rm -rf /tmp/glide.tar.gz
 # Install dependencies
 RUN export PATH=$PATH:/tmp/glide/`go env GOHOSTOS`-`go env GOHOSTARCH` \
-    && make install_ci
-# Run test suite
-RUN make test && make lint
+    && make install
 # Set project version
-RUN sed -ie "s/changeme/`echo ${COMMIT_HASH}`/g" /go/src/github.com/northwesternmutual/kanali/cmd/version.go
+RUN sed -ie "s/changeme/`echo ${VERSION}`/g" /go/src/github.com/northwesternmutual/kanali/cmd/version.go
 # download apikey plugin
 RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/master/plugin.go
 # compile plugin

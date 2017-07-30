@@ -13,5 +13,5 @@ if [[ "$DOCKER_TAG" == "" ]]; then
 fi
 
 docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-docker tag $DOCKER_REPO:$DOCKER_TAG
+docker tag $DOCKER_REPO:$DOCKER_TAG --build-arg VERSION=$DOCKER_TAG
 docker push $DOCKER_REPO:$DOCKER_TAG
