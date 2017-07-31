@@ -196,7 +196,7 @@ As an example, if I wanted to overwrite the `--bind-address` flag, I would set t
 A flag can also be overwritten via configuration files. Kanali accepts configuration files in `JSON`, `YAML`, `TOML`, or `HCL` formats.
 
 Kanali will look for files in the following locations (in order of precedence):
-* `/etc/kanali/conifig.ext`
+* `/etc/kanali/config.ext`
 * `$HOME/conifig.ext`
 * `./conifig.ext`
 
