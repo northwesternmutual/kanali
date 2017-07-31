@@ -142,3 +142,15 @@ func OmitHeaderValues(h http.Header, msg string, keys ...string) http.Header {
 	}
 	return copy
 }
+
+// FlattHTTPHeaders turns HTTP headers into key/value instead of key/array
+func FlattHTTPHeaders(h http.Header) map[string]string {
+	if h == nil {
+		return nil
+	}
+	headers := map[string]string{}
+	for k, _ := range h {
+		headers[k] = h.Get(k)
+	}
+	return headers
+}
