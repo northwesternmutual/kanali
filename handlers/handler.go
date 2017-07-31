@@ -67,7 +67,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logrus.Warnf("could not marsah request headers into JSON - tracing data maybe not be as expected")
 	} else {
-		sp.SetTag("http.headers", string(jsonHeaders))
+		sp.SetTag("http.headers", jsonHeaders)
 	}
 
 	defer sp.Finish()
