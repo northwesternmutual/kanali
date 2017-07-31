@@ -149,7 +149,7 @@ func FlattHTTPHeaders(h http.Header) map[string]string {
 		return nil
 	}
 	headers := map[string]string{}
-	for k, _ := range h {
+	for k := range h {
 		headers[k] = h.Get(k)
 	}
 	return headers
