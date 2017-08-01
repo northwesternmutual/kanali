@@ -23,10 +23,8 @@ There are essentially only two main design requirements for a Kanali plugin:
 To make this simple, I've provided a [Yeoman](http://yeoman.io/) template that will dynamically scaffold everything out for you. You can find the template [here](https://github.com/northwesternmutual/kanali-plugin-template) or just follow the instructions below:
 
 ```sh
-$ sudo npm install -g yo
-$ git clone git@github.com:northwesternmutual/kanali-plugin-template.git
-$ cd kanali-plugin-template
-$ sudo npm link
+$ npm install -g yo
+$ npm install -g generator-kanali-plugin
 $ yo kanali-plugin
 ```
 
@@ -49,7 +47,7 @@ type StatusError struct {
 A series of method parameters are provided for optional usage inside of your plugin logic. Here is a table providing detailing their purpose:
 
 |  name        |  type                                             | methods                  | mutability| description |
-|:-------------|:--------------------------------------------------|:-------------------------|:----------|:-|
+|:-------------|:--------------------------------------------------|:-------------------------|:----------|:------------|
 | `ctx`      | [`context.Context`](https://golang.org/pkg/context/) | `OnRequest` `OnResponse` | Mutable | Holds various requests metrics for analytics. |
 | `proxy`      | [`github.com/northwesternmutual/kanali/spec.ApiProxy`](https://github.com/northwesternmutual/kanali/blob/master/spec/apiproxy.go#L20) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the `ApiProxy` struct that matched the incoming request. |
 | `ctlr`      | [`github.com/northwesternmutual/kanali/controller.Controller`](https://github.com/northwesternmutual/kanali/blob/master/controller/controller.go#L17) | `OnRequest` `OnResponse` | Immutable | This parameter provides a client by which the Kubernetes api may be accessed. |
