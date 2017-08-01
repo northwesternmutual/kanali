@@ -27,7 +27,7 @@ spec:
       containers:
       - name: example-seven
         imagePullPolicy: Always
-        image: fbgrecojr/helloworld:node-opentracing
+        image: fbgrecojr/helloworld:golang
         ports:
         - containerPort: 8080
 

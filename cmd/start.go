@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
@@ -37,9 +38,25 @@ import (
 
 func init() {
 
-	if err := config.StartFlags.AddAll(startCmd); err != nil {
+	if err := config.Flags.AddAll(startCmd); err != nil {
 		logrus.Fatalf("could not add flag to command: %s", err.Error())
 		os.Exit(1)
+	}
+
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	logrus.SetOutput(os.Stdout)
+
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("$HOME/.kanali")
+	viper.AddConfigPath("/etc/kanali/")
+
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix("kanali")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+
+	if err := viper.ReadInConfig(); err != nil {
+		logrus.Warn("couldn't find any config file, using env variables and/or cli flags")
 	}
 
 	RootCmd.AddCommand(startCmd)

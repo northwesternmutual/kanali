@@ -21,9 +21,7 @@
 package plugins
 
 import (
-  "fmt"
 	"context"
-  "net/url"
 	"net/http"
 
 	"github.com/northwesternmutual/kanali/controller"
@@ -36,26 +34,4 @@ import (
 type Plugin interface {
 	OnRequest(ctx context.Context, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span) error
 	OnResponse(ctx context.Context, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, resp *http.Response, span opentracing.Span) error
-}
-
-type PluginList struct {
-  Plugins []PluginItem `json:"plugins"`
-}
-
-type PluginItem struct {
-  Location  string `json:"location"`
-  Version   string `json:"version"`
-  Name      string `json:"name"`
-}
-
-func (p PluginItem) GetURL() (*url.URL, error) {
-  u, err := url.Parse(fmt.Sprintf(
-    "https://%s/archive/%s.zip",
-    p.Location,
-    p.Version,
-  ))
-  if err != nil {
-    return nil, err
-  }
-  return u, nil
 }

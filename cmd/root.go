@@ -21,31 +21,8 @@
 package cmd
 
 import (
-  "os"
-  "strings"
-   
 	"github.com/spf13/cobra"
-  "github.com/spf13/viper"
-  "github.com/Sirupsen/logrus"
 )
-
-func init() {
-  logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(os.Stdout)
-
-	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("$HOME/.kanali")
-	viper.AddConfigPath("/etc/kanali/")
-
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("kanali")
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-
-	if err := viper.ReadInConfig(); err != nil {
-		logrus.Warn("couldn't find any config file, using env variables and/or cli flags")
-	}
-}
 
 // RootCmd is the base command of this project
 var RootCmd = &cobra.Command{

@@ -1,9 +1,0 @@
-{
-  "plugins": [
-    {
-      "location": "github.com/northwesternmutual/kanali-plugin-apikey",
-      "version": "v1.0.0",
-      "name": "apiKey"
-    }
-  ]
-}
