@@ -46,14 +46,14 @@ type StatusError struct {
 
 A series of method parameters are provided for optional usage inside of your plugin logic. Here is a table providing detailing their purpose:
 
-|  name        |  type                                             | methods                  | mutability| description |
-|:-------------|:--------------------------------------------------|:-------------------------|:----------|:------------|
-| `ctx`      | [`context.Context`](https://golang.org/pkg/context/) | `OnRequest` `OnResponse` | Mutable | Holds various requests metrics for analytics. |
-| `proxy`      | [`github.com/northwesternmutual/kanali/spec.ApiProxy`](https://github.com/northwesternmutual/kanali/blob/master/spec/apiproxy.go#L20) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the `ApiProxy` struct that matched the incoming request. |
-| `ctlr`      | [`github.com/northwesternmutual/kanali/controller.Controller`](https://github.com/northwesternmutual/kanali/blob/master/controller/controller.go#L17) | `OnRequest` `OnResponse` | Immutable | This parameter provides a client by which the Kubernetes api may be accessed. |
-| `req`      | [`http.Request`](https://golang.org/pkg/net/http/#Request) | `OnRequest` `OnResponse` | Mutable | This parameter gives you access to the original HTTP request struct. |
-| `resp`      | [`*http.Response`](https://golang.org/pkg/net/http/#Response) | `OnResponse` | Mutable | This parameter will point to the response that was returned from the upstream service. Note that it is mutable allowing for potential changes in a plugin's logic. |
-| `span`      | [`github.com/opentracing/opentracing-go.Span`](https://godoc.org/github.com/opentracing/opentracing-go#Span) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the parent tracing span allowing you to add details (tags) to that span and optionally create new spans in the context of this parent span. |
+name        | type             | methods              |mutability |description
+------------|------------------|----------------------|-----------|------------
+`ctx`        | [`context.Context`](https://golang.org/pkg/context/) | `OnRequest` `OnResponse` | Mutable | Holds various requests metrics for analytics.
+`proxy`      | [`spec.ApiProxy`](https://github.com/northwesternmutual/kanali/blob/master/spec/apiproxy.go#L20) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the `ApiProxy` struct that matched the incoming request.
+`ctlr`       | [`controller.Controller`](https://github.com/northwesternmutual/kanali/blob/master/controller/controller.go#L17) | `OnRequest` `OnResponse` | Immutable | This parameter provides a client by which the Kubernetes api may be accessed.
+`req`        | [`http.Request`](https://golang.org/pkg/net/http/#Request) | `OnRequest` `OnResponse` | Mutable | This parameter gives you access to the original HTTP request struct.
+`resp`       | [`*http.Response`](https://golang.org/pkg/net/http/#Response) | `OnResponse` | Mutable | This parameter will point to the response that was returned from the upstream service. Note that it is mutable allowing for potential changes in a plugin's logic.
+`span`       | [`opentracing-go.Span`](https://godoc.org/github.com/opentracing/opentracing-go#Span) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the parent tracing span allowing you to add details (tags) to that span and optionally create new spans in the context of this parent span.
 
 ## Step 2: Test
 
