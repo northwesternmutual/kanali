@@ -18,38 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package cmd
+package config
 
-import (
-  "os"
-  "strings"
-   
-	"github.com/spf13/cobra"
-  "github.com/spf13/viper"
-  "github.com/Sirupsen/logrus"
+var (
+	// FlagPluginRequirementsFileLocation specifies the path to plugins requirments file
+	FlagPluginRequirementsFileLocation = flag{
+		long:  "requirments-file",
+		short: "",
+		value: "./plugins.yaml",
+		usage: "Location of the plugin requirements file.",
+	}
+  // FlagPluginLocation specifies the final location of compiled plugins
+	FlagPluginLocation = flag{
+		long:  "plugins-location",
+		short: "",
+		value: ".",
+		usage: "Location to place compiled plugins",
+	}
 )
 
-func init() {
-  logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(os.Stdout)
-
-	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("$HOME/.kanali")
-	viper.AddConfigPath("/etc/kanali/")
-
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("kanali")
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-
-	if err := viper.ReadInConfig(); err != nil {
-		logrus.Warn("couldn't find any config file, using env variables and/or cli flags")
-	}
-}
-
-// RootCmd is the base command of this project
-var RootCmd = &cobra.Command{
-	Use:   "kanali",
-	Short: "layer 7 load balancer for Kubernetes with API managment",
-	Long:  "kanali provides a dynamic layer 7 load balancer for a Kubernetes cluster coupled tightly with an API managment solution",
+// Flags represents the complete set of configuration options that Kanali can use
+var PluginLoadFlags = flags{
+	FlagPluginRequirementsFileLocation,
+  FlagPluginLocation,
 }

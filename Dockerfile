@@ -24,22 +24,9 @@ RUN export PATH=$PATH:/tmp/glide/`go env GOHOSTOS`-`go env GOHOSTARCH` \
     && make install
 # Set project version
 RUN sed -ie "s/changeme/`echo ${VERSION}`/g" /go/src/github.com/northwesternmutual/kanali/cmd/version.go
-# download apikey plugin
-RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/master/plugin.go
-# compile plugin
-RUN go build -buildmode=plugin -o apiKey.so plugin.go
 # Build project
 RUN make build
-
-# production stage
-FROM centos:latest
-# set maintainer
-MAINTAINER frankgreco@northwesternmutual.com
 # add ca certificates bundle
 RUN curl http://curl.haxx.se/ca/cacert.pem -o /etc/pki/tls/certs/ca-bundle.crt
-# load plugin
-COPY --from=build-stage /go/src/github.com/northwesternmutual/kanali/apiKey.so ./apiKey.so
-# copy compiled binary from our build stage
-COPY --from=build-stage /go/src/github.com/northwesternmutual/kanali/kanali .
 # set our entrypoint
-ENTRYPOINT ["/kanali"]
+ENTRYPOINT ["./kanali"]
