@@ -45,6 +45,9 @@ func New() Metrics {
 
 // GetCtxMetric retreives a specific contextual request metric
 func GetCtxMetric(ctx context.Context, key string) string {
+
+  // TODO: add read/write mutex lock
+
 	untypedValue := ctx.Value(MetricsKey)
 	if untypedValue == nil {
 		logrus.Errorf("context does not have the correct key")
@@ -64,6 +67,9 @@ func GetCtxMetric(ctx context.Context, key string) string {
 
 // AddCtxMetric adds a specific contextual request metric
 func AddCtxMetric(ctx context.Context, key string, value string) context.Context {
+
+  // TODO: add read/write mutex lock
+
 	untypedMetrics := ctx.Value(MetricsKey)
 	if untypedMetrics == nil {
 		ctx = context.WithValue(context.Background(), MetricsKey, Metrics{map[string]string{}})
