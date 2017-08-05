@@ -22,6 +22,7 @@ package monitor
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -35,44 +36,56 @@ const (
 
 // Metrics holds contextual metrics for the current request
 type Metrics struct {
-	m map[string]string
+	mutex sync.RWMutex
+	m     map[string]string
 }
 
 // New creates a new metrics objects
 func New() Metrics {
-	return Metrics{map[string]string{}}
+	return Metrics{sync.RWMutex{}, map[string]string{}}
 }
 
-// GetCtxMetric retreives a specific contextual request metric
+// GetCtxMetric is a concurrency safe function that retreives a
+// specific contextual request metric
 func GetCtxMetric(ctx context.Context, key string) string {
 	untypedValue := ctx.Value(MetricsKey)
 	if untypedValue == nil {
-		logrus.Errorf("context does not have the correct key")
+		logrus.Errorf("could not find a value in the provided context at the given key %s", key)
 		return ""
 	}
-	value, ok := untypedValue.(Metrics)
+	metrics, ok := untypedValue.(Metrics)
 	if !ok {
-		logrus.Errorf("value must be of type Metrics")
+		logrus.Errorf("expected the value in the provided context at the given key %s to be of type Metrics", key)
 		return ""
 	}
-	m, ok := value.m[key]
+
+	metrics.mutex.RLock()
+	defer metrics.mutex.RUnlock()
+
+	m, ok := metrics.m[key]
 	if !ok {
 		return ""
 	}
 	return m
 }
 
-// AddCtxMetric adds a specific contextual request metric
+// AddCtxMetric is a concurrency safe function that adds a
+// specific contextual request metric
 func AddCtxMetric(ctx context.Context, key string, value string) context.Context {
 	untypedMetrics := ctx.Value(MetricsKey)
 	if untypedMetrics == nil {
-		ctx = context.WithValue(context.Background(), MetricsKey, Metrics{map[string]string{}})
+		logrus.Errorf("could not find a value in the provided context at the given key %s", key)
+		return ctx
 	}
 	metrics, ok := untypedMetrics.(Metrics)
 	if !ok {
-		metrics = Metrics{map[string]string{}}
-		ctx = context.WithValue(ctx, MetricsKey, metrics)
+		logrus.Errorf("expected the value in the provided context at the given key %s to be of type Metrics", key)
+		return ctx
 	}
+
+	metrics.mutex.Lock()
+	defer metrics.mutex.Unlock()
+
 	metrics.m[key] = value
 	return ctx
 }
