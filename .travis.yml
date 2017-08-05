@@ -22,7 +22,7 @@ install:
 
 script:
 - make test_ci
-- travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true ; else echo 'skipping coverage';
+- travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true
 
 after_success:
 - bash ./travis/build-docker-images.sh
