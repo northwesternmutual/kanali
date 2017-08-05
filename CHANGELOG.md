@@ -11,6 +11,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Travis will now retry the goveralls step if not successful the first time.
 - Docker images will now only be built and pushed on pushes to the master branch. This resolves an issue where images were being built and pushed on pull requests where the master branch was the target.
 
-## 1.0.0 - 2017-07-31
+## [1.0.0] - 2017-07-31
 ### Added
 - Initial Project Commit.
