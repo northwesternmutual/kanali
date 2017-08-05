@@ -11,6 +11,7 @@ RACE=-race
 GOTEST=go test -v $(RACE)
 GOLINT=golint
 GOVET=go vet
+GOBUILD=go build $(RACE)
 GOFMT=gofmt
 ERRCHECK=errcheck -ignoretests
 FMT_LOG=fmt.log
@@ -31,7 +32,7 @@ install:
 
 .PHONY: build
 build:
-	GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -o $(BINARY)
+	GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` $(GOBUILD) -o $(BINARY)
 
 .PHONY: fmt
 fmt:
