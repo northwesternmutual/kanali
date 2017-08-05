@@ -63,7 +63,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	sp.SetTag("http.url", r.RequestURI)
 	sp.SetTag("http.method", r.Method)
 
-	jsonHeaders, err := json.Marshal(utils.FlattenHTTPHeaders(utils.OmitHeaderValues(r.Header, viper.GetString(config.FlagHeaderMaskValue.GetLong()), config.FlagApikeyHeaderKey.GetLong())))
+	jsonHeaders, err := json.Marshal(utils.FlattenHTTPHeaders(utils.OmitHeaderValues(r.Header, viper.GetString(config.FlagHeaderMaskValue.GetLong()), viper.GetString(config.FlagApikeyHeaderKey.GetLong()))))
 	if err != nil {
 		logrus.Warnf("could not marsah request headers into JSON - tracing data maybe not be as expected")
 	} else {
