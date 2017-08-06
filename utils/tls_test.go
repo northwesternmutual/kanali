@@ -28,13 +28,8 @@ import (
 )
 
 func TestDecodeBase64ByteArray(t *testing.T) {
-
-	assert := assert.New(t)
-
 	arr1, _ := DecodeBase64ByteArray([]byte(base64.StdEncoding.EncodeToString([]byte("abc123"))))
-	assert.Equal([]byte("abc123"), arr1, "error message not what expected")
-
+	assert.Equal(t, []byte("abc123"), arr1)
 	_, err := DecodeBase64ByteArray([]byte("notbase64"))
-	assert.NotNil(err, "error message not what expected")
-
+	assert.NotNil(t, err)
 }

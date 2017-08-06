@@ -29,27 +29,22 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-// Flow represents a series of steps
+// Flow is a list of steps
 type Flow []Step
 
-// Add takes a step and adds it to the flow
+// Add appends a step to a flow
 func (f *Flow) Add(steps ...Step) {
 	for _, step := range steps {
 		*f = append(*f, step)
 	}
 }
 
-// Play iterates through every step that it has
-// and exectutes them.
+// Play executes all step in a flow in the order they were added.
 func (f *Flow) Play(ctx context.Context, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-
-	logrus.Infof("flow is about to play")
-
+	logrus.Infof("a flow with %d step is about to play", len(*f))
 	for _, step := range *f {
-		logrus.Infof("playing step: %s", step.GetName())
+		logrus.Infof("playing step %s", step.GetName())
 		if err := step.Do(ctx, ctlr, w, r, resp, trace); err != nil {
-			// An error was encourted during the flow's execution that Kanali is responsible for.
-			// Because of this, we need to make sure we tag our opentracing span with that error
 			trace.SetTag("error", true)
 			trace.LogKV(
 				"event", "error",

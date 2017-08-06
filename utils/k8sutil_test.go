@@ -31,21 +31,14 @@ import (
 )
 
 func TestIsKubernetesResourceAlreadyExistError(t *testing.T) {
-
-	assert := assert.New(t)
-	message := "value not expected"
-
-	assert.False(IsKubernetesResourceAlreadyExistError(errors.New("test error")), message)
-
+	assert.False(t, IsKubernetesResourceAlreadyExistError(errors.New("test error")))
 	se := e.StatusError{
 		ErrStatus: unversioned.Status{
 			Code:   http.StatusConflict,
 			Reason: unversioned.StatusReasonAlreadyExists,
 		},
 	}
-	assert.True(IsKubernetesResourceAlreadyExistError(&se), message)
-
+	assert.True(t, IsKubernetesResourceAlreadyExistError(&se))
 	se.ErrStatus.Code = http.StatusNotFound
-	assert.False(IsKubernetesResourceAlreadyExistError(&se), message)
-
+	assert.False(t, IsKubernetesResourceAlreadyExistError(&se))
 }

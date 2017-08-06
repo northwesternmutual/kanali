@@ -27,16 +27,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStatusError(t *testing.T) {
-
-	assert := assert.New(t)
-
+func TestStatus(t *testing.T) {
 	se := StatusError{
 		Code: 400,
 		Err:  errors.New("new error"),
 	}
+	assert.Equal(t, "new error", se.Error())
+}
 
-	assert.Equal("new error", se.Error(), "error message not what expected")
-	assert.Equal(400, se.Status(), "error code not what expected")
-
+func TestError(t *testing.T) {
+	se := StatusError{
+		Code: 400,
+		Err:  errors.New("new error"),
+	}
+	assert.Equal(t, 400, se.Status())
 }
