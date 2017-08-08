@@ -6,7 +6,7 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 
 * **Kubernetes Native:** Kanali extends the Kubernetes API by using [Third Party Resources](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-third-party-resource/), allowing Kanali to be configured in the same way as native Kubernetes resources.
 * **Performance Centric:** As a middleware component, Kanali is developed with performance as the highest priority! You could instantly improve your application's network performance by using Kanali.
-* **Powerful, Decoupled Plugin Framework:** Need to preform complex transformations or integrations with a legacy system? Kanali provides a framework allowing developers to create, integrate, and version control custom plugins without every touching the Kanali codebase. Read more about plugins [here](https://github.com/northwesternmutual/kanali/blob/master/PLUGIN_GUIDE.md).
+* **Powerful, Decoupled Plugin Framework:** Need to perform complex transformations or integrations with a legacy system? Kanali provides a framework allowing developers to create, integrate, and version control custom plugins without every touching the Kanali codebase. Read more about plugins [here](https://github.com/northwesternmutual/kanali/blob/master/PLUGIN_GUIDE.md).
 * **User-Defined Configurations:** Kanali gives you complete control over declaratively configuring how your proxy behaves. Need mutual TLS, dynamic service discovery, mock responses, etc.? No problem! Kanali makes it easy!
 * **Robust API Management:** Fine grained API key authorization, quota policies, rate limiting, etc., these are some of the built in API management capabilities that Kanali provides. In addition, it follows native Kubernetes patterns for API key creation and binding making it easy and secure to control access to your proxy.
 * **Analytics & Monitoring:** Kanali uses [Grafana](https://grafana.com/) and [InfluxDB](https://www.influxdata.com/) to provide a customizable and visually appealing experience so that you can get real time alerting and visualization around Kanali's metrics. Find out more [here](#analytics-and-monitoring)!
@@ -66,7 +66,7 @@ Kanali describes itself as *an extremely efficient Kubernetes ingress controller
 
 Kubernetes provides a native [`Ingress`](https://kubernetes.io/docs/concepts/services-networking/ingress/) resource spec. The implementation of this resource, along with other Kubernetes resources such as the  `NetworkPolicy` resource, are left as an exercise.
 
-The [NGINX](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#limitations) ingress controller for Kubernetes is a popular implementation for this native resource. However, it has no concept of features Kanali provides such as dynamic service discovery, mutual TLS for upstream services, API managment, or a version controlled plugin system. In addition, every time an ingress is create or updated, the NGINX process is required to restart which could affect performance.
+The [NGINX](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#limitations) ingress controller for Kubernetes is a popular implementation for this native resource. However, it has no concept of features Kanali provides such as dynamic service discovery, mutual TLS for upstream services, API management, or a version controlled plugin system. In addition, every time an ingress is create or updated, the NGINX process is required to restart which could affect performance.
 
 #### Apigee
 
@@ -78,7 +78,7 @@ The [NGINX](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#
 
 Traefik was not built to be as focused and native to Kubernetes as Kanali strives to be. Because of this, it has a lot of shortcomings with regards to Ingress definitions.
 
-While Traefik does provide a few API management features, Kanali offers so much more such as a robust API key managment ecosystem, decoupled and extensible plugin system, Opentracing compatibility, and more.
+While Traefik does provide a few API management features, Kanali offers so much more such as a robust API key management ecosystem, decoupled and extensible plugin system, Opentracing compatibility, and more.
 
 
 # Analytics, Monitoring, and Tracing
