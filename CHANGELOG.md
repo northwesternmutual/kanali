@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Unit tests for `flow` package.
 ### Changed
+- Fixed typos in README.
 - Updated Postman collection.
 - Using read/write mutex to Metrics map. Before this change, it was not safe for concurrent use.
 - Resolved bug that resulted in requested HTTP header values to not be properly omitted when being reported to Influxdb.
