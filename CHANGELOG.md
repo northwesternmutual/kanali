@@ -6,8 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- Unit tests for `flow` package.
+- Improved test coverage.
 ### Changed
+- Resolved bug that did not handle potential panics from plugins.
 - Fixed typos in README.
 - Updated Postman collection.
 - Using read/write mutex to Metrics map. Before this change, it was not safe for concurrent use.
