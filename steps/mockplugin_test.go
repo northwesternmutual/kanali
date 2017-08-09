@@ -18,25 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// package
 package steps
 
 import (
 	"context"
-	"testing"
+	"net/http"
 
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/spec"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/stretchr/testify/assert"
+	"github.com/opentracing/opentracing-go"
 )
 
-func TestPluginsOnRequestGetName(t *testing.T) {
-	assert := assert.New(t)
-	step := PluginsOnRequestStep{}
-	assert.Equal(step.GetName(), "Plugin OnRequest", "step name is incorrect")
+type fakePlugin struct{}
+
+func (plugin fakePlugin) OnRequest(ctx context.Context, p spec.APIProxy, c controller.Controller, r *http.Request, span opentracing.Span) error {
+	panic("intentional")
 }
 
-func TestDoOnRequest(t *testing.T) {
-	err := doOnRequest(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakePlugin{})
-	assert.Equal(t, err.Error(), "OnRequest paniced")
+func (plugin fakePlugin) OnResponse(ctx context.Context, p spec.APIProxy, c controller.Controller, r *http.Request, resp *http.Response, span opentracing.Span) error {
+	panic("intentional")
 }

@@ -21,13 +21,21 @@
 package steps
 
 import (
+	"context"
 	"testing"
 
+	"github.com/northwesternmutual/kanali/controller"
+	"github.com/northwesternmutual/kanali/spec"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPluginsOnResponseGetName(t *testing.T) {
-	assert := assert.New(t)
 	step := PluginsOnResponseStep{}
-	assert.Equal(step.GetName(), "Plugin OnResponse", "step name is incorrect")
+	assert.Equal(t, step.GetName(), "Plugin OnResponse", "step name is incorrect")
+}
+
+func TestDoOnResponse(t *testing.T) {
+	err := doOnResponse(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, nil, opentracing.StartSpan("test span"), fakePlugin{})
+	assert.Equal(t, err.Error(), "OnResponse paniced")
 }
