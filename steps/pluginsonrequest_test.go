@@ -37,6 +37,7 @@ func TestPluginsOnRequestGetName(t *testing.T) {
 }
 
 func TestDoOnRequest(t *testing.T) {
-	err := doOnRequest(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakePlugin{})
-	assert.Equal(t, err.Error(), "OnRequest paniced")
+	assert.Equal(t, doOnRequest(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakePanicPlugin{}).Error(), "OnRequest paniced")
+  assert.Equal(t, doOnRequest(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakeErrorPlugin{}).Error(), "error")
+	assert.Nil(t, doOnRequest(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakeSuccessPlugin{}))
 }
