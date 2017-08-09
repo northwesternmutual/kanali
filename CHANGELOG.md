@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Improved test coverage.
 ### Changed
+- Upgraded to Go version 1.8.3
 - Resolved bug that did not handle potential panics from plugins.
 - Fixed typos in README.
 - Updated Postman collection.
