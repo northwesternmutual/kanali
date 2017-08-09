@@ -27,6 +27,7 @@ import (
 	"net/http"
 	pluginPkg "plugin"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/plugins"
 	"github.com/northwesternmutual/kanali/spec"
@@ -101,7 +102,7 @@ func (step PluginsOnResponseStep) Do(ctx context.Context, c *controller.Controll
 		}
 
 		// execute the OnResponse function of our current plugin
-		if err := p.OnResponse(ctx, proxy, *c, r, resp, sp); err != nil {
+		if err := doOnResponse(ctx, proxy, *c, r, resp, sp, p); err != nil {
 			return err
 		}
 
@@ -113,4 +114,17 @@ func (step PluginsOnResponseStep) Do(ctx context.Context, c *controller.Controll
 	// without any error
 	return nil
 
+}
+
+func doOnResponse(ctx context.Context, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, resp *http.Response, span opentracing.Span, p plugins.Plugin) (e error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.Errorf("OnResponse paniced: %v", r)
+			e = errors.New("OnResponse paniced")
+		}
+	}()
+	if err := p.OnResponse(ctx, proxy, ctlr, req, resp, span); err != nil {
+		return err
+	}
+	return nil
 }
