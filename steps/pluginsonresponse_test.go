@@ -37,6 +37,6 @@ func TestPluginsOnResponseGetName(t *testing.T) {
 
 func TestDoOnResponse(t *testing.T) {
 	assert.Equal(t, doOnResponse(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, nil, opentracing.StartSpan("test span"), fakePanicPlugin{}).Error(), "OnResponse paniced")
-  assert.Equal(t, doOnResponse(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, nil, opentracing.StartSpan("test span"), fakeErrorPlugin{}).Error(), "error")
-  assert.Nil(t, doOnResponse(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, nil, opentracing.StartSpan("test span"), fakeSuccessPlugin{}))
+	assert.Equal(t, doOnResponse(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, nil, opentracing.StartSpan("test span"), fakeErrorPlugin{}).Error(), "error")
+	assert.Nil(t, doOnResponse(context.Background(), spec.APIProxy{}, controller.Controller{}, nil, nil, opentracing.StartSpan("test span"), fakeSuccessPlugin{}))
 }

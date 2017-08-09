@@ -22,8 +22,8 @@
 package steps
 
 import (
-  "errors"
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/northwesternmutual/kanali/controller"
