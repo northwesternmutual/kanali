@@ -79,7 +79,7 @@ func (step PluginsOnRequestStep) Do(ctx context.Context, c *controller.Controlle
 		if err != nil {
 			return utils.StatusError{
 				Code: http.StatusInternalServerError,
-				Err:  fmt.Errorf("could not open plugin %s: %s", plugin.Name, err.Error()), 
+				Err:  fmt.Errorf("could not open plugin %s: %s", plugin.Name, err.Error()),
 			}
 		}
 
