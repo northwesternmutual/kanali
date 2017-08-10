@@ -42,10 +42,10 @@ import (
 type mock []route
 
 type route struct {
-	route  string      `json:"route"`
-	code   int         `json:"code"`
-	method string      `json:"method"`
-	body   interface{} `json:"body"`
+	Route  string      `json:"route"`
+	Code   int         `json:"code"`
+	Method string      `json:"method"`
+	Body   interface{} `json:"body"`
 }
 
 // MockServiceStep is factory that defines a step responsible for
@@ -132,7 +132,7 @@ func (step MockServiceStep) Do(ctx context.Context, c *controller.Controller, w 
 	// to find a match
 	for i, currRoute := range m {
 
-		if strings.Compare(currRoute.route, targetPath) == 0 && strings.Compare(strings.ToUpper(currRoute.method), r.Method) == 0 {
+		if strings.Compare(currRoute.Route, targetPath) == 0 && strings.Compare(strings.ToUpper(currRoute.Method), r.Method) == 0 {
 			mockRespIndex = i
 			break
 		}
@@ -155,7 +155,7 @@ func (step MockServiceStep) Do(ctx context.Context, c *controller.Controller, w 
 	// we're going to require it be JSON however.
 	// we're going to attempt to marshal it into jsonpath
 	// and pass it along
-	mockBodyData, err := json.Marshal(m[mockRespIndex].body)
+	mockBodyData, err := json.Marshal(m[mockRespIndex].Body)
 	if err != nil {
 		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. while data was found for the incoming route, it was not valid json",
 			proxy.Spec.Mock.ConfigMapName,
@@ -173,12 +173,12 @@ func (step MockServiceStep) Do(ctx context.Context, c *controller.Controller, w 
 
 	// create a fake response
 	responseRecorder := &httptest.ResponseRecorder{
-		Code:      m[mockRespIndex].code,
+		Code:      m[mockRespIndex].Code,
 		Body:      bytes.NewBuffer(mockBodyData),
 		HeaderMap: upstreamHeaders,
 	}
 
-	ctx = monitor.AddCtxMetric(ctx, "http_response_code", strconv.Itoa(m[mockRespIndex].code))
+	ctx = monitor.AddCtxMetric(ctx, "http_response_code", strconv.Itoa(m[mockRespIndex].Code))
 
 	*resp = *responseRecorder.Result()
 
