@@ -189,7 +189,7 @@ var (
 	FlagUpstreamTimeout = flag{
 		long:  "upstream-timeout",
 		short: "w",
-		value: "0h0m0s",
+		value: "0h0m10s",
 		usage: "Set length of upstream timeout. Defaults to none",
 	}
 	// FlagStatusPort sets the HTTP port that Kanali status server
