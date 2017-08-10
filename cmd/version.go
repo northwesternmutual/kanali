@@ -22,6 +22,8 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -30,11 +32,16 @@ func init() {
 	RootCmd.AddCommand(versionCmd)
 }
 
+var out io.Writer = os.Stdout
+
 var versionCmd = &cobra.Command{
 	Use:   `version`,
 	Short: `version`,
 	Long:  `view the current version of this software`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("changeme")
-	},
+	Run:   versionCmdRun,
+}
+
+var versionCmdRun = func(cmd *cobra.Command, args []string) {
+	fmt.Fprint(out, "changeme")
+	fmt.Fprint(out, "\n")
 }
