@@ -21,13 +21,42 @@
 package steps
 
 import (
+	"bytes"
+	"context"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteResponseGetName(t *testing.T) {
-	assert := assert.New(t)
 	step := WriteResponseStep{}
-	assert.Equal(step.GetName(), "Write Response", "step name is incorrect")
+	assert.Equal(t, step.GetName(), "Write Response", "step name is incorrect")
+}
+
+func TestWriteResponseDo(t *testing.T) {
+	step := WriteResponseStep{}
+	writer := httptest.NewRecorder()
+	response := &httptest.ResponseRecorder{
+		Code: 200,
+		HeaderMap: http.Header{
+			"One":   []string{"two"},
+			"Three": []string{"four"},
+		},
+		Body: bytes.NewBuffer([]byte("this is my mock response body")),
+	}
+	err := step.Do(context.Background(), nil, writer, nil, response.Result(), opentracing.StartSpan("test span"))
+	defer writer.Result().Body.Close()
+	assert.Nil(t, err)
+	assert.Equal(t, writer.Result().StatusCode, 200)
+	assert.Equal(t, writer.Result().Status, "OK")
+	assert.Equal(t, len(writer.Result().Header), 2)
+	assert.Equal(t, writer.Result().Header.Get("one"), "two")
+	assert.Equal(t, writer.Result().Header.Get("three"), "four")
+	bodyBytes, err := ioutil.ReadAll(writer.Result().Body)
+	assert.Nil(t, err)
+	assert.Equal(t, string(bodyBytes), "this is my mock response body")
 }
