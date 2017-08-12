@@ -107,10 +107,8 @@ func getTags(ctx context.Context) map[string]string {
 
 func getFields(ctx context.Context) map[string]interface{} {
 
-	totalTime, _ := strconv.Atoi(GetCtxMetric(ctx, "totalTime"))
-
 	return map[string]interface{}{
-		"totalTime":    totalTime,
+		"totalTime":    GetCtxMetric(ctx, "totalTime"),
 		"clientIP":     GetCtxMetric(ctx, "client_ip"),
 		"responseCode": GetCtxMetric(ctx, "http_response_code"),
 		"uri":          GetCtxMetric(ctx, "http_uri"),

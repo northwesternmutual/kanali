@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improved test coverage.
 ### Changed
 - Fixed issue where Docker images were not pushed for tag builds.
+- Fixed issue that always reported 0 for total request time
+- Fixed issue that did not report span if plugin return an error
 
 ## [1.0.1] - 2017-08-10
 ### Added
