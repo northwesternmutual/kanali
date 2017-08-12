@@ -24,7 +24,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	influx "github.com/influxdata/influxdb/client/v2"
