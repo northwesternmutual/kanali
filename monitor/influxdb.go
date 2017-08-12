@@ -107,7 +107,7 @@ func getTags(ctx context.Context) map[string]string {
 func getFields(ctx context.Context) map[string]interface{} {
 
 	return map[string]interface{}{
-		"totalTime":    GetCtxMetric(ctx, "totalTime"),
+		"totalTime":    GetCtxMetric(ctx, "total_time"),
 		"clientIP":     GetCtxMetric(ctx, "client_ip"),
 		"responseCode": GetCtxMetric(ctx, "http_response_code"),
 		"uri":          GetCtxMetric(ctx, "http_uri"),
