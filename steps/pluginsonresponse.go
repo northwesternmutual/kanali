@@ -79,7 +79,7 @@ func doOnResponse(ctx context.Context, name string, proxy spec.APIProxy, ctlr co
 	sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_RESPONSE: %s", name), opentracing.ChildOf(span.Context()))
 	defer sp.Finish()
 
-	if err := p.OnResponse(ctx, proxy, ctlr, req, resp, span); err != nil {
+	if err := p.OnResponse(ctx, proxy, ctlr, req, resp, sp); err != nil {
 		return err
 	}
 	return nil

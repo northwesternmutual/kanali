@@ -78,7 +78,7 @@ func doOnRequest(ctx context.Context, name string, proxy spec.APIProxy, ctlr con
 	sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_REQUEST: %s", name), opentracing.ChildOf(span.Context()))
 	defer sp.Finish()
 
-	if err := p.OnRequest(ctx, proxy, ctlr, req, span); err != nil {
+	if err := p.OnRequest(ctx, proxy, ctlr, req, sp); err != nil {
 		return err
 	}
 	return nil
