@@ -22,16 +22,62 @@ package plugins
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	pluginPkg "plugin"
 
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/spec"
+	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/spf13/viper"
 )
+
+const pluginSymbolName = "Plugin"
 
 // Plugin is an interface that is used for every Plugin used by Kanali.
 // If external plugins are developed, they also must conform to this interface.
 type Plugin interface {
 	OnRequest(ctx context.Context, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span) error
 	OnResponse(ctx context.Context, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, resp *http.Response, span opentracing.Span) error
+}
+
+// GetPlugin will use the Go plugin package and extract
+// the plugin
+func GetPlugin(plugin spec.Plugin) (*Plugin, error) {
+	path, err := utils.GetAbsPath(viper.GetString(config.FlagPluginsLocation.GetLong()))
+	if err != nil {
+		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("file path %s could not be found", viper.GetString("plugins-path"))}
+	}
+
+	plug, err := pluginPkg.Open(fmt.Sprintf("%s/%s.so",
+		path,
+		plugin.GetFileName(),
+	))
+	if err != nil {
+		return nil, utils.StatusError{
+			Code: http.StatusInternalServerError,
+			Err:  fmt.Errorf("could not open plugin %s: %s", plugin.Name, err.Error()),
+		}
+	}
+
+	symPlug, err := plug.Lookup(pluginSymbolName)
+	if err != nil {
+		return nil, utils.StatusError{
+			Code: http.StatusInternalServerError,
+			Err:  err,
+		}
+	}
+
+	var p Plugin
+	p, ok := symPlug.(Plugin)
+	if !ok {
+		return nil, utils.StatusError{
+			Code: http.StatusInternalServerError,
+			Err:  fmt.Errorf("plugin %s must implement the Plugin interface", plugin.Name),
+		}
+	}
+
+	return &p, nil
 }

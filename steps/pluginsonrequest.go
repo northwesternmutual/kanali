@@ -25,7 +25,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	pluginPkg "plugin"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/controller"
@@ -33,7 +32,6 @@ import (
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
-	"github.com/spf13/viper"
 )
 
 // PluginsOnRequestStep is factory that defines a step responsible for
@@ -47,9 +45,6 @@ func (step PluginsOnRequestStep) GetName() string {
 
 // Do executes the logic of the PluginsOnRequestStep step
 func (step PluginsOnRequestStep) Do(ctx context.Context, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-
-	// retreive the current proxy which holds
-	// the plugins that should be executed, if any
 	untypedProxy, err := spec.ProxyStore.Get(r.URL.Path)
 	if err != nil || untypedProxy == nil {
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
@@ -60,69 +55,29 @@ func (step PluginsOnRequestStep) Do(ctx context.Context, c *controller.Controlle
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
 
-	// iterate over all of the plugins associated with this proxy
 	for _, plugin := range proxy.Spec.Plugins {
-
-		sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_REQUEST: %s", plugin.Name), opentracing.ChildOf(trace.Context()))
-
-		path, err := utils.GetAbsPath(viper.GetString("plugins-location"))
+		p, err := plugins.GetPlugin(plugin)
 		if err != nil {
-			return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("file path %s could not be found", viper.GetString("plugins-path"))}
-		}
-
-		// open the plugin module using the standard Go
-		// plugin package.
-		plug, err := pluginPkg.Open(fmt.Sprintf("%s/%s.so",
-			path,
-			plugin.GetFileName(),
-		))
-		if err != nil {
-			return utils.StatusError{
-				Code: http.StatusInternalServerError,
-				Err:  fmt.Errorf("could not open plugin %s: %s", plugin.Name, err.Error()),
-			}
-		}
-
-		// lookup an exported variable from our plugin module
-		symPlug, err := plug.Lookup("Plugin")
-		if err != nil {
-			return utils.StatusError{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-			}
-		}
-
-		var p plugins.Plugin
-		p, ok := symPlug.(plugins.Plugin)
-		if !ok {
-			return utils.StatusError{
-				Code: http.StatusInternalServerError,
-				Err:  fmt.Errorf("plugin %s must implement the Plugin interface", plugin.Name),
-			}
-		}
-
-		// execute the OnRequest function of our current plugin
-		if err := doOnRequest(ctx, proxy, *c, r, sp, p); err != nil {
 			return err
 		}
-
-		sp.Finish()
-
+		if err := doOnRequest(ctx, plugin.Name, proxy, *c, r, trace, *p); err != nil {
+			return err
+		}
 	}
-
-	// all plugins, if any, have been executed
-	// without any error
 	return nil
-
 }
 
-func doOnRequest(ctx context.Context, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span, p plugins.Plugin) (e error) {
+func doOnRequest(ctx context.Context, name string, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span, p plugins.Plugin) (e error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.Errorf("OnRequest paniced: %v", r)
 			e = errors.New("OnRequest paniced")
 		}
 	}()
+
+	sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_REQUEST: %s", name), opentracing.ChildOf(span.Context()))
+	defer sp.Finish()
+
 	if err := p.OnRequest(ctx, proxy, ctlr, req, span); err != nil {
 		return err
 	}
