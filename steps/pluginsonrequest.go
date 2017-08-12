@@ -47,9 +47,6 @@ func (step PluginsOnRequestStep) GetName() string {
 
 // Do executes the logic of the PluginsOnRequestStep step
 func (step PluginsOnRequestStep) Do(ctx context.Context, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-
-	// retreive the current proxy which holds
-	// the plugins that should be executed, if any
 	untypedProxy, err := spec.ProxyStore.Get(r.URL.Path)
 	if err != nil || untypedProxy == nil {
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
@@ -60,60 +57,57 @@ func (step PluginsOnRequestStep) Do(ctx context.Context, c *controller.Controlle
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
 
-	// iterate over all of the plugins associated with this proxy
 	for _, plugin := range proxy.Spec.Plugins {
-
-		sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_REQUEST: %s", plugin.Name), opentracing.ChildOf(trace.Context()))
-
-		path, err := utils.GetAbsPath(viper.GetString("plugins-location"))
-		if err != nil {
-			return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("file path %s could not be found", viper.GetString("plugins-path"))}
-		}
-
-		// open the plugin module using the standard Go
-		// plugin package.
-		plug, err := pluginPkg.Open(fmt.Sprintf("%s/%s.so",
-			path,
-			plugin.GetFileName(),
-		))
-		if err != nil {
-			return utils.StatusError{
-				Code: http.StatusInternalServerError,
-				Err:  fmt.Errorf("could not open plugin %s: %s", plugin.Name, err.Error()),
-			}
-		}
-
-		// lookup an exported variable from our plugin module
-		symPlug, err := plug.Lookup("Plugin")
-		if err != nil {
-			return utils.StatusError{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-			}
-		}
-
-		var p plugins.Plugin
-		p, ok := symPlug.(plugins.Plugin)
-		if !ok {
-			return utils.StatusError{
-				Code: http.StatusInternalServerError,
-				Err:  fmt.Errorf("plugin %s must implement the Plugin interface", plugin.Name),
-			}
-		}
-
-		// execute the OnRequest function of our current plugin
-		if err := doOnRequest(ctx, proxy, *c, r, sp, p); err != nil {
+		if err := doExecutePlugin(ctx, proxy, *c, r, trace, plugin); err != nil {
 			return err
 		}
-
-		sp.Finish()
-
 	}
 
-	// all plugins, if any, have been executed
-	// without any error
 	return nil
+}
 
+func doExecutePlugin(ctx context.Context, proxy spec.APIProxy, c controller.Controller, r *http.Request, trace opentracing.Span, plugin spec.Plugin) error {
+	sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_REQUEST: %s", plugin.Name), opentracing.ChildOf(trace.Context()))
+	defer sp.Finish()
+
+	path, err := utils.GetAbsPath(viper.GetString("plugins-location"))
+	if err != nil {
+		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("file path %s could not be found", viper.GetString("plugins-path"))}
+	}
+
+	plug, err := pluginPkg.Open(fmt.Sprintf("%s/%s.so",
+		path,
+		plugin.GetFileName(),
+	))
+	if err != nil {
+		return utils.StatusError{
+			Code: http.StatusInternalServerError,
+			Err:  fmt.Errorf("could not open plugin %s: %s", plugin.Name, err.Error()),
+		}
+	}
+
+	symPlug, err := plug.Lookup("Plugin")
+	if err != nil {
+		return utils.StatusError{
+			Code: http.StatusInternalServerError,
+			Err:  err,
+		}
+	}
+
+	var p plugins.Plugin
+	p, ok := symPlug.(plugins.Plugin)
+	if !ok {
+		return utils.StatusError{
+			Code: http.StatusInternalServerError,
+			Err:  fmt.Errorf("plugin %s must implement the Plugin interface", plugin.Name),
+		}
+	}
+
+	if err := doOnRequest(ctx, proxy, c, r, sp, p); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func doOnRequest(ctx context.Context, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span, p plugins.Plugin) (e error) {
