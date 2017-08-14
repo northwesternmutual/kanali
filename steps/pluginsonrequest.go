@@ -61,14 +61,14 @@ func (step PluginsOnRequestStep) Do(ctx context.Context, m *metrics.Metrics, c *
 		if err != nil {
 			return err
 		}
-		if err := doOnRequest(ctx, plugin.Name, proxy, *c, r, trace, *p); err != nil {
+		if err := doOnRequest(ctx, m, plugin.Name, proxy, *c, r, trace, *p); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func doOnRequest(ctx context.Context, name string, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span, p plugins.Plugin) (e error) {
+func doOnRequest(ctx context.Context, m *metrics.Metrics, name string, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span, p plugins.Plugin) (e error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.Errorf("OnRequest paniced: %v", r)
@@ -79,7 +79,7 @@ func doOnRequest(ctx context.Context, name string, proxy spec.APIProxy, ctlr con
 	sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_REQUEST: %s", name), opentracing.ChildOf(span.Context()))
 	defer sp.Finish()
 
-	if err := p.OnRequest(ctx, proxy, ctlr, req, sp); err != nil {
+	if err := p.OnRequest(ctx, m, proxy, ctlr, req, sp); err != nil {
 		return err
 	}
 	return nil
