@@ -28,7 +28,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/controller"
-	"github.com/northwesternmutual/kanali/monitor"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 )
@@ -43,7 +43,7 @@ func (step WriteResponseStep) GetName() string {
 }
 
 // Do executes the logic of the WriteResponseStep step
-func (step WriteResponseStep) Do(ctx context.Context, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (step WriteResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
 	for k, v := range resp.Header {
 		for _, value := range v {
@@ -51,7 +51,7 @@ func (step WriteResponseStep) Do(ctx context.Context, c *controller.Controller, 
 		}
 	}
 
-	ctx = monitor.AddCtxMetric(ctx, "http_response_code", strconv.Itoa(resp.StatusCode))
+	m.Add(metrics.Metric{"http_response_code", strconv.Itoa(resp.StatusCode), true})
 
 	closer, str, err := utils.DupReaderAndString(resp.Body)
 	if err != nil {

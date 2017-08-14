@@ -27,7 +27,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/controller"
-	"github.com/northwesternmutual/kanali/monitor"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
@@ -44,7 +44,7 @@ func (step ValidateProxyStep) GetName() string {
 }
 
 // Do executes the logic of the ValidateProxyStep step
-func (step ValidateProxyStep) Do(ctx context.Context, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
 	untypedProxy, err := spec.ProxyStore.Get(r.URL.Path)
 	if err != nil || untypedProxy == nil {
@@ -55,8 +55,10 @@ func (step ValidateProxyStep) Do(ctx context.Context, c *controller.Controller, 
 		trace.SetTag("kanali.proxy_name", "unknown")
 		trace.SetTag("kanali.proxy_namespace", "unknown")
 
-		ctx = monitor.AddCtxMetric(ctx, "proxy_name", "unknown")
-		ctx = monitor.AddCtxMetric(ctx, "proxy_namespace", "unknown")
+		m.Add(
+			metrics.Metric{"proxy_name", "unknown", true},
+			metrics.Metric{"proxy_namespace", "unknown", true},
+		)
 
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
@@ -67,8 +69,10 @@ func (step ValidateProxyStep) Do(ctx context.Context, c *controller.Controller, 
 		trace.SetTag("kanali.proxy_name", "unknown")
 		trace.SetTag("kanali.proxy_namespace", "unknown")
 
-		ctx = monitor.AddCtxMetric(ctx, "proxy_name", "unknown")
-		ctx = monitor.AddCtxMetric(ctx, "proxy_namespace", "unknown")
+		m.Add(
+			metrics.Metric{"proxy_name", "unknown", true},
+			metrics.Metric{"proxy_namespace", "unknown", true},
+		)
 
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
@@ -76,8 +80,10 @@ func (step ValidateProxyStep) Do(ctx context.Context, c *controller.Controller, 
 	trace.SetTag("kanali.proxy_name", proxy.ObjectMeta.Name)
 	trace.SetTag("kanali.proxy_namespace", proxy.ObjectMeta.Namespace)
 
-	ctx = monitor.AddCtxMetric(ctx, "proxy_name", proxy.ObjectMeta.Name)
-	ctx = monitor.AddCtxMetric(ctx, "proxy_namespace", proxy.ObjectMeta.Namespace)
+	m.Add(
+		metrics.Metric{"proxy_name", proxy.ObjectMeta.Name, true},
+		metrics.Metric{"proxy_namespace", proxy.ObjectMeta.Namespace, true},
+	)
 
 	return nil
 

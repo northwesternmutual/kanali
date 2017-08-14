@@ -30,7 +30,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/controller"
-	"github.com/northwesternmutual/kanali/monitor"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
@@ -39,8 +39,8 @@ import (
 // Handler is used to provide additional parameters to an HTTP handler
 type Handler struct {
 	*controller.Controller
-	context.Context
-	H func(ctx context.Context, c *controller.Controller, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error
+	*metrics.Metrics
+	H func(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error
 }
 
 func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +72,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 	defer sp.Finish()
 
-	err = h.H(h.Context, h.Controller, w, r, sp)
+	err = h.H(context.Background(), h.Metrics, h.Controller, w, r, sp)
 
 	// handle request errors
 	if err != nil {
@@ -92,7 +92,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 				"uri":    r.RequestURI,
 			}).Error(e.Error())
 
-			h.Context = monitor.AddCtxMetric(h.Context, "http_response_code", strconv.Itoa(e.Status()))
+			h.Metrics.Add(metrics.Metric{"http_response_code", strconv.Itoa(e.Status()), true})
 
 			errStatus, err := json.Marshal(utils.JSONErr{Code: e.Status(), Msg: e.Error()})
 			if err != nil {
@@ -119,7 +119,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 				"uri":    r.RequestURI,
 			}).Error("unknown error")
 
-			h.Context = monitor.AddCtxMetric(h.Context, "http_response_code", strconv.Itoa(http.StatusInternalServerError))
+			h.Metrics.Add(metrics.Metric{"http_response_code", strconv.Itoa(http.StatusInternalServerError), true})
 
 			errStatus, err := json.Marshal(utils.JSONErr{Code: http.StatusInternalServerError, Msg: "unknown error"})
 			if err != nil {
