@@ -31,76 +31,53 @@ import (
 )
 
 func TestCompareTime(t *testing.T) {
-
 	assert := assert.New(t)
-
 	t1 := time.Now()
 	t2 := t1
-
 	d1, err := time.ParseDuration("-1h")
 	if err != nil {
 		assert.Fail("parse duration should work")
 	}
-
 	t3 := t1.Add(d1)
-
 	d2, err := time.ParseDuration("1h")
 	if err != nil {
 		assert.Fail("parse duration should work")
 	}
-
 	t4 := t1.Add(d2)
-
 	assert.Equal(0, compareTime(t1, t2), "times should be equal")
 	assert.Equal(-1, compareTime(t3, t2), "time t3 should be less than t2")
 	assert.Equal(1, compareTime(t4, t2), "time t4 should be greater than t2")
-
 }
 
 func TestTimeMinusOneUnit(t *testing.T) {
-
 	assert := assert.New(t)
-
 	t1 := time.Now()
-
 	d1, err := time.ParseDuration("-1h")
 	if err != nil {
 		assert.Fail("parse duration should work")
 	}
-
 	t2 := t1.Add(d1)
 	t3, err := timeMinusOneUnit(t1, "hour")
-
 	assert.Equal(t2, t3, "times should be equal")
-
 	d2, err := time.ParseDuration("-1m")
 	if err != nil {
 		assert.Fail("parse duration should work")
 	}
-
 	t4 := t1.Add(d2)
 	t5, err := timeMinusOneUnit(t1, "minute")
-
 	assert.Equal(t4, t5, "times should be equal")
-
 	d3, err := time.ParseDuration("-1s")
 	if err != nil {
 		assert.Fail("parse duration should work")
 	}
-
 	t6 := t1.Add(d3)
 	t7, err := timeMinusOneUnit(t1, "second")
-
 	assert.Equal(t6, t7, "times should be equal")
-
 	_, err = timeMinusOneUnit(t1, "wrong")
-
 	assert.NotNil(err, "should throw error")
-
 }
 
 func TestGetTrafficVolume(t *testing.T) {
-
 	assert := assert.New(t)
 	timeArray := []time.Time{}
 
@@ -111,14 +88,11 @@ func TestGetTrafficVolume(t *testing.T) {
 			timeArray = append(timeArray, tmpTime)
 		}
 	}
-
 	mockCurrTime, _ := time.Parse("Mon Jan 2 15:04:05 -0700 MST 2006", "Sun Jun 12 03:00:00 -0000 CST 2017")
 
 	// this implies that in the last hour, there were 59 requests
 	assert.Equal(59, getTrafficVolume(timeArray, "hour", mockCurrTime, 0, len(timeArray)), "volume not what expected")
-
 	timeArray = []time.Time{}
-
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 60; j++ {
 			for k := 0; k < 60; k++ {
@@ -130,9 +104,7 @@ func TestGetTrafficVolume(t *testing.T) {
 
 	// this implies that in the last minute, there were 59 requests
 	assert.Equal(59, getTrafficVolume(timeArray, "minute", mockCurrTime, 0, len(timeArray)), "volume not what expected")
-
 	timeArray = []time.Time{}
-
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 60; j++ {
 			for k := 0; k < 60; k++ {
@@ -162,127 +134,123 @@ func TestGetTrafficVolume(t *testing.T) {
 
 }
 
-func TestGetTrafficStore(t *testing.T) {
-
-	// setup
-	assert := assert.New(t)
-	TrafficStore := TrafficStore
-	message := "store is not empty"
-
-	// test
+func TestTrafficStoreSet(t *testing.T) {
+	assert.Nil(t, TrafficStore.Set("namespace-one,proxy-one,key-one"))
 	TrafficStore.Clear()
-	assert.Equal(0, len(TrafficStore), message)
-
 }
 
-func TestAddTraffic(t *testing.T) {
+func TestTrafficStoreDelete(t *testing.T) {
+	result, err := TrafficStore.Delete("namespace-one,proxy-one,key-one")
+	assert.Nil(t, result)
+	assert.Nil(t, err)
+}
 
-	// setup
-	assert := assert.New(t)
-	TrafficStore := TrafficStore
-	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
+func TestTrafficStoreGet(t *testing.T) {
+	result, err := TrafficStore.Get("namespace-one,proxy-one,key-one")
+	assert.Nil(t, result)
+	assert.Nil(t, err)
+}
 
-	// test
+func TestTrafficStoreIsEmpty(t *testing.T) {
 	TrafficStore.Clear()
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", currTime)
-	TrafficStore.AddTraffic("namespace-one", "proxy-two", "key-one", currTime)
-	TrafficStore.AddTraffic("namespace-one", "proxy-three", "key-one", currTime)
-	TrafficStore.AddTraffic("namespace-one", "proxy-three", "key-two", currTime)
-	assert.Equal(1, len(TrafficStore))
-	assert.Equal(3, len(TrafficStore["namespace-one"]))
-	assert.Equal(2, len(TrafficStore["namespace-one"]["proxy-three"]))
+	assert.True(t, TrafficStore.IsEmpty())
+	TrafficStore.Set("namespace-one,proxy-one,key-one")
+	assert.False(t, TrafficStore.IsEmpty())
+}
 
+func TestTrafficStoreDoSet(t *testing.T) {
+	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
+	TrafficStore.Clear()
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	TrafficStore.doSet("namespace-one,proxy-two,key-one", currTime)
+	TrafficStore.doSet("namespace-one,proxy-three,key-one", currTime)
+	TrafficStore.doSet("namespace-one,proxy-three,key-two", currTime)
+	assert.Equal(t, 1, len(TrafficStore.trafficMap))
+	assert.Equal(t, 3, len(TrafficStore.trafficMap["namespace-one"]))
+	assert.Equal(t, 2, len(TrafficStore.trafficMap["namespace-one"]["proxy-three"]))
+	assert.Equal(t, TrafficStore.doSet(5, currTime).Error(), "parameter not of type string")
+	assert.Equal(t, TrafficStore.doSet("bad-string", currTime).Error(), "kgram must have 3")
 }
 
 func TestTrafficStoreClear(t *testing.T) {
-
-	// setup
-	assert := assert.New(t)
-	TrafficStore := TrafficStore
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
-
-	// test
 	TrafficStore.Clear()
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", currTime)
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
 	TrafficStore.Clear()
-	assert.Equal(0, len(TrafficStore), "store should be empty")
-
+	assert.Equal(t, 0, len(TrafficStore.trafficMap))
 }
 
-func TestHasTraffic(t *testing.T) {
-
-	assert := assert.New(t)
-	TrafficStore := TrafficStore
+func TestContains(t *testing.T) {
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
-
-	// test
 	TrafficStore.Clear()
-	assert.False(TrafficStore.hasTraffic(getTestAPIKeyBinding(), "key-one"))
-	TrafficStore.AddTraffic("namespace-one", "proxy-two", "key-two", currTime)
-	assert.False(TrafficStore.hasTraffic(getTestAPIKeyBinding(), "key-one"))
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-two", currTime)
-	assert.False(TrafficStore.hasTraffic(getTestAPIKeyBinding(), "key-one"))
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", currTime)
-	assert.True(TrafficStore.hasTraffic(getTestAPIKeyBinding(), "key-one"))
-	TrafficStore.AddTraffic("namespace-one", "proxy-two", "key-one", currTime)
-	assert.True(TrafficStore.hasTraffic(getTestAPIKeyBinding(), "key-one"))
-
+	_, err := TrafficStore.Contains(getTestAPIKeyBinding())
+	assert.Equal(t, err.Error(), "expecting two parameters")
+	_, err = TrafficStore.Contains("foo", "bar")
+	assert.Equal(t, err.Error(), "expected the first parameter to be of type spec.APIKeyBinding")
+	_, err = TrafficStore.Contains(getTestAPIKeyBinding(), 5)
+	assert.Equal(t, err.Error(), "expected the second parameter to be of type string")
+	result, _ := TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
+	assert.False(t, result)
+	TrafficStore.doSet("namespace-one,proxy-two,key-two", currTime)
+	result, _ = TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
+	assert.False(t, result)
+	TrafficStore.doSet("namespace-one,proxy-one,key-two", currTime)
+	result, _ = TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
+	assert.False(t, result)
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	result, _ = TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
+	assert.True(t, result)
+	TrafficStore.doSet("namespace-one,proxy-two,key-one", currTime)
+	result, _ = TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
+	assert.True(t, result)
 }
 
 func TestIsQuotaViolated(t *testing.T) {
-
-	assert := assert.New(t)
-	TrafficStore := TrafficStore
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
 	TrafficStore.Clear()
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	assert.False(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
 
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", currTime)
-	assert.False(TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	assert.True(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
 
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", currTime)
-	assert.True(TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	assert.True(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
 
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", currTime)
-	assert.True(TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
-
-	assert.True(TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-frank"))
+	assert.True(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-frank"))
 	testBinding := getTestAPIKeyBinding()
 	testBinding.Spec.Keys[0].Quota = 0
 
-	assert.False(TrafficStore.IsQuotaViolated(testBinding, "key-one"))
+	assert.False(t, TrafficStore.IsQuotaViolated(testBinding, "key-one"))
 
 	TrafficStore.Clear()
-	assert.False(TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
-
+	assert.False(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
 }
 
 func TestIsRateLimitViolated(t *testing.T) {
-
-	assert := assert.New(t)
-	TrafficStore := TrafficStore
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:54.10 -0000 CST 2017")
 	TrafficStore.Clear()
 	testBinding := getTestAPIKeyBinding()
 	testBinding.Spec.Keys[0].Rate = &Rate{3, "minute"}
 
-	assert.False(TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
+	assert.False(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
 	tmpTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:04.14 -0000 CST 2017")
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", tmpTime)
-	assert.False(TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", tmpTime)
+	assert.False(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
 	tmpTime, _ = time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:06.01 -0000 CST 2017")
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", tmpTime)
-	assert.False(TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", tmpTime)
+	assert.False(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
 	tmpTime, _ = time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:08.99 -0000 CST 2017")
-	TrafficStore.AddTraffic("namespace-one", "proxy-one", "key-one", tmpTime)
-	assert.True(TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
+	TrafficStore.doSet("namespace-one,proxy-one,key-one", tmpTime)
+	assert.True(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
 	testBinding.Spec.Keys[0].Rate = &Rate{}
-	assert.False(TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
+	assert.False(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
-	assert.True(TrafficStore.IsRateLimitViolated(testBinding, "key-two", currTime))
+	assert.True(t, TrafficStore.IsRateLimitViolated(testBinding, "key-two", currTime))
 
 }
 

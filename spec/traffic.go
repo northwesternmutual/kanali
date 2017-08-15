@@ -59,6 +59,10 @@ func (s *TrafficFactory) Clear() {
 func (s *TrafficFactory) Set(obj interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+	return s.doSet(obj, time.Now())
+}
+
+func (s *TrafficFactory) doSet(obj interface{}, currTime time.Time) error {
 	kgram, ok := obj.(string)
 	if !ok {
 		return errors.New("parameter not of type string")
@@ -74,7 +78,7 @@ func (s *TrafficFactory) Set(obj interface{}) error {
 		s.trafficMap[nSpace][pName] = make(trafficByAPIKey)
 	}
 	if _, ok := s.trafficMap[nSpace][pName][keyName]; !ok {
-		s.trafficMap[nSpace][pName][keyName] = make([]time.Time, 1)
+		s.trafficMap[nSpace][pName][keyName] = make([]time.Time, 0)
 	}
 	s.trafficMap[nSpace][pName][keyName] = append(s.trafficMap[nSpace][pName][keyName], time.Now())
 	return nil
@@ -143,7 +147,7 @@ func (s *TrafficFactory) Contains(params ...interface{}) (bool, error) {
 	}
 	keyName, ok := params[1].(string)
 	if !ok {
-		return false, errors.New("expected the first parameter to be of type string")
+		return false, errors.New("expected the second parameter to be of type string")
 	}
 	if _, ok := s.trafficMap[binding.ObjectMeta.Namespace]; !ok {
 		return false, nil
