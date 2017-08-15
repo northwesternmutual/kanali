@@ -23,7 +23,7 @@ package metrics
 // Metric represent a single request metric
 type Metric struct {
 	Name  string
-	Value string
+	Value interface{}
 	Index bool
 }
 

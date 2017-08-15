@@ -27,7 +27,7 @@ import (
 	"net/http"
 
 	"github.com/northwesternmutual/kanali/controller"
-  "github.com/northwesternmutual/kanali/metrics"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/opentracing/opentracing-go"
 )

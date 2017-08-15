@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Changed
-- Extracted request metrics out of context
+- Extracted request metrics out of context resulting in an updated `Plugin` interface.
+- Enhanced Grafana dashboard.
+- Updated docs to reflect change to `Plugin` interface.
 
 ## [1.0.3] - 2017-08-11
 ### Changed

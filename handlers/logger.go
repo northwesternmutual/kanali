@@ -22,7 +22,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -52,7 +51,7 @@ func Logger(influxCtlr *monitor.InfluxController, inner Handler) http.Handler {
 		}).Info("request details")
 
 		inner.Metrics.Add(
-			metrics.Metric{"total_time", strconv.Itoa(int(t1.Sub(t0) / time.Millisecond)), false},
+			metrics.Metric{"total_time", int(t1.Sub(t0) / time.Millisecond), false},
 			metrics.Metric{"http_method", r.Method, true},
 			metrics.Metric{"http_uri", r.RequestURI, false},
 			metrics.Metric{"client_ip", strings.Split(r.RemoteAddr, ":")[0], false},

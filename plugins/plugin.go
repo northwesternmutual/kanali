@@ -27,8 +27,8 @@ import (
 	pluginPkg "plugin"
 
 	"github.com/northwesternmutual/kanali/config"
-  "github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/controller"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"

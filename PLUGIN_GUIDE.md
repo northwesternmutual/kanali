@@ -48,7 +48,8 @@ A series of method parameters are provided for optional usage inside of your plu
 
 name        | type             | methods              |mutability |description
 ------------|------------------|----------------------|-----------|------------
-`ctx`        | [`context.Context`](https://golang.org/pkg/context/) | `OnRequest` `OnResponse` | Mutable | Holds various requests metrics for analytics.
+`ctx`        | [`context.Context`](https://golang.org/pkg/context/) | `OnRequest` `OnResponse` | Mutable | Request context.
+`m`        | [`*metrics.Metrics`](https://github.com/northwesternmutual/kanali/blob/master/metrics/metrics.go) | `OnRequest` `OnResponse` | Mutable | Holds various requests metrics for analytics.
 `proxy`      | [`spec.ApiProxy`](https://github.com/northwesternmutual/kanali/blob/master/spec/apiproxy.go#L20) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the `ApiProxy` struct that matched the incoming request.
 `ctlr`       | [`controller.Controller`](https://github.com/northwesternmutual/kanali/blob/master/controller/controller.go#L17) | `OnRequest` `OnResponse` | Immutable | This parameter provides a client by which the Kubernetes api may be accessed.
 `req`        | [`http.Request`](https://golang.org/pkg/net/http/#Request) | `OnRequest` `OnResponse` | Mutable | This parameter gives you access to the original HTTP request struct.

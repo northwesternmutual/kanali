@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/metrics"
@@ -81,9 +82,15 @@ func (c *InfluxController) WriteRequestData(m *metrics.Metrics) (err error) {
 
 	for _, metric := range *m {
 		fields[metric.Name] = metric.Value
-		if metric.Index {
-			tags[metric.Name] = metric.Value
+		if !metric.Index {
+			continue
 		}
+		tagValue, ok := metric.Value.(string)
+		if !ok {
+			logrus.Errorf("the metric %s is configured to be indexed. InfluxDB requires that indexed fields have a string value", metric.Name)
+			continue
+		}
+		tags[metric.Name] = tagValue
 	}
 
 	pt, err := influx.NewPoint("request_details", tags, fields, time.Now())
