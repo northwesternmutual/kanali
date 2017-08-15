@@ -18,26 +18,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package steps
+package metrics
 
 import (
-	"context"
 	"testing"
 
-	"github.com/northwesternmutual/kanali/controller"
-	"github.com/northwesternmutual/kanali/spec"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPluginsOnRequestGetName(t *testing.T) {
-	assert := assert.New(t)
-	step := PluginsOnRequestStep{}
-	assert.Equal(step.GetName(), "Plugin OnRequest", "step name is incorrect")
-}
-
-func TestDoOnRequest(t *testing.T) {
-	assert.Equal(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakePanicPlugin{}).Error(), "OnRequest paniced")
-	assert.Equal(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakeErrorPlugin{}).Error(), "error")
-	assert.Nil(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakeSuccessPlugin{}))
+func TestAdd(t *testing.T) {
+	f := &Metrics{}
+	f.Add(Metric{"nameOne", "valueOne", false})
+	f.Add(Metric{"nameTwo", "valueTwo", true}, Metric{"nameThree", "valueThree", false})
+	assert.Equal(t, len(*f), 3)
+	assert.False(t, (*f)[0].Index)
+	assert.True(t, (*f)[1].Index)
+	assert.False(t, (*f)[2].Index)
+	assert.Equal(t, (*f)[0].Name, "nameOne")
+	assert.Equal(t, (*f)[1].Name, "nameTwo")
+	assert.Equal(t, (*f)[2].Name, "nameThree")
+	assert.Equal(t, (*f)[0].Value, "valueOne")
+	assert.Equal(t, (*f)[1].Value, "valueTwo")
+	assert.Equal(t, (*f)[2].Value, "valueThree")
 }

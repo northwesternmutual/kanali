@@ -21,13 +21,14 @@
 package monitor
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/spf13/viper"
 )
 
@@ -60,7 +61,7 @@ func NewInfluxdbController() (*InfluxController, error) {
 }
 
 // WriteRequestData writes contextual request metrics to Influxdb
-func (c *InfluxController) WriteRequestData(ctx context.Context) (err error) {
+func (c *InfluxController) WriteRequestData(m *metrics.Metrics) (err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -76,7 +77,23 @@ func (c *InfluxController) WriteRequestData(ctx context.Context) (err error) {
 		return err
 	}
 
-	pt, err := influx.NewPoint("request_details", getTags(ctx), getFields(ctx), time.Now())
+	tags := make(map[string]string)
+	fields := make(map[string]interface{})
+
+	for _, metric := range *m {
+		fields[metric.Name] = metric.Value
+		if !metric.Index {
+			continue
+		}
+		tagValue, ok := metric.Value.(string)
+		if !ok {
+			logrus.Errorf("the metric %s is configured to be indexed. InfluxDB requires that indexed fields have a string value", metric.Name)
+			continue
+		}
+		tags[metric.Name] = tagValue
+	}
+
+	pt, err := influx.NewPoint("request_details", tags, fields, time.Now())
 	if err != nil {
 		return err
 	}
@@ -84,33 +101,5 @@ func (c *InfluxController) WriteRequestData(ctx context.Context) (err error) {
 	bp.AddPoint(pt)
 
 	return c.Client.Write(bp)
-
-}
-
-func getTags(ctx context.Context) map[string]string {
-
-	keyName := GetCtxMetric(ctx, "api_key_name")
-	if keyName == "" {
-		keyName = "none"
-	}
-
-	return map[string]string{
-		"proxyName":      GetCtxMetric(ctx, "proxy_name"),
-		"responseCode":   GetCtxMetric(ctx, "http_response_code"),
-		"method":         GetCtxMetric(ctx, "http_method"),
-		"keyName":        keyName,
-		"proxyNamespace": GetCtxMetric(ctx, "proxy_namespace"),
-	}
-
-}
-
-func getFields(ctx context.Context) map[string]interface{} {
-
-	return map[string]interface{}{
-		"totalTime":    GetCtxMetric(ctx, "total_time"),
-		"clientIP":     GetCtxMetric(ctx, "client_ip"),
-		"responseCode": GetCtxMetric(ctx, "http_response_code"),
-		"uri":          GetCtxMetric(ctx, "http_uri"),
-	}
 
 }

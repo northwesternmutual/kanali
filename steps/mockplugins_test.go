@@ -27,36 +27,37 @@ import (
 	"net/http"
 
 	"github.com/northwesternmutual/kanali/controller"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/opentracing/opentracing-go"
 )
 
 type fakePanicPlugin struct{}
 
-func (plugin fakePanicPlugin) OnRequest(ctx context.Context, p spec.APIProxy, c controller.Controller, r *http.Request, span opentracing.Span) error {
+func (plugin fakePanicPlugin) OnRequest(ctx context.Context, m *metrics.Metrics, p spec.APIProxy, c controller.Controller, r *http.Request, span opentracing.Span) error {
 	panic("intentional")
 }
 
-func (plugin fakePanicPlugin) OnResponse(ctx context.Context, p spec.APIProxy, c controller.Controller, r *http.Request, resp *http.Response, span opentracing.Span) error {
+func (plugin fakePanicPlugin) OnResponse(ctx context.Context, m *metrics.Metrics, p spec.APIProxy, c controller.Controller, r *http.Request, resp *http.Response, span opentracing.Span) error {
 	panic("intentional")
 }
 
 type fakeSuccessPlugin struct{}
 
-func (plugin fakeSuccessPlugin) OnRequest(ctx context.Context, p spec.APIProxy, c controller.Controller, r *http.Request, span opentracing.Span) error {
+func (plugin fakeSuccessPlugin) OnRequest(ctx context.Context, m *metrics.Metrics, p spec.APIProxy, c controller.Controller, r *http.Request, span opentracing.Span) error {
 	return nil
 }
 
-func (plugin fakeSuccessPlugin) OnResponse(ctx context.Context, p spec.APIProxy, c controller.Controller, r *http.Request, resp *http.Response, span opentracing.Span) error {
+func (plugin fakeSuccessPlugin) OnResponse(ctx context.Context, m *metrics.Metrics, p spec.APIProxy, c controller.Controller, r *http.Request, resp *http.Response, span opentracing.Span) error {
 	return nil
 }
 
 type fakeErrorPlugin struct{}
 
-func (plugin fakeErrorPlugin) OnRequest(ctx context.Context, p spec.APIProxy, c controller.Controller, r *http.Request, span opentracing.Span) error {
+func (plugin fakeErrorPlugin) OnRequest(ctx context.Context, m *metrics.Metrics, p spec.APIProxy, c controller.Controller, r *http.Request, span opentracing.Span) error {
 	return errors.New("error")
 }
 
-func (plugin fakeErrorPlugin) OnResponse(ctx context.Context, p spec.APIProxy, c controller.Controller, r *http.Request, resp *http.Response, span opentracing.Span) error {
+func (plugin fakeErrorPlugin) OnResponse(ctx context.Context, m *metrics.Metrics, p spec.APIProxy, c controller.Controller, r *http.Request, resp *http.Response, span opentracing.Span) error {
 	return errors.New("error")
 }

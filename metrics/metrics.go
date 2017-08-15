@@ -18,26 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package steps
+package metrics
 
-import (
-	"context"
-	"testing"
-
-	"github.com/northwesternmutual/kanali/controller"
-	"github.com/northwesternmutual/kanali/spec"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/stretchr/testify/assert"
-)
-
-func TestPluginsOnRequestGetName(t *testing.T) {
-	assert := assert.New(t)
-	step := PluginsOnRequestStep{}
-	assert.Equal(step.GetName(), "Plugin OnRequest", "step name is incorrect")
+// Metric represent a single request metric
+type Metric struct {
+	Name  string
+	Value interface{}
+	Index bool
 }
 
-func TestDoOnRequest(t *testing.T) {
-	assert.Equal(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakePanicPlugin{}).Error(), "OnRequest paniced")
-	assert.Equal(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakeErrorPlugin{}).Error(), "error")
-	assert.Nil(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakeSuccessPlugin{}))
+// Metrics represents a list of Metrics associated with a request
+type Metrics []Metric
+
+// Add appends a metric to the list of metrics
+func (m *Metrics) Add(metrics ...Metric) {
+	for _, metric := range metrics {
+		*m = append(*m, metric)
+	}
 }

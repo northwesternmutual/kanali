@@ -27,6 +27,7 @@ import (
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/flow"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/steps"
 	"github.com/opentracing/opentracing-go"
@@ -34,7 +35,7 @@ import (
 )
 
 // IncomingRequest orchestrates the logic that occurs for every incoming request
-func IncomingRequest(ctx context.Context, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error {
+func IncomingRequest(ctx context.Context, m *metrics.Metrics, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error {
 
 	// this is a handler to our future proxy pass response
 	// maybe there's a better way to do this... seems misplaced
@@ -57,7 +58,7 @@ func IncomingRequest(ctx context.Context, ctlr *controller.Controller, w http.Re
 		steps.WriteResponseStep{},
 	)
 
-	err := f.Play(ctx, ctlr, w, r, futureResponse, trace)
+	err := f.Play(ctx, m, ctlr, w, r, futureResponse, trace)
 
 	return err
 

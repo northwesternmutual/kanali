@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- Extracted request metrics out of context resulting in an updated `Plugin` interface.
+- Enhanced Grafana dashboard.
+- Updated docs to reflect change to `Plugin` interface.
+
 ## [1.0.3] - 2017-08-11
 ### Changed
 - Fixed issue that used wrong map key for total time metric

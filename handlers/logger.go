@@ -21,13 +21,12 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/monitor"
 )
 
@@ -38,7 +37,7 @@ func Logger(influxCtlr *monitor.InfluxController, inner Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		inner.Context = context.WithValue(context.Background(), monitor.MetricsKey, monitor.New())
+		inner.Metrics = &metrics.Metrics{}
 
 		t0 := time.Now()
 		inner.serveHTTP(w, r)
@@ -51,12 +50,14 @@ func Logger(influxCtlr *monitor.InfluxController, inner Handler) http.Handler {
 			"totalTime": int(t1.Sub(t0) / time.Millisecond),
 		}).Info("request details")
 
-		inner.Context = monitor.AddCtxMetric(inner.Context, "total_time", strconv.Itoa(int(t1.Sub(t0)/time.Millisecond)))
-		inner.Context = monitor.AddCtxMetric(inner.Context, "http_method", r.Method)
-		inner.Context = monitor.AddCtxMetric(inner.Context, "http_uri", r.RequestURI)
-		inner.Context = monitor.AddCtxMetric(inner.Context, "client_ip", strings.Split(r.RemoteAddr, ":")[0])
+		inner.Metrics.Add(
+			metrics.Metric{"total_time", int(t1.Sub(t0) / time.Millisecond), false},
+			metrics.Metric{"http_method", r.Method, true},
+			metrics.Metric{"http_uri", r.RequestURI, false},
+			metrics.Metric{"client_ip", strings.Split(r.RemoteAddr, ":")[0], false},
+		)
 
-		if err := influxCtlr.WriteRequestData(inner.Context); err != nil {
+		if err := influxCtlr.WriteRequestData(inner.Metrics); err != nil {
 			logrus.Warnf(err.Error())
 		} else {
 			logrus.Infof("successfully wrote request details to influxdb")

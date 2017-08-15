@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/northwesternmutual/kanali/controller"
+	"github.com/northwesternmutual/kanali/metrics"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,7 +38,7 @@ func (s mockStep) GetName() string {
 	return "mock step"
 }
 
-func (s mockStep) Do(ctx context.Context, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (s mockStep) Do(ctx context.Context, m *metrics.Metrics, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 	return nil
 }
 
@@ -47,7 +48,7 @@ func (s mockErrorStep) GetName() string {
 	return "mock error step"
 }
 
-func (s mockErrorStep) Do(ctx context.Context, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (s mockErrorStep) Do(ctx context.Context, m *metrics.Metrics, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 	return errors.New("forced error")
 }
 
@@ -58,14 +59,14 @@ func TestAdd(t *testing.T) {
 	assert.Equal(t, len(*f), 3)
 	for _, step := range *f {
 		assert.Equal(t, step.GetName(), "mock step")
-		assert.Nil(t, step.Do(context.Background(), nil, nil, nil, nil, opentracing.StartSpan("test span")))
+		assert.Nil(t, step.Do(context.Background(), nil, nil, nil, nil, nil, opentracing.StartSpan("test span")))
 	}
 }
 
 func TestPlay(t *testing.T) {
 	f := &Flow{}
 	f.Add(mockStep{})
-	assert.Nil(t, f.Play(context.Background(), nil, nil, nil, nil, opentracing.StartSpan("test span")))
+	assert.Nil(t, f.Play(context.Background(), nil, nil, nil, nil, nil, opentracing.StartSpan("test span")))
 	f.Add(mockErrorStep{})
-	assert.Error(t, f.Play(context.Background(), nil, nil, nil, nil, opentracing.StartSpan("test span")))
+	assert.Error(t, f.Play(context.Background(), nil, nil, nil, nil, nil, opentracing.StartSpan("test span")))
 }

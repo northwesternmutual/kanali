@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
@@ -56,10 +57,10 @@ func TestValidateProxy(t *testing.T) {
 	urlThree, _ := url.Parse("https://www.foo.bar.com/")
 	urlFour, _ := url.Parse("https://www.foo.bar.com/foo/bar")
 
-	assert.Nil(step.Do(context.Background(), nil, nil, &http.Request{URL: urlOne}, nil, opentracing.StartSpan("test span")), "expected proxy to be found")
-	assert.Nil(step.Do(context.Background(), nil, nil, &http.Request{URL: urlTwo}, nil, opentracing.StartSpan("test span")), "expected proxy to be found")
-	assert.Equal(utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}, step.Do(context.Background(), nil, nil, &http.Request{URL: urlThree}, nil, opentracing.StartSpan("test span")), "expected proxy to not exist")
-	assert.Equal(utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}, step.Do(context.Background(), nil, nil, &http.Request{URL: urlFour}, nil, opentracing.StartSpan("test span")), "expected proxy to not exist")
+	assert.Nil(step.Do(context.Background(), &metrics.Metrics{}, nil, nil, &http.Request{URL: urlOne}, nil, opentracing.StartSpan("test span")), "expected proxy to be found")
+	assert.Nil(step.Do(context.Background(), &metrics.Metrics{}, nil, nil, &http.Request{URL: urlTwo}, nil, opentracing.StartSpan("test span")), "expected proxy to be found")
+	assert.Equal(utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}, step.Do(context.Background(), &metrics.Metrics{}, nil, nil, &http.Request{URL: urlThree}, nil, opentracing.StartSpan("test span")), "expected proxy to not exist")
+	assert.Equal(utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}, step.Do(context.Background(), &metrics.Metrics{}, nil, nil, &http.Request{URL: urlFour}, nil, opentracing.StartSpan("test span")), "expected proxy to not exist")
 }
 
 func getTestAPIProxyListForValidateProxy() *spec.APIProxyList {

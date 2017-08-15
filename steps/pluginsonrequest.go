@@ -28,6 +28,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/controller"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/plugins"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
@@ -44,7 +45,7 @@ func (step PluginsOnRequestStep) GetName() string {
 }
 
 // Do executes the logic of the PluginsOnRequestStep step
-func (step PluginsOnRequestStep) Do(ctx context.Context, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (step PluginsOnRequestStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 	untypedProxy, err := spec.ProxyStore.Get(r.URL.Path)
 	if err != nil || untypedProxy == nil {
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
@@ -60,14 +61,14 @@ func (step PluginsOnRequestStep) Do(ctx context.Context, c *controller.Controlle
 		if err != nil {
 			return err
 		}
-		if err := doOnRequest(ctx, plugin.Name, proxy, *c, r, trace, *p); err != nil {
+		if err := doOnRequest(ctx, m, plugin.Name, proxy, *c, r, trace, *p); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func doOnRequest(ctx context.Context, name string, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span, p plugins.Plugin) (e error) {
+func doOnRequest(ctx context.Context, m *metrics.Metrics, name string, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span, p plugins.Plugin) (e error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.Errorf("OnRequest paniced: %v", r)
@@ -78,7 +79,7 @@ func doOnRequest(ctx context.Context, name string, proxy spec.APIProxy, ctlr con
 	sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_REQUEST: %s", name), opentracing.ChildOf(span.Context()))
 	defer sp.Finish()
 
-	if err := p.OnRequest(ctx, proxy, ctlr, req, sp); err != nil {
+	if err := p.OnRequest(ctx, m, proxy, ctlr, req, sp); err != nil {
 		return err
 	}
 	return nil
