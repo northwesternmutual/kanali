@@ -21,10 +21,10 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -74,10 +74,9 @@ func StartUDPServer() (e error) {
 		if err != nil {
 			return err
 		}
-
-		trafficData := strings.Split(string(buf[0:n]), ",")
-		spec.TrafficStore.AddTraffic(trafficData[0], trafficData[1], trafficData[2], time.Now())
-
+		if err := spec.TrafficStore.Set(string(buf[0:n])); err != nil {
+			logrus.Errorf("could not add traffic point to store: %s", err.Error())
+		}
 	}
 
 }
@@ -88,7 +87,9 @@ func Emit(binding spec.APIKeyBinding, keyName string, currTime time.Time) {
 	for _, addr := range spec.KanaliEndpoints.Subsets[0].Addresses {
 
 		if os.Getenv("POD_IP") == addr.IP {
-			spec.TrafficStore.AddTraffic(binding.ObjectMeta.Namespace, binding.Spec.APIProxyName, keyName, currTime)
+			if err := spec.TrafficStore.Set(encodeKanaliGram(binding.ObjectMeta.Namespace, binding.Spec.APIProxyName, keyName, ",")); err != nil {
+				logrus.Errorf("could not add traffic point to store: %s", err.Error())
+			}
 			continue
 		}
 
@@ -120,4 +121,14 @@ func Emit(binding spec.APIKeyBinding, keyName string, currTime time.Time) {
 
 	}
 
+}
+
+func encodeKanaliGram(nSpace, pName, keyName, delimiter string) string {
+	var buffer bytes.Buffer
+	buffer.WriteString(nSpace)
+	buffer.WriteString(delimiter)
+	buffer.WriteString(pName)
+	buffer.WriteString(delimiter)
+	buffer.WriteString(keyName)
+	return buffer.String()
 }
