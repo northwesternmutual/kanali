@@ -64,9 +64,8 @@ func (step WriteResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 	w.WriteHeader(resp.StatusCode)
 
 	if _, err := io.Copy(w, closer); err != nil {
-		return err
+		return nil
 	}
 
 	return nil
-
 }
