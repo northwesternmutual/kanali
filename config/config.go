@@ -91,7 +91,7 @@ var (
 	FlagInfluxdbAddr = flag{
 		long:  "influxdb-addr",
 		short: "i",
-		value: "monitoring-influxdb.kube-system.svc.cluster.local",
+		value: "http://monitoring-influxdb.kube-system.svc.cluster.local",
 		usage: "Influxdb address. Addr should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port'",
 	}
 	// FlagJaegerSamplerServerURL specifies the endpoint to the Jaeger sampler server

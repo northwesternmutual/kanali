@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/metrics"
@@ -40,7 +39,6 @@ type InfluxController struct {
 // NewInfluxdbController creates a new controller allowing
 // connection to Influxdb
 func NewInfluxdbController() (*InfluxController, error) {
-
 	influxClient, err := influx.NewHTTPClient(influx.HTTPConfig{
 		Addr:     viper.GetString(config.FlagInfluxdbAddr.GetLong()),
 		Username: viper.GetString(config.FlagInfluxdbUsername.GetLong()),
@@ -49,57 +47,71 @@ func NewInfluxdbController() (*InfluxController, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// create db
-	q := influx.NewQuery(fmt.Sprintf("CREATE DATABASE %s", viper.GetString(config.FlagInfluxdbDatabase.GetLong())), "", "")
-	if response, err := influxClient.Query(q); err != nil || response.Error() != nil {
-		return nil, err
-	}
-
 	return &InfluxController{Client: influxClient}, nil
-
 }
 
 // WriteRequestData writes contextual request metrics to Influxdb
 func (c *InfluxController) WriteRequestData(m *metrics.Metrics) (err error) {
-
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.New("influxdb paniced while attempting to writing - this probably means that Kanali was unable to establish a connection on startup")
+			err = errors.New("influxdb paniced while attempting to write")
 		}
 	}()
-
 	bp, err := influx.NewBatchPoints(influx.BatchPointsConfig{
-		Database:  viper.GetString(config.FlagInfluxdbDatabase.GetLong()),
-		Precision: "s",
+		Database: viper.GetString(config.FlagInfluxdbDatabase.GetLong()),
 	})
 	if err != nil {
 		return err
 	}
+	tags, err := getTags(m)
+	if err != nil {
+		return err
+	}
+	pt, err := influx.NewPoint("request_details", tags, getFields(m), time.Now())
+	if err != nil {
+		return err
+	}
+	bp.AddPoint(pt)
+	if err := c.Client.Write(bp); err == nil {
+		return nil
+	}
+	if err := createDatabase(c.Client); err != nil {
+		return err
+	}
+	return c.Client.Write(bp)
+}
 
+func createDatabase(c influx.Client) error {
+	q := influx.NewQuery(fmt.Sprintf("CREATE DATABASE %s", viper.GetString(config.FlagInfluxdbDatabase.GetLong())), "", "")
+	response, err := c.Query(q)
+	if err != nil {
+		return err
+	}
+	if response != nil && response.Error() != nil {
+		return response.Error()
+	}
+	return nil
+}
+
+func getTags(m *metrics.Metrics) (map[string]string, error) {
 	tags := make(map[string]string)
-	fields := make(map[string]interface{})
-
 	for _, metric := range *m {
-		fields[metric.Name] = metric.Value
 		if !metric.Index {
 			continue
 		}
 		tagValue, ok := metric.Value.(string)
 		if !ok {
-			logrus.Errorf("the metric %s is configured to be indexed. InfluxDB requires that indexed fields have a string value", metric.Name)
-			continue
+			return nil, fmt.Errorf("InfluxDB requires that the indexed field %s be of type string", metric.Name)
 		}
 		tags[metric.Name] = tagValue
 	}
+	return tags, nil
+}
 
-	pt, err := influx.NewPoint("request_details", tags, fields, time.Now())
-	if err != nil {
-		return err
+func getFields(m *metrics.Metrics) map[string]interface{} {
+	fields := make(map[string]interface{})
+	for _, metric := range *m {
+		fields[metric.Name] = metric.Value
 	}
-
-	bp.AddPoint(pt)
-
-	return c.Client.Write(bp)
-
+	return fields
 }
