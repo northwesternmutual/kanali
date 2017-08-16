@@ -61,11 +61,11 @@ func (step WriteResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 	trace.SetTag("http.status_code", resp.StatusCode)
 	trace.SetTag("http.response_body", str)
 
-	w.WriteHeader(resp.StatusCode)
-
 	if _, err := io.Copy(w, closer); err != nil {
 		return err
 	}
+
+	w.WriteHeader(resp.StatusCode)
 
 	return nil
 
