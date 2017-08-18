@@ -199,8 +199,8 @@ func (up *upstream) setUpstreamURL(p *proxy) *upstream {
 			Err:  err,
 		}
 	} else {
-		u.Path = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.EscapedPath())
-		u.RawPath = u.EscapedPath()
+		u.Path = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.Path)
+		u.RawPath = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.EscapedPath())
 		u.ForceQuery = p.Source.URL.ForceQuery
 		u.RawQuery = p.Source.URL.RawQuery
 		u.Fragment = p.Source.URL.Fragment
@@ -234,7 +234,7 @@ func (up *upstream) performProxy(trace opentracing.Span) *upstream {
 		return up
 	}
 
-	logrus.Infof("performing proxypass to %s", up.Request.URL.String())
+	logrus.Infof("upstream url: %s", up.Request.URL.String())
 
 	err := trace.Tracer().Inject(trace.Context(),
 		opentracing.TextMap,
