@@ -55,7 +55,7 @@ func (step WriteResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 
 	closer, str, err := utils.DupReaderAndString(resp.Body)
 	if err != nil {
-		logrus.Errorf("error copying response body, response may not be as expected: %s", err.Error())
+		logrus.Errorf("error copying response body: %s", err.Error())
 	}
 
 	trace.SetTag("http.status_code", resp.StatusCode)

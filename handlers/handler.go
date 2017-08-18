@@ -53,7 +53,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 	closer, str, err := utils.DupReaderAndString(r.Body)
 	if err != nil {
-		logrus.Errorf("error copying request body, data may not be as expected: %s", err.Error())
+		logrus.Errorf("error copying request body: %s", err.Error())
 	}
 
 	// copy new reader into freshly drained reader

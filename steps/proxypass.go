@@ -85,7 +85,7 @@ func (step ProxyPassStep) Do(ctx context.Context, m *metrics.Metrics, c *control
 	up := create(p).setUpstreamURL(p).configureTLS(p).setUpstreamHeaders(p).performProxy(trace)
 
 	if up.Error != (utils.StatusError{}) {
-		logrus.Errorf("oops: %s", up.Error)
+		logrus.Errorf("error performing proxypass: %s", up.Error)
 		return up.Error
 	}
 
@@ -96,9 +96,6 @@ func (step ProxyPassStep) Do(ctx context.Context, m *metrics.Metrics, c *control
 }
 
 func create(p *proxy) *upstream {
-
-	logrus.Infof("creating new upstream object")
-
 	new := &http.Request{}
 	*new = *(p.Source)
 
@@ -114,7 +111,6 @@ func create(p *proxy) *upstream {
 	up.Request.RequestURI = ""
 
 	return up
-
 }
 
 func (up *upstream) configureTLS(p *proxy) *upstream {
@@ -122,8 +118,6 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 	if up.Error != (utils.StatusError{}) {
 		return up
 	}
-
-	logrus.Infof("configuring tls")
 
 	// get secret for this request - if any
 	untypedSecret, err := spec.SecretStore.Get(p.Target.GetSSLCertificates(p.Source.Host).SecretName, p.Target.ObjectMeta.Namespace)
@@ -141,7 +135,7 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 		// if upstream option is being used, if the scheme
 		// is https we need to add the root ca bundle
 		if strings.Compare(up.Request.URL.Scheme, "https") != 0 {
-			logrus.Infof("TLS not configured for this proxy")
+			logrus.Debug("TLS not configured for this proxy")
 			return up
 		}
 
@@ -168,11 +162,6 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 		if viper.GetBool("disable-tls-cn-validation") {
 			tlsConfig.InsecureSkipVerify = true
 			tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-				// roots := x509.NewCertPool()
-				// for _, rawCert := range rawCerts {
-				//     cert, _ := x509.ParseCertificate(rawCert)
-				//     roots.AddCert(cert)
-				// }
 				opts := x509.VerifyOptions{
 					Roots: caCertPool,
 				}
@@ -202,8 +191,6 @@ func (up *upstream) setUpstreamURL(p *proxy) *upstream {
 		return up
 	}
 
-	logrus.Infof("setting upstream url")
-
 	u, err := p.setK8sDiscoveredURI()
 
 	if err != nil {
@@ -231,8 +218,6 @@ func (up *upstream) setUpstreamHeaders(p *proxy) *upstream {
 		return up
 	}
 
-	logrus.Infof("setting upstream headers")
-
 	// upstream request doesn't need the apikey
 	// remove it.
 	up.Request.Header.Del("apikey")
@@ -256,7 +241,7 @@ func (up *upstream) performProxy(trace opentracing.Span) *upstream {
 		opentracing.HTTPHeadersCarrier(up.Request.Header))
 
 	if err != nil {
-		logrus.Errorf("couldn't inject headers. tracing may not be as expected")
+		logrus.Error("could not inject headers")
 	}
 
 	resp, err := up.Client.Do(up.Request)

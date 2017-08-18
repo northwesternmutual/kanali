@@ -35,7 +35,6 @@ import (
   "github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
-	"github.com/Sirupsen/logrus"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -85,12 +84,6 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 		)}
 	}
 
-	logrus.Infof("found configmap %s in namespace %s that correlates with apiproxy %s",
-		proxy.Spec.Mock.ConfigMapName,
-		proxy.ObjectMeta.Namespace,
-		proxy.ObjectMeta.Name,
-	)
-
 	// we have our config map. Now there's no guarentee that
 	// it is in the format that we require. Using a TPR for this
 	// is unnecessary and so we'll just be have to pay close attention
@@ -105,8 +98,6 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 
 	}
 
-	logrus.Infof("found valid response field in configmap %s: %v", proxy.Spec.Mock.ConfigMapName, mockResponse)
-
 	// we'll unmarshal the data into this var
 	var mok mock
 
@@ -117,8 +108,6 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 			proxy.ObjectMeta.Namespace,
 		)}
 	}
-
-	logrus.Infof("successfully unmarshaled configmap json data")
 
 	// alright so have an incoming path and we have a target path, if defined.
 	// figure out with the diff is and search for that in the map.
@@ -149,8 +138,6 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 
 	}
 
-	logrus.Infof("found a mock route for target path %s", targetPath)
-
 	// we have a mock response that could be anything
 	// we're going to require it be JSON however.
 	// we're going to attempt to marshal it into jsonpath
@@ -162,8 +149,6 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 			proxy.ObjectMeta.Namespace,
 		)}
 	}
-
-	logrus.Infof("successfully marshaled mock response into json")
 
 	// create new upstream header object
 	upstreamHeaders := http.Header{}
