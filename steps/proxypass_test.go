@@ -60,8 +60,8 @@ func TestSetUpstreamURL(t *testing.T) {
 
 	p := getTestInternalProxies()[3]
 	result := create(p).setUpstreamURL(p)
-	assert.Equal(t, result.Request.URL.Path, "/foo/bar/https%3A%2F%2Ffoo.bar.com")
-	assert.Equal(t, result.Request.URL.EscapedPath(), "/foo/bar/https%253A%252F%252Ffoo.bar.com")
+	assert.Equal(t, result.Request.URL.Path, "/foo/bar/https://foo.bar.com")
+	assert.Equal(t, result.Request.URL.EscapedPath(), "/foo/bar/https%3A%2F%2Ffoo.bar.com")
 }
 
 func TestSetK8sDiscoveredURI(t *testing.T) {
