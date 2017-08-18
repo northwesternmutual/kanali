@@ -61,7 +61,7 @@ func (step MockServiceStep) GetName() string {
 func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
 	// incoming proxy
-	untypedProxy, err := spec.ProxyStore.Get(r.URL.Path)
+	untypedProxy, err := spec.ProxyStore.Get(r.URL.EscapedPath())
 	if err != nil || untypedProxy == nil {
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
@@ -122,7 +122,7 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 
 	// alright so have an incoming path and we have a target path, if defined.
 	// figure out with the diff is and search for that in the map.
-	targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.Path)
+	targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.EscapedPath())
 
 	// this variable will hold the index in the array
 	// of the matching mock response, if any
@@ -143,7 +143,7 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 	if mockRespIndex < 0 {
 
 		return utils.StatusError{Code: http.StatusNotFound, Err: fmt.Errorf("no mock response defined for the incoming path %s and target path %s",
-			r.URL.Path,
+			r.URL.EscapedPath(),
 			targetPath,
 		)}
 
@@ -178,7 +178,7 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 		HeaderMap: upstreamHeaders,
 	}
 
-  m.Add(metrics.Metric{"http_response_code", strconv.Itoa(mok[mockRespIndex].Code), true})
+  m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(mok[mockRespIndex].Code), Index: true})
 
 	*resp = *responseRecorder.Result()
 

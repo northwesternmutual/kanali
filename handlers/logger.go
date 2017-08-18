@@ -46,15 +46,15 @@ func Logger(influxCtlr *monitor.InfluxController, inner Handler) http.Handler {
 		logrus.WithFields(logrus.Fields{
 			"client ip": strings.Split(r.RemoteAddr, ":")[0],
 			"method":    r.Method,
-			"uri":       r.RequestURI,
+			"uri":       r.URL.EscapedPath(),
 			"totalTime": int(t1.Sub(t0) / time.Millisecond),
 		}).Info("request details")
 
 		inner.Metrics.Add(
-			metrics.Metric{"total_time", int(t1.Sub(t0) / time.Millisecond), false},
-			metrics.Metric{"http_method", r.Method, true},
-			metrics.Metric{"http_uri", r.RequestURI, false},
-			metrics.Metric{"client_ip", strings.Split(r.RemoteAddr, ":")[0], false},
+			metrics.Metric{Name: "total_time", Value: int(t1.Sub(t0) / time.Millisecond), Index: false},
+			metrics.Metric{Name: "http_method", Value: r.Method, Index: true},
+			metrics.Metric{Name: "http_uri", Value: r.URL.EscapedPath(), Index: false},
+			metrics.Metric{Name: "client_ip", Value: strings.Split(r.RemoteAddr, ":")[0], Index: false},
 		)
 
 		if err := influxCtlr.WriteRequestData(inner.Metrics); err != nil {

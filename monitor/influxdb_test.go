@@ -68,8 +68,8 @@ func (c *mockClient) Close() error {
 func TestWriteRequestData(t *testing.T) {
 	ctlr := &InfluxController{Client: &mockClient{}}
 	m := &metrics.Metrics{
-		metrics.Metric{"metric-one", "value-one", true},
-		metrics.Metric{"metric-two", "value-two", false},
+		metrics.Metric{Name: "metric-one", Value: "value-one", Index: true},
+		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
 	}
 	assert.Equal(t, ctlr.WriteRequestData(m).Error(), "no database name")
 	viper.SetDefault(config.FlagInfluxdbDatabase.GetLong(), "mydb")
@@ -98,8 +98,8 @@ func TestCreateDatabase(t *testing.T) {
 
 func TestGetFields(t *testing.T) {
 	assert.Equal(t, getFields(&metrics.Metrics{
-		metrics.Metric{"metric-one", "value-one", true},
-		metrics.Metric{"metric-two", "value-two", false},
+		metrics.Metric{Name: "metric-one", Value: "value-one", Index: true},
+		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
 	}), map[string]interface{}{
 		"metric-one": "value-one",
 		"metric-two": "value-two",
@@ -108,16 +108,16 @@ func TestGetFields(t *testing.T) {
 
 func TestGetTags(t *testing.T) {
 	tags, err := getTags(&metrics.Metrics{
-		metrics.Metric{"metric-one", "value-one", true},
-		metrics.Metric{"metric-two", "value-two", false},
+		metrics.Metric{Name: "metric-one", Value: "value-one", Index: true},
+		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, tags, map[string]string{
 		"metric-one": "value-one",
 	})
 	tags, err = getTags(&metrics.Metrics{
-		metrics.Metric{"metric-one", 5, true},
-		metrics.Metric{"metric-two", "value-two", false},
+		metrics.Metric{Name: "metric-one", Value: 5, Index: true},
+		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
 	})
 	assert.Nil(t, tags)
 	assert.Equal(t, err.Error(), "InfluxDB requires that the indexed field metric-one be of type string")

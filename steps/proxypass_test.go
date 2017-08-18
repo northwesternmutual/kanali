@@ -50,6 +50,20 @@ func TestCreate(t *testing.T) {
 
 }
 
+func TestSetUpstreamURL(t *testing.T) {
+	spec.ServiceStore.Set(spec.Service{
+		Name:      "my-service",
+		Namespace: "foo",
+		ClusterIP: "1.2.3.4",
+		Port:      8080,
+	})
+
+	p := getTestInternalProxies()[3]
+	result := create(p).setUpstreamURL(p)
+	assert.Equal(t, result.Request.URL.Path, "/foo/bar/https%3A%2F%2Ffoo.bar.com")
+	assert.Equal(t, result.Request.URL.EscapedPath(), "/foo/bar/https%253A%252F%252Ffoo.bar.com")
+}
+
 func TestSetK8sDiscoveredURI(t *testing.T) {
 	assert := assert.New(t)
 
@@ -97,6 +111,7 @@ func getTestInternalProxies() []*proxy {
 
 	one, _ := url.Parse("http://www.foo.bar.com/api/v1/accounts")
 	two, _ := url.Parse("http://www.foo.bar.com/api/v1/accounts/one/two")
+	three, _ := url.Parse("http://www.foo.bar.com/api/v1/accounts/https%3A%2F%2Ffoo.bar.com")
 
 	return []*proxy{
 		{
@@ -199,6 +214,27 @@ func getTestInternalProxies() []*proxy {
 						{
 							Name: "apikey",
 						},
+					},
+				},
+			},
+		},
+		{
+			Source: &http.Request{
+				URL: three,
+			},
+			Target: spec.APIProxy{
+				TypeMeta: unversioned.TypeMeta{},
+				ObjectMeta: api.ObjectMeta{
+					Name:      "exampleAPIProxyOne",
+					Namespace: "foo",
+				},
+				Spec: spec.APIProxySpec{
+					Path:   "/api/v1/accounts",
+					Target: "/foo/bar",
+					Service: spec.Service{
+						Name:      "my-service",
+						Namespace: "foo",
+						Port:      8080,
 					},
 				},
 			},
