@@ -82,7 +82,7 @@ func (step ProxyPassStep) Do(ctx context.Context, m *metrics.Metrics, c *control
 		Target: typedProxy, // shouldn't be nil (unless the proxy is removed within the microseconds it takes to get to this code)
 	}
 
-	up := create(p).setUpstreamURL(p, c).configureTLS(p).setUpstreamHeaders(p).performProxy(trace)
+	up := create(p).setUpstreamURL(p).configureTLS(p).setUpstreamHeaders(p).performProxy(trace)
 
 	if up.Error != (utils.StatusError{}) {
 		logrus.Errorf("oops: %s", up.Error)
@@ -196,7 +196,7 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 
 }
 
-func (up *upstream) setUpstreamURL(p *proxy, c *controller.Controller) *upstream {
+func (up *upstream) setUpstreamURL(p *proxy) *upstream {
 
 	if up.Error != (utils.StatusError{}) {
 		return up
@@ -212,8 +212,8 @@ func (up *upstream) setUpstreamURL(p *proxy, c *controller.Controller) *upstream
 			Err:  err,
 		}
 	} else {
-		// set path
-		u.Path = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.Path)
+		u.Path = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.EscapedPath())
+		u.RawPath = u.EscapedPath()
 		u.ForceQuery = p.Source.URL.ForceQuery
 		u.RawQuery = p.Source.URL.RawQuery
 		u.Fragment = p.Source.URL.Fragment

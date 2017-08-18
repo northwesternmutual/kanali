@@ -46,7 +46,7 @@ func (step PluginsOnRequestStep) GetName() string {
 
 // Do executes the logic of the PluginsOnRequestStep step
 func (step PluginsOnRequestStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-	untypedProxy, err := spec.ProxyStore.Get(r.URL.Path)
+	untypedProxy, err := spec.ProxyStore.Get(r.URL.EscapedPath())
 	if err != nil || untypedProxy == nil {
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}

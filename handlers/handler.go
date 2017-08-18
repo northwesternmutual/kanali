@@ -48,7 +48,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	// start a global trace
 	sp := opentracing.StartSpan(fmt.Sprintf("%s %s",
 		r.Method,
-		r.URL.Path,
+		r.URL.EscapedPath(),
 	))
 
 	closer, str, err := utils.DupReaderAndString(r.Body)
@@ -60,7 +60,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	r.Body = closer
 
 	sp.SetTag("http.request_body", str)
-	sp.SetTag("http.url", r.RequestURI)
+	sp.SetTag("http.url", r.URL.EscapedPath())
 	sp.SetTag("http.method", r.Method)
 
 	jsonHeaders, err := json.Marshal(utils.FlattenHTTPHeaders(utils.OmitHeaderValues(r.Header, viper.GetString(config.FlagHeaderMaskValue.GetLong()), viper.GetString(config.FlagApikeyHeaderKey.GetLong()))))
@@ -89,10 +89,10 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 			// log error
 			logrus.WithFields(logrus.Fields{
 				"method": r.Method,
-				"uri":    r.RequestURI,
+				"uri":    r.URL.EscapedPath(),
 			}).Error(e.Error())
 
-			h.Metrics.Add(metrics.Metric{"http_response_code", strconv.Itoa(e.Status()), true})
+			h.Metrics.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(e.Status()), Index: true})
 
 			errStatus, err := json.Marshal(utils.JSONErr{Code: e.Status(), Msg: e.Error()})
 			if err != nil {
@@ -116,10 +116,10 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 			// log error
 			logrus.WithFields(logrus.Fields{
 				"method": r.Method,
-				"uri":    r.RequestURI,
+				"uri":    r.URL.EscapedPath(),
 			}).Error("unknown error")
 
-			h.Metrics.Add(metrics.Metric{"http_response_code", strconv.Itoa(http.StatusInternalServerError), true})
+			h.Metrics.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(http.StatusInternalServerError), Index: true})
 
 			errStatus, err := json.Marshal(utils.JSONErr{Code: http.StatusInternalServerError, Msg: "unknown error"})
 			if err != nil {

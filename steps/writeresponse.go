@@ -51,7 +51,7 @@ func (step WriteResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 		}
 	}
 
-	m.Add(metrics.Metric{"http_response_code", strconv.Itoa(resp.StatusCode), true})
+	m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(resp.StatusCode), Index: true})
 
 	closer, str, err := utils.DupReaderAndString(resp.Body)
 	if err != nil {
@@ -64,7 +64,7 @@ func (step WriteResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 	w.WriteHeader(resp.StatusCode)
 
 	if _, err := io.Copy(w, closer); err != nil {
-		return nil
+		return err
 	}
 
 	return nil

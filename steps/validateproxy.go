@@ -46,7 +46,7 @@ func (step ValidateProxyStep) GetName() string {
 // Do executes the logic of the ValidateProxyStep step
 func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
-	untypedProxy, err := spec.ProxyStore.Get(r.URL.Path)
+	untypedProxy, err := spec.ProxyStore.Get(r.URL.EscapedPath())
 	if err != nil || untypedProxy == nil {
 		if err != nil {
 			logrus.Error(err.Error())
@@ -56,8 +56,8 @@ func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 		trace.SetTag("kanali.proxy_namespace", "unknown")
 
 		m.Add(
-			metrics.Metric{"proxy_name", "unknown", true},
-			metrics.Metric{"proxy_namespace", "unknown", true},
+			metrics.Metric{Name: "proxy_name", Value: "unknown", Index: true},
+			metrics.Metric{Name: "proxy_namespace", Value: "unknown", Index: true},
 		)
 
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
@@ -70,8 +70,8 @@ func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 		trace.SetTag("kanali.proxy_namespace", "unknown")
 
 		m.Add(
-			metrics.Metric{"proxy_name", "unknown", true},
-			metrics.Metric{"proxy_namespace", "unknown", true},
+			metrics.Metric{Name: "proxy_name", Value: "unknown", Index: true},
+			metrics.Metric{Name: "proxy_namespace", Value: "unknown", Index: true},
 		)
 
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
@@ -81,8 +81,8 @@ func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 	trace.SetTag("kanali.proxy_namespace", proxy.ObjectMeta.Namespace)
 
 	m.Add(
-		metrics.Metric{"proxy_name", proxy.ObjectMeta.Name, true},
-		metrics.Metric{"proxy_namespace", proxy.ObjectMeta.Namespace, true},
+		metrics.Metric{Name: "proxy_name", Value: proxy.ObjectMeta.Name, Index: true},
+		metrics.Metric{Name: "proxy_namespace", Value: proxy.ObjectMeta.Namespace, Index: true},
 	)
 
 	return nil

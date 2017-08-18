@@ -4,10 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.1.2] - 2017-08-16
+## [Unreleased]
 ### Changed
 - If InfluxDB database doesn't exist when writing, it will be created.
-- Fixed bug causing `http: multiple response.WriteHeader calls` error if `io.Copy` failed when writing the response.
+- Raw URL path will be used as the primary path when proxying to upstream services.
 
 ## [1.1.1] - 2017-08-15
 ### Changed
