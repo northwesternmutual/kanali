@@ -30,22 +30,21 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // APIKeyList represents a list of APIKeys
 type APIKeyList struct {
-	unversioned.TypeMeta `json:",inline"`
-	unversioned.ListMeta `json:"metadata,omitempty"`
-	Keys                 []APIKey `json:"items"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Keys            []APIKey `json:"items"`
 }
 
 // APIKey represents the TPR for an APIKey
 type APIKey struct {
-	unversioned.TypeMeta `json:",inline"`
-	api.ObjectMeta       `json:"metadata,omitempty"`
-	Spec                 APIKeySpec `json:"spec"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              APIKeySpec `json:"spec"`
 }
 
 // APIKeySpec represents the data fields for the APIKey TPR

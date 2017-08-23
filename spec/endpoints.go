@@ -20,11 +20,11 @@
 
 package spec
 
-import "k8s.io/kubernetes/pkg/api"
+import "k8s.io/client-go/pkg/api/v1"
 
 // KanaliEndpoints represents the endpoints of all running instances of Kanali
-var KanaliEndpoints *api.Endpoints
+var KanaliEndpoints *v1.Endpoints
 
 func init() {
-	KanaliEndpoints = &api.Endpoints{}
+	KanaliEndpoints = &v1.Endpoints{}
 }

@@ -29,7 +29,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 // Service in an internal representation of a Kubernetes Service
@@ -87,7 +87,7 @@ func (s *ServiceFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add services to the services store.... duh")
 	}
-	logrus.Infof("Adding new Service named %s", service.Name)
+	logrus.Debugf("adding service object %s", service.Name)
 	if s.serviceMap[service.Namespace] == nil {
 		s.serviceMap[service.Namespace] = []Service{service}
 		return nil
@@ -166,6 +166,7 @@ func (s *ServiceFactory) Delete(obj interface{}) (interface{}, error) {
 	if i < 0 {
 		return nil, nil
 	}
+	logrus.Debugf("deleting service object %s", service.Name)
 	if len(s.serviceMap[service.Namespace]) == 1 {
 		delete(s.serviceMap, service.Namespace)
 	} else {
@@ -175,8 +176,8 @@ func (s *ServiceFactory) Delete(obj interface{}) (interface{}, error) {
 }
 
 // CreateService transforms a Kubernetes service
-// of type api.Service into type Service
-func CreateService(s api.Service) Service {
+// of type v1.Service into type Service
+func CreateService(s v1.Service) Service {
 	l := Labels{}
 	for k, v := range s.ObjectMeta.Labels {
 		l = append(l, Label{Name: k, Value: v})

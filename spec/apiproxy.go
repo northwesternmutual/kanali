@@ -27,23 +27,56 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // APIProxyList represents a list of APIProxies
 type APIProxyList struct {
-	unversioned.TypeMeta `json:",inline"`
-	unversioned.ListMeta `json:"metadata,omitempty"`
-	Proxies              []APIProxy `json:"items"`
+	metav1.TypeMeta `json:",inline"`
+	Metadata        metav1.ListMeta `json:"metadata,omitempty"`
+	Proxies         []APIProxy      `json:"items"`
+}
+
+type ApiProxyList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Proxies         []APIProxy `json:"items"`
 }
 
 // APIProxy represents the TPR for an APIProxy
 type APIProxy struct {
-	unversioned.TypeMeta `json:",inline"`
-	api.ObjectMeta       `json:"metadata,omitempty"`
-	Spec                 APIProxySpec `json:"spec"`
+	metav1.TypeMeta `json:",inline"`
+	Metadata        metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec            APIProxySpec      `json:"spec"`
 }
+
+type ApiProxy struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              APIProxySpec `json:"spec"`
+}
+
+// // Required to satisfy Object interface
+// func (e *ApiProxy) GetObjectKind() schema.ObjectKind {
+// 	return &e.TypeMeta
+// }
+//
+// // Required to satisfy ObjectMetaAccessor interface
+// func (e *ApiProxy) GetObjectMeta() metav1.Object {
+// 	return &e.Metadata
+// }
+//
+// // Required to satisfy Object interface
+// func (el *ApiProxyList) GetObjectKind() schema.ObjectKind {
+// 	return &el.TypeMeta
+// }
+//
+// // Required to satisfy ListMetaAccessor interface
+// func (el *ApiProxyList) GetListMeta() metav1.List {
+// 	return &el.Metadata
+// }
 
 // APIProxySpec represents the data fields for the APIProxy TPR
 type APIProxySpec struct {
@@ -114,8 +147,8 @@ func (s *ProxyFactory) Set(obj interface{}) error {
 		return errors.New("grrr - you're only allowed add api proxies to the api proxy store.... duh")
 	}
 	// set service namespace
-	p.Spec.Service.Namespace = p.ObjectMeta.Namespace
-	logrus.Infof("Adding new APIProxy named %s", p.ObjectMeta.Name)
+	p.Spec.Service.Namespace = p.Metadata.Namespace
+	logrus.Infof("Adding new APIProxy named %s", p.Metadata.Name)
 	if p.Spec.Path[0] == '/' {
 		s.proxyTree.doSet(strings.Split(p.Spec.Path[1:], "/"), &p)
 	} else {

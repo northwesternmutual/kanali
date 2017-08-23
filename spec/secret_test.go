@@ -24,8 +24,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+  "k8s.io/client-go/pkg/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestSecretGetSecretStore(t *testing.T) {
@@ -35,7 +35,7 @@ func TestSecretGetSecretStore(t *testing.T) {
 	store.Clear()
 	assert.Equal(0, len(store.secretMap), "store should be empty")
 
-	v := SecretFactory{}
+	v := SecretFactory{}``
 	var i interface{} = &v
 	_, ok := i.(Store)
 	assert.True(ok, "SecretFactory does not implement the Store interface")
@@ -163,25 +163,25 @@ func TestX509KeyPair(t *testing.T) {
 	store.Set(secretList[2])
 
 	result, _ := store.Get("secret-one", "foo")
-	typed := result.(api.Secret)
+	typed := result.(v1.Secret)
 	_, err := X509KeyPair(typed)
 	assert.Nil(err, "should be able to get key pair")
 	result, _ = store.Get("secret-two", "foo")
-	typed = result.(api.Secret)
+	typed = result.(v1.Secret)
 	_, err = X509KeyPair(typed)
 	assert.Equal(err.Error(), "tls: failed to find any PEM data in certificate input", "wrong error")
 	result, _ = store.Get("secret-three", "foo")
-	typed = result.(api.Secret)
+	typed = result.(v1.Secret)
 	_, err = X509KeyPair(typed)
 	assert.Equal(err.Error(), "tls: failed to find any PEM data in certificate input", "wrong error")
 }
 
-func getTestSecretList() []api.Secret {
+func getTestSecretList() []v1.Secret {
 
-	return []api.Secret{
+	return []v1.Secret{
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret-one",
 				Namespace: "foo",
 			},
@@ -236,8 +236,8 @@ GbTccols89QEcA4=
 			},
 		},
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret-two",
 				Namespace: "foo",
 			},
@@ -248,8 +248,8 @@ GbTccols89QEcA4=
 			},
 		},
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret-three",
 				Namespace: "foo",
 			},
@@ -260,8 +260,8 @@ GbTccols89QEcA4=
 			},
 		},
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret-four",
 				Namespace: "bar",
 			},

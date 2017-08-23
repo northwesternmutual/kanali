@@ -31,7 +31,7 @@ import (
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/spf13/viper"
-	"k8s.io/kubernetes/pkg/api"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
@@ -93,7 +93,7 @@ func checkLiveness(c *controller.Controller) bool {
 	}
 
 	// proxy store is empty so we'll need to be able to connect to the k8s apiserver
-	if _, err := c.ClientSet.Core().Endpoints(api.NamespaceAll).List(api.ListOptions{}); err != nil {
+	if _, err := c.ClientSet.Core().Endpoints(metav1.NamespaceAll).List(metav1.ListOptions{}); err != nil {
 		logrus.Errorf("liveness probe error: %s", err.Error())
 		return false
 	}
@@ -108,7 +108,7 @@ func checkReadiness(c *controller.Controller) bool {
 
 	// there's no reason we single out the endpoints api.
 	// it happens to be one that Kanali already has permission to access.
-	if _, err := c.ClientSet.Core().Endpoints(api.NamespaceAll).List(api.ListOptions{}); err != nil {
+	if _, err := c.ClientSet.Core().Endpoints(metav1.NamespaceAll).List(metav1.ListOptions{}); err != nil {
 		logrus.Errorf("readiness probe error: %s", err.Error())
 		return false
 	}

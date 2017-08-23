@@ -16,7 +16,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// THE SOFTWARE.``
 
 package spec
 
@@ -26,8 +26,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestCompareTime(t *testing.T) {
@@ -256,8 +255,8 @@ func TestIsRateLimitViolated(t *testing.T) {
 
 func getTestAPIKeyBinding() APIKeyBinding {
 	return APIKeyBinding{
-		TypeMeta: unversioned.TypeMeta{},
-		ObjectMeta: api.ObjectMeta{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "abc123",
 			Namespace: "namespace-one",
 		},

@@ -61,7 +61,7 @@ func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
 		scheme = "http"
 		listener, lerr = net.Listen("tcp4", address)
 		if lerr != nil {
-			logrus.Fatal("error creating http net listener")
+			logrus.Fatalf("error creating http listener: %s", lerr.Error())
 			os.Exit(1)
 		}
 	} else {

@@ -26,8 +26,8 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 func TestGetServiceStore(t *testing.T) {
@@ -60,9 +60,9 @@ func TestCreateService(t *testing.T) {
 	assert := assert.New(t)
 	message := "service received is not expected"
 
-	svc := CreateService(api.Service{
-		TypeMeta: unversioned.TypeMeta{},
-		ObjectMeta: api.ObjectMeta{
+	svc := CreateService(v1.Service{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "bar",
 			Labels: map[string]string{
@@ -70,7 +70,7 @@ func TestCreateService(t *testing.T) {
 				"three": "four",
 			},
 		},
-		Spec: api.ServiceSpec{},
+		Spec: v1.ServiceSpec{},
 	})
 
 	assert.Equal("foo", svc.Name, message)

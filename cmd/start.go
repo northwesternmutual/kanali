@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"strings"
 
@@ -56,7 +57,7 @@ func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
 	if err := viper.ReadInConfig(); err != nil {
-		logrus.Warn("couldn't find any config file, using env variables and/or cli flags")
+		logrus.Warn("config file not found, using env variables and/or cli flags")
 	}
 
 	RootCmd.AddCommand(startCmd)
@@ -70,8 +71,8 @@ var startCmd = &cobra.Command{
 
 		// set logging level
 		if level, err := logrus.ParseLevel(viper.GetString("log-level")); err != nil {
+			logrus.Info("could not parse logging level - defaulting to INFO")
 			logrus.SetLevel(logrus.InfoLevel)
-			logrus.Info("could not parse logging level")
 		} else {
 			logrus.SetLevel(level)
 		}
@@ -79,25 +80,25 @@ var startCmd = &cobra.Command{
 		// create new k8s controller
 		ctlr, err := controller.New()
 		if err != nil {
-			logrus.Panic(err.Error())
+			logrus.Fatalf("could not create controller %s", err.Error())
+			os.Exit(1)
+		}
+
+		if err := ctlr.CreateTPRs(); err != nil {
+			logrus.Fatalf("could not create TPRs: %s", err.Error())
 			os.Exit(1)
 		}
 
 		// load decryption key into memory
 		if err := utils.LoadDecryptionKey(viper.GetString("decryption-key-file")); err != nil {
-			logrus.Panic(err.Error())
+			logrus.Fatalf("could not load decryption key: %s", err.Error())
 			os.Exit(1)
 		}
 
-		// create tprs
-		if err := ctlr.CreateTPRs(); err != nil {
-			logrus.Panic(err.Error())
-			os.Exit(1)
-		}
-
-		// start walking k8s resources
+		ctx, cancelFunc := context.WithCancel(context.Background())
+		defer cancelFunc()
 		go func() {
-			if err := ctlr.Watch(); err != nil {
+			if err := ctlr.Watch(ctx); err != nil {
 				logrus.Fatal(err.Error())
 				os.Exit(1)
 			}

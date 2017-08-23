@@ -26,8 +26,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestGetKeyStore(t *testing.T) {
@@ -213,8 +212,8 @@ I0teIby/h2MN7yPNjFgIq64JneHpKwEH04+qy/dWQafxrpBlf9tfwg==
 	APIKeyDecryptionKey = privateKey
 
 	apiKey := &APIKey{
-		TypeMeta: unversioned.TypeMeta{},
-		ObjectMeta: api.ObjectMeta{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "my-api-key",
 			Namespace: "default",
 		},
@@ -280,12 +279,12 @@ vV+J+U6XO9amQH/QNUNg/JJObJhQjeGvunZk3FkMXzAh+lUC264d28UYiMTwP/Md
 func getTestAPIKeyList() *APIKeyList {
 
 	return &APIKeyList{
-		TypeMeta: unversioned.TypeMeta{},
-		ListMeta: unversioned.ListMeta{},
+		TypeMeta: metav1.TypeMeta{},
+		ListMeta: metav1.ListMeta{},
 		Keys: []APIKey{
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
 				},
@@ -294,8 +293,8 @@ func getTestAPIKeyList() *APIKeyList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "def456",
 					Namespace: "foo",
 				},
@@ -304,8 +303,8 @@ func getTestAPIKeyList() *APIKeyList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ghi789",
 					Namespace: "foo",
 				},

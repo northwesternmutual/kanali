@@ -77,7 +77,7 @@ var (
 	FlagHeaderMaskValue = flag{
 		long:  "header-mask-value",
 		short: "f",
-		value: "ommitted",
+		value: "omitted",
 		usage: "Sets the value to be used when omitting header values.",
 	}
 	// FlagPluginsLocation sets the location of custom plugins shared object (.so) files
@@ -87,6 +87,9 @@ var (
 		value: "/",
 		usage: "Location of custom plugins shared object (.so) files.",
 	}
+
+	// Cannot create a flag with a short value of 'h'. This is reserved for the help flag.
+
 	// FlagInfluxdbAddr specifies the Influxdb address. Addr should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port'
 	FlagInfluxdbAddr = flag{
 		long:  "influxdb-addr",
@@ -206,6 +209,13 @@ var (
 		value: "apikey",
 		usage: "Name of the HTTP header holding the apikey.",
 	}
+	// FlagKubeconfig declares the location of a kubeconfig file to use for out-of-cluster configuration
+	FlagKubeconfig = flag{
+		long:  "kubeconfig",
+		short: "",
+		value: "",
+		usage: "Location of kubeconfig file for out-of-cluster configuration.",
+	}
 )
 
 // Flags represents the complete set of configuration options that Kanali can use
@@ -234,6 +244,7 @@ var Flags = flags{
 	FlagUpstreamTimeout,
 	FlagHeaderMaskValue,
 	FlagApikeyHeaderKey,
+	FlagKubeconfig,
 }
 
 func (f flag) GetLong() string {

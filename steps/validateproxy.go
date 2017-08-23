@@ -77,12 +77,12 @@ func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
 
-	trace.SetTag("kanali.proxy_name", proxy.ObjectMeta.Name)
-	trace.SetTag("kanali.proxy_namespace", proxy.ObjectMeta.Namespace)
+	trace.SetTag("kanali.proxy_name", proxy.Metadata.Name)
+	trace.SetTag("kanali.proxy_namespace", proxy.Metadata.Namespace)
 
 	m.Add(
-		metrics.Metric{Name: "proxy_name", Value: proxy.ObjectMeta.Name, Index: true},
-		metrics.Metric{Name: "proxy_namespace", Value: proxy.ObjectMeta.Namespace, Index: true},
+		metrics.Metric{Name: "proxy_name", Value: proxy.Metadata.Name, Index: true},
+		metrics.Metric{Name: "proxy_namespace", Value: proxy.Metadata.Namespace, Index: true},
 	)
 
 	return nil

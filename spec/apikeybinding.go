@@ -26,22 +26,21 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // APIKeyBindingList represents a list of APIKeyBindingings
 type APIKeyBindingList struct {
-	unversioned.TypeMeta `json:",inline"`
-	unversioned.ListMeta `json:"metadata,omitempty"`
-	Bindings             []APIKeyBinding `json:"items"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []APIKeyBinding `json:"items"`
 }
 
 // APIKeyBinding represents the TPR for an APIKeyBinding
 type APIKeyBinding struct {
-	unversioned.TypeMeta `json:",inline"`
-	api.ObjectMeta       `json:"metadata,omitempty"`
-	Spec                 APIKeyBindingSpec `json:"spec"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              APIKeyBindingSpec `json:"spec"`
 }
 
 // APIKeyBindingSpec represents the data fields for the APIKeyBinding TPR

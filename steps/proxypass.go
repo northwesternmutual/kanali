@@ -37,7 +37,7 @@ import (
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 type proxy struct {
@@ -120,7 +120,7 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 	}
 
 	// get secret for this request - if any
-	untypedSecret, err := spec.SecretStore.Get(p.Target.GetSSLCertificates(p.Source.Host).SecretName, p.Target.ObjectMeta.Namespace)
+	untypedSecret, err := spec.SecretStore.Get(p.Target.GetSSLCertificates(p.Source.Host).SecretName, p.Target.Metadata.Namespace)
 	if err != nil {
 		up.Error = utils.StatusError{Code: http.StatusInternalServerError, Err: err}
 		return up
@@ -141,7 +141,7 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 
 	} else {
 
-		secret, ok := untypedSecret.(api.Secret)
+		secret, ok := untypedSecret.(v1.Secret)
 		if !ok {
 			up.Error = utils.StatusError{Code: http.StatusInternalServerError, Err: errors.New("the secret store is corrupted")}
 			return up
@@ -278,7 +278,7 @@ func (p *proxy) setK8sDiscoveredURI() (*url.URL, error) {
 
 	uri := fmt.Sprintf("%s.%s.svc.cluster.local",
 		svc.Name,
-		p.Target.ObjectMeta.Namespace,
+		p.Target.Metadata.Namespace,
 	)
 
 	if viper.GetBool("enable-cluster-ip") {

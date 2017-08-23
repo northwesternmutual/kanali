@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- Using [client-go](https://github.com/kubernetes/client-go) as Kubernetes client.
+- Significantly reduced the amount of Info logging by converting to to Debug
+
 ## [1.1.2] - 2017-08-18
 ### Changed
 - If InfluxDB database doesn't exist when writing, it will be created.

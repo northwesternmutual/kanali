@@ -31,17 +31,17 @@ func TestComputeTargetPath(t *testing.T) {
 
 	assert := assert.New(t)
 
-	assert.Equal("/", ComputeTargetPath("/foo/bar", "", "/foo/bar"), "path not what expected")
-	assert.Equal("/", ComputeTargetPath("/foo/bar", "/", "/foo/bar"), "path not what expected")
-	assert.Equal("/foo", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar"), "path not what expected")
-	assert.Equal("/foo/bar", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar"), "path not what expected")
-	assert.Equal("/bar", ComputeTargetPath("/foo/bar", "", "/foo/bar/bar"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts"), "path not what expected")
+	assert.Equal("/", ComputeTargetPath("/foo/bar", "", "/foo/bar"))
+	assert.Equal("/", ComputeTargetPath("/foo/bar", "/", "/foo/bar"))
+	assert.Equal("/foo", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar"))
+	assert.Equal("/foo/bar", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar"))
+	assert.Equal("/bar", ComputeTargetPath("/foo/bar", "", "/foo/bar/bar"))
+	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts"))
+	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/"))
+	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/"))
+	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/"))
+	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/"))
+	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts"))
 	assert.Equal("/", ComputeTargetPath("/", "", "/"), "path not what expected")
 	assert.Equal("/", ComputeTargetPath("/", "/", "/"), "path not what expected")
 
@@ -71,29 +71,29 @@ func TestOmitHeaderValues(t *testing.T) {
 		"Three": []string{"four"},
 	}
 
-	copy := OmitHeaderValues(h, "ommitted", "one")
+	copy := OmitHeaderValues(h, "omitted", "one")
 	assert.Equal(h, http.Header{
 		"One":   []string{"two"},
 		"Three": []string{"four"},
 	}, "original map should not change")
 	assert.Equal(copy, http.Header{
-		"One":   []string{"ommitted"},
+		"One":   []string{"omitted"},
 		"Three": []string{"four"},
 	}, "map should be equal")
 
-	copy = OmitHeaderValues(h, "ommitted", "one", "foo", "bar")
+	copy = OmitHeaderValues(h, "omitted", "one", "foo", "bar")
 	assert.Equal(copy, http.Header{
-		"One":   []string{"ommitted"},
+		"One":   []string{"omitted"},
 		"Three": []string{"four"},
 	}, "map should be equal")
 
-	copy = OmitHeaderValues(h, "ommitted")
+	copy = OmitHeaderValues(h, "omitted")
 	assert.Equal(copy, http.Header{
 		"One":   []string{"two"},
 		"Three": []string{"four"},
 	}, "original map should not change")
 
-	copy = OmitHeaderValues(nil, "ommitted")
+	copy = OmitHeaderValues(nil, "omitted")
 	assert.Nil(copy, "map should be equal")
 
 }

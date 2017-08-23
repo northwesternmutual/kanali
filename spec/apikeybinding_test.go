@@ -24,8 +24,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestGetKeyBindingStore(t *testing.T) {
@@ -247,12 +246,12 @@ func TestAPIKeyBindingDelete(t *testing.T) {
 func getTestAPIKeyBindingList() *APIKeyBindingList {
 
 	return &APIKeyBindingList{
-		TypeMeta: unversioned.TypeMeta{},
-		ListMeta: unversioned.ListMeta{},
+		TypeMeta: metav1.TypeMeta{},
+		ListMeta: metav1.ListMeta{},
 		Bindings: []APIKeyBinding{
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
 				},
@@ -286,8 +285,8 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
 				},
@@ -310,8 +309,8 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "bar",
 				},
@@ -347,8 +346,8 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
 				},
@@ -365,8 +364,8 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
 				},

@@ -36,6 +36,7 @@ import (
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
+  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type mock []route
@@ -76,11 +77,11 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 	// as we do for an actual request. We won't worry about
 	// caching but instead we'll talk to the api server each
 	// and every time for the configmap data
-	cm, err := c.ClientSet.Core().ConfigMaps(proxy.ObjectMeta.Namespace).Get(proxy.Spec.Mock.ConfigMapName)
+	cm, err := c.ClientSet.CoreV1Client.ConfigMaps(proxy.Metadata.Namespace).Get(proxy.Spec.Mock.ConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s could not be found in the namespace %s",
 			proxy.Spec.Mock.ConfigMapName,
-			proxy.ObjectMeta.Namespace,
+			proxy.Metadata.Namespace,
 		)}
 	}
 
@@ -93,7 +94,7 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 
 		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. a data field named 'response' is required",
 			proxy.Spec.Mock.ConfigMapName,
-			proxy.ObjectMeta.Namespace,
+			proxy.Metadata.Namespace,
 		)}
 
 	}
@@ -105,7 +106,7 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 	if err := json.Unmarshal([]byte(mockResponse), &mok); err != nil {
 		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. a json object is required",
 			proxy.Spec.Mock.ConfigMapName,
-			proxy.ObjectMeta.Namespace,
+			proxy.Metadata.Namespace,
 		)}
 	}
 
@@ -146,7 +147,7 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 	if err != nil {
 		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. while data was found for the incoming route, it was not valid json",
 			proxy.Spec.Mock.ConfigMapName,
-			proxy.ObjectMeta.Namespace,
+			proxy.Metadata.Namespace,
 		)}
 	}
 

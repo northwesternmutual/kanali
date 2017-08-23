@@ -21,11 +21,16 @@
 package controller
 
 import (
-	"errors"
-
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/restclient"
-	"k8s.io/kubernetes/pkg/kubectl/cmd/util"
+	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/spec"
+	"github.com/spf13/viper"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // Controller is an exported struct
@@ -35,46 +40,63 @@ import (
 // this includes a rest client and well
 // a clientset that gives us access to the libs
 type Controller struct {
-	RestClient *restclient.RESTClient
-	ClientSet  internalclientset.Interface
-	MasterHost string
+	RESTClient *rest.RESTClient
+	ClientSet  *kubernetes.Clientset
 }
+
+var (
+	schemeBuilder      = runtime.NewSchemeBuilder(addKnownTypes)
+	addToScheme        = schemeBuilder.AddToScheme
+	schemeGroupVersion = schema.GroupVersion{Group: "kanali.io", Version: "v1"}
+)
 
 // New creates a new kubernetes controller
 // the controller is secure and uses the
 // cluster's kubeconfig file to construct
 // permissions
 func New() (*Controller, error) {
-
-	f := util.NewFactory(nil)
-
-	// ClientSet gives you back an internal, generated clientset
-	clientSet, err := f.ClientSet()
+	cfg, err := buildConfig(viper.GetString(config.FlagKubeconfig.GetLong()))
 	if err != nil {
 		return nil, err
 	}
-
-	// Returns a RESTClient for accessing Kubernetes resources or an error.
-	restClient, err := f.RESTClient()
+	clientset, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-
-	controller := &Controller{
-		RestClient: restClient,
-		ClientSet:  clientSet,
+	scheme := runtime.NewScheme()
+	if err := addToScheme(scheme); err != nil {
+		return nil, err
 	}
 
-	// Returns a client.Config for accessing the Kubernetes server.
-	k8sConfig, err := f.ClientConfig()
+	config := *cfg
+	config.APIPath = "/apis"
+	config.GroupVersion = &schemeGroupVersion
+	config.ContentType = runtime.ContentTypeJSON
+	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: serializer.NewCodecFactory(scheme)}
+
+	restClient, err := rest.RESTClientFor(&config)
 	if err != nil {
 		return nil, err
-	} else if k8sConfig == nil {
-		return nil, errors.New("received nil k8sConfig, please check if k8s cluster is available")
-	} else {
-		controller.MasterHost = k8sConfig.Host
 	}
+	return &Controller{restClient, clientset}, nil
+}
 
-	// return our newly created controller
-	return controller, nil
+func buildConfig(kubeconfig string) (*rest.Config, error) {
+	if kubeconfig != "" {
+		return clientcmd.BuildConfigFromFlags("", kubeconfig)
+	}
+	return rest.InClusterConfig()
+}
+
+func addKnownTypes(scheme *runtime.Scheme) error {
+	scheme.AddKnownTypes(schemeGroupVersion,
+		&spec.APIKey{},
+		&spec.APIKeyList{},
+		&spec.ApiProxy{},
+		&spec.ApiProxyList{},
+		&spec.APIKeyBinding{},
+		&spec.APIKeyBindingList{},
+	)
+	metav1.AddToGroupVersion(scheme, schemeGroupVersion)
+	return nil
 }

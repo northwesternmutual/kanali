@@ -23,23 +23,19 @@ package controller
 import (
 	"fmt"
 
-	"github.com/northwesternmutual/kanali/utils"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
-// tpr is an internal struct that stores
-// information about a Kubernetes ThirdPartyResource
 type tpr struct {
 	Name        string
 	Version     string
 	Description string
 }
 
-// CreateTPRs will create the two tprs that kanali uses
-// ApiProxy an ApiKey
+// CreateTPRs will create the two tprs that kanali will use
 func (c *Controller) CreateTPRs() error {
-
 	if err := c.doCreateTPRs(&tpr{
 		Name:        "api-proxy.kanali.io",
 		Version:     "v1",
@@ -53,29 +49,21 @@ func (c *Controller) CreateTPRs() error {
 		Version:     "v1",
 		Description: "api key binding TPR",
 	}); err != nil {
-		if !utils.IsKubernetesResourceAlreadyExistError(err) {
-			return fmt.Errorf("Fail to create TPR: %v", err)
+		if !errors.IsAlreadyExists(err) {
+			return fmt.Errorf("Failed to create TPR: %v", err)
 		}
 	}
 
-	// no error has occured
 	return nil
-
 }
 
-// doCreateTPRs is a helper function that takes a
-// list of tprs and adds each of them to our cluster
 func (c *Controller) doCreateTPRs(tprs ...*tpr) error {
-
 	for _, tpr := range tprs {
-
-		// use the kubernetes libraries to add a tpr
-		if _, err := c.ClientSet.Extensions().ThirdPartyResources().Create(&extensions.ThirdPartyResource{
-
-			ObjectMeta: api.ObjectMeta{
+		if _, err := c.ClientSet.ExtensionsV1beta1Client.ThirdPartyResources().Create(&v1beta1.ThirdPartyResource{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: tpr.Name,
 			},
-			Versions: []extensions.APIVersion{
+			Versions: []v1beta1.APIVersion{
 				{
 					Name: tpr.Version,
 				},
@@ -84,10 +72,7 @@ func (c *Controller) doCreateTPRs(tprs ...*tpr) error {
 		}); err != nil {
 			return err
 		}
-
 	}
 
-	// no error has occured
 	return nil
-
 }

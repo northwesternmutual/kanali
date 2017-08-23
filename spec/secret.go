@@ -26,13 +26,13 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 // SecretFactory is factory that implements a concurrency safe store for Kubernetes secrets
 type SecretFactory struct {
 	mutex     sync.RWMutex
-	secretMap map[string]map[string]api.Secret
+	secretMap map[string]map[string]v1.Secret
 }
 
 // SecretStore holds all Kubernetes secrets that Kanali has discovered
@@ -40,7 +40,7 @@ type SecretFactory struct {
 var SecretStore *SecretFactory
 
 func init() {
-	SecretStore = &SecretFactory{sync.RWMutex{}, map[string]map[string]api.Secret{}}
+	SecretStore = &SecretFactory{sync.RWMutex{}, map[string]map[string]v1.Secret{}}
 }
 
 // Clear will remove all secrets from the store
@@ -57,15 +57,15 @@ func (s *SecretFactory) Clear() {
 func (s *SecretFactory) Set(obj interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	secret, ok := obj.(api.Secret)
+	secret, ok := obj.(v1.Secret)
 	if !ok {
 		return errors.New("grrr - you're only allowed add secrets to the secrets store.... duh")
 	}
-	logrus.Infof("Adding new Secret named %s", secret.ObjectMeta.Name)
+	logrus.Debugf("adding secret object %s", secret.ObjectMeta.Name)
 	if _, ok := s.secretMap[secret.ObjectMeta.Namespace]; ok {
 		s.secretMap[secret.ObjectMeta.Namespace][secret.ObjectMeta.Name] = secret
 	} else {
-		s.secretMap[secret.ObjectMeta.Namespace] = map[string]api.Secret{
+		s.secretMap[secret.ObjectMeta.Namespace] = map[string]v1.Secret{
 			secret.ObjectMeta.Name: secret,
 		}
 	}
@@ -101,7 +101,7 @@ func (s *SecretFactory) Delete(obj interface{}) (interface{}, error) {
 	if obj == nil {
 		return nil, nil
 	}
-	secret, ok := obj.(api.Secret)
+	secret, ok := obj.(v1.Secret)
 	if !ok {
 		return nil, errors.New("there's no way this secret could've gotten in here")
 	}
@@ -112,6 +112,7 @@ func (s *SecretFactory) Delete(obj interface{}) (interface{}, error) {
 	if !ok {
 		return nil, nil
 	}
+	logrus.Debugf("deleting secret object %s", oldSecret.ObjectMeta.Name)
 	delete(s.secretMap[secret.ObjectMeta.Namespace], secret.ObjectMeta.Name)
 	if len(s.secretMap[secret.ObjectMeta.Namespace]) == 0 {
 		delete(s.secretMap, secret.ObjectMeta.Namespace)
@@ -150,7 +151,7 @@ func (s *SecretFactory) IsEmpty() bool {
 
 // X509KeyPair creates a tls.Certificate from the tls data in
 // a Kubernetes secret of type kubernetes.io/tls
-func X509KeyPair(s api.Secret) (*tls.Certificate, error) {
+func X509KeyPair(s v1.Secret) (*tls.Certificate, error) {
 	pair, err := tls.X509KeyPair(s.Data["tls.crt"], s.Data["tls.key"])
 	if err != nil {
 		return nil, err

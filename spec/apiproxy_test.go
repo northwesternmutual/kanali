@@ -24,8 +24,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestAPIProxyGetProxyStore(t *testing.T) {
@@ -204,12 +203,12 @@ func TestGetSSLCertificates(t *testing.T) {
 func getTestAPIProxyList() *APIProxyList {
 
 	return &APIProxyList{
-		TypeMeta: unversioned.TypeMeta{},
-		ListMeta: unversioned.ListMeta{},
+		TypeMeta: metav1.TypeMeta{},
+		ListMeta: metav1.ListMeta{},
 		Proxies: []APIProxy{
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyOne",
 					Namespace: "foo",
 				},
@@ -246,8 +245,8 @@ func getTestAPIProxyList() *APIProxyList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyTwo",
 					Namespace: "foo",
 				},
@@ -277,8 +276,8 @@ func getTestAPIProxyList() *APIProxyList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyThree",
 					Namespace: "foo",
 				},
@@ -314,8 +313,8 @@ func getTestAPIProxyList() *APIProxyList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyFour",
 					Namespace: "foo",
 				},
