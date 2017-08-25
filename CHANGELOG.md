@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- *Go Report* GitHub badge
+- [License] (./LICENSE) file
+### Changed
+- If connection to the k8s apiserver is lost, it will be reattempted after 5 seconds.
+- When TPRs are created, the server will not start until it is confirmed that they are created.
+- Kanali process will not terminate if a connection to Jaeger cannot be made.
+### Removed
+- Status server.
+- Deprecated `enable-tracing` flag. Like InfluxDB, a best effort at a connection will be made.
+
 ## [1.1.2] - 2017-08-18
 ### Changed
 - If InfluxDB database doesn't exist when writing, it will be created.

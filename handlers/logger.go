@@ -58,9 +58,9 @@ func Logger(influxCtlr *monitor.InfluxController, inner Handler) http.Handler {
 		)
 
 		if err := influxCtlr.WriteRequestData(inner.Metrics); err != nil {
-			logrus.Warnf(err.Error())
+			logrus.Warnf("error writing request details to InfluxDB: %s", err.Error())
 		} else {
-			logrus.Infof("successfully wrote request details to influxdb")
+			logrus.Debugf("successfully wrote request details to InfluxDB")
 		}
 
 	})

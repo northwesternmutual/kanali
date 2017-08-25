@@ -66,13 +66,6 @@ var (
 		value: "",
 		usage: "Path to valid PEM-encoded private key that matches the public key used to encrypt API keys.",
 	}
-	// FlagEnableTracing enables end to end tracing powered by opentracing
-	FlagEnableTracing = flag{
-		long:  "enable-tracing",
-		short: "e",
-		value: false,
-		usage: "Enables end to end tracing powered by opentracing.",
-	}
 	// FlagHeaderMaskValue sets the value to be used when omitting header values
 	FlagHeaderMaskValue = flag{
 		long:  "header-mask-value",
@@ -192,13 +185,6 @@ var (
 		value: "0h0m10s",
 		usage: "Set length of upstream timeout. Defaults to none",
 	}
-	// FlagStatusPort sets the HTTP port that Kanali status server
-	FlagStatusPort = flag{
-		long:  "status-port",
-		short: "x",
-		value: 8080,
-		usage: "Sets the HTTP port that Kanali status server.",
-	}
 	// FlagApikeyHeaderKey specifies the name of the HTTP header holding the apikey
 	FlagApikeyHeaderKey = flag{
 		long:  "apikey-header-key",
@@ -214,7 +200,6 @@ var Flags = flags{
 	FlagBindAddress,
 	FlagTLSCertFile,
 	FlagDecryptionKeyFile,
-	FlagEnableTracing,
 	FlagPluginsLocation,
 	FlagInfluxdbAddr,
 	FlagJaegerSamplerServerURL,
@@ -228,7 +213,6 @@ var Flags = flags{
 	FlagInfluxdbPassword,
 	FlagInfluxdbDatabase,
 	FlagEnableProxyProtocol,
-	FlagStatusPort,
 	FlagEnableClusterIP,
 	FlagDisableTLSCnValidation,
 	FlagUpstreamTimeout,

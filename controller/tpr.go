@@ -22,7 +22,9 @@ package controller
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/utils"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -39,6 +41,8 @@ type tpr struct {
 // CreateTPRs will create the two tprs that kanali uses
 // ApiProxy an ApiKey
 func (c *Controller) CreateTPRs() error {
+
+	logrus.Debug("creating TPRs")
 
 	if err := c.doCreateTPRs(&tpr{
 		Name:        "api-proxy.kanali.io",
@@ -58,7 +62,6 @@ func (c *Controller) CreateTPRs() error {
 		}
 	}
 
-	// no error has occured
 	return nil
 
 }
@@ -68,10 +71,7 @@ func (c *Controller) CreateTPRs() error {
 func (c *Controller) doCreateTPRs(tprs ...*tpr) error {
 
 	for _, tpr := range tprs {
-
-		// use the kubernetes libraries to add a tpr
 		if _, err := c.ClientSet.Extensions().ThirdPartyResources().Create(&extensions.ThirdPartyResource{
-
 			ObjectMeta: api.ObjectMeta{
 				Name: tpr.Name,
 			},
@@ -85,9 +85,16 @@ func (c *Controller) doCreateTPRs(tprs ...*tpr) error {
 			return err
 		}
 
+		for {
+			if _, err := c.ClientSet.Extensions().ThirdPartyResources().Get(tpr.Name); err == nil {
+				break
+			}
+			logrus.Debugf("thirdpartyresource %s was not found - will try again", tpr.Name)
+			time.Sleep(1 * time.Second)
+		}
+
 	}
 
-	// no error has occured
 	return nil
 
 }
