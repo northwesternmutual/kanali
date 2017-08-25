@@ -22,6 +22,7 @@ package controller
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/northwesternmutual/kanali/spec"
@@ -31,24 +32,49 @@ import (
 )
 
 type testHandlerFuncs struct {
+	mutex        sync.RWMutex
 	addResult    string
 	updateResult string
 	deleteResult string
 }
 
 func (f *testHandlerFuncs) addFunc(obj interface{}) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	foo, _ := obj.(string)
 	f.addResult = fmt.Sprintf("modified %s", foo)
 }
 
 func (f *testHandlerFuncs) updateFunc(obj interface{}) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	foo, _ := obj.(string)
 	f.updateResult = fmt.Sprintf("modified %s", foo)
 }
 
 func (f *testHandlerFuncs) deleteFunc(obj interface{}) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	foo, _ := obj.(string)
 	f.deleteResult = fmt.Sprintf("modified %s", foo)
+}
+
+func (f *testHandlerFuncs) getAddResult() string {
+	f.mutex.RLock()
+	defer f.mutex.RUnlock()
+	return f.addResult
+}
+
+func (f *testHandlerFuncs) getUpdateResult() string {
+	f.mutex.RLock()
+	defer f.mutex.RUnlock()
+	return f.updateResult
+}
+
+func (f *testHandlerFuncs) getDeleteResult() string {
+	f.mutex.RLock()
+	defer f.mutex.RUnlock()
+	return f.deleteResult
 }
 
 func TestMonitor(t *testing.T) {
@@ -73,9 +99,9 @@ func TestMonitor(t *testing.T) {
 	eventCh <- updateEvent
 	eventCh <- deleteEvent
 
-	assert.Equal(t, "modified test add", testFuncs.addResult)
-	assert.Equal(t, "modified test update", testFuncs.updateResult)
-	assert.Equal(t, "modified test delete", testFuncs.deleteResult)
+	assert.Equal(t, "modified test add", testFuncs.getAddResult())
+	assert.Equal(t, "modified test update", testFuncs.getUpdateResult())
+	assert.Equal(t, "modified test delete", testFuncs.getDeleteResult())
 
 }
 
