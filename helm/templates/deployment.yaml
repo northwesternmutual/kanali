@@ -33,7 +33,6 @@ spec:
         - --disable-tls-cn-validation
         - --influxdb-addr=http://kanali-influxdb.default.svc.cluster.local:8086
         - --influxdb-database=kanali
-        - --enable-tracing
         - --jaeger-sampler-server-url=jaeger-agent.kube-system.svc.cluster.local
         - --jaeger-agent-url=jaeger-agent.kube-system.svc.cluster.local
         env:
