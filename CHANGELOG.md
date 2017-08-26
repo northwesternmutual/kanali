@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Kanali process will not terminate if a connection to Jaeger cannot be made.
 - Response will not wait for metrics to be written to InfluxDB before completing.
 ### Removed
-- Status server.
+- Deprecated `status-port` flag. The status server has been removed.
 - Deprecated `enable-tracing` flag. Like InfluxDB, a best effort at a connection will be made.
 
 ## [1.1.2] - 2017-08-18
