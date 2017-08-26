@@ -60,7 +60,6 @@ spec:
         args:
         - start
         - --kanali-port=8443
-        - --status-port=8080
         - --bind-address=0.0.0.0
         - --log-level=info
         - --enable-mock
@@ -69,19 +68,6 @@ spec:
         - --tls-private-key-file=/etc/pki/tls.key
         - --decryption-key-file=/etc/pki/key.pem
         - --plugins-location=/
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 8080
-          initialDelaySeconds: 3
-          periodSeconds: 3
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 8080
-          initialDelaySeconds: 5
-          timeoutSeconds: 1
-          periodSeconds: 15
         env:
         - name: POD_IP
           valueFrom:

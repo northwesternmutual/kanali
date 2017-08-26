@@ -48,7 +48,7 @@ func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
 	var lerr error
 	var scheme string
 
-	router := h.Logger(influxCtlr, h.Handler{Controller: c, H: h.IncomingRequest})
+	router := h.Logger(h.Handler{Controller: c, InfluxController: influxCtlr, H: h.IncomingRequest})
 
 	address := fmt.Sprintf("%s:%d",
 		viper.GetString(config.FlagBindAddress.GetLong()),
