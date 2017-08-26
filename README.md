@@ -126,7 +126,6 @@ start
     -u, --enable-cluster-ip                  Enables to use of cluster ip as opposed to Kubernetes DNS for upstream routing.
     -m, --enable-mock                        Enables Kanali's mock responses feature. Read the documentation for more information.
     -t, --enable-proxy-protocol              Maintain the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header.
-    -e, --enable-tracing                     Enables end to end tracing powered by opentracing.
     -f, --header-mask-value string           Sets the value to be used when omitting header values. (default "ommitted")
     -h, --help                               help for start
     -i, --influxdb-addr string               Influxdb address. Addr should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port' (default "monitoring-influxdb.kube-system.svc.cluster.local")
@@ -139,7 +138,6 @@ start
     -l, --log-level string                   Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'. (default "info")
     -o, --peer-udp-port int                  Sets the port that all Kanali instances will communicate to each other over. (default 10001)
     -g, --plugins-location string            Location of custom plugins shared object (.so) files. (default "/")
-    -x, --status-port int                    Sets the HTTP port that Kanali status server. (default 8080)
     -a, --tls-ca-file string                 Path to x509 certificate authority bundle for mutual TLS.
     -c, --tls-cert-file string               Path to x509 certificate for HTTPS servers.
     -k, --tls-private-key-file string        Path to x509 private key matching --tls-cert-file.
