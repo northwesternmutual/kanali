@@ -42,9 +42,9 @@ func (f *Flow) Add(steps ...Step) {
 
 // Play executes all step in a flow in the order they were added.
 func (f *Flow) Play(ctx context.Context, metrics *metrics.Metrics, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-	logrus.Infof("a flow with %d step is about to play", len(*f))
+	logrus.Debugf("flow with %d step about to play", len(*f))
 	for _, step := range *f {
-		logrus.Infof("playing step %s", step.GetName())
+		logrus.Debugf("playing step %s", step.GetName())
 		if err := step.Do(ctx, metrics, ctlr, w, r, resp, trace); err != nil {
 			trace.SetTag("error", true)
 			trace.LogKV(

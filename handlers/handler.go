@@ -26,11 +26,14 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
+	"github.com/northwesternmutual/kanali/monitor"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
@@ -39,11 +42,30 @@ import (
 // Handler is used to provide additional parameters to an HTTP handler
 type Handler struct {
 	*controller.Controller
-	*metrics.Metrics
+	*monitor.InfluxController
 	H func(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error
 }
 
 func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
+
+	t0 := time.Now()
+	m := &metrics.Metrics{}
+
+	defer func() {
+		m.Add(
+			metrics.Metric{Name: "total_time", Value: int(time.Now().Sub(t0) / time.Millisecond), Index: false},
+			metrics.Metric{Name: "http_method", Value: r.Method, Index: true},
+			metrics.Metric{Name: "http_uri", Value: r.URL.EscapedPath(), Index: false},
+			metrics.Metric{Name: "client_ip", Value: strings.Split(r.RemoteAddr, ":")[0], Index: false},
+		)
+		go func() {
+			if err := h.InfluxController.WriteRequestData(m); err != nil {
+				logrus.Warnf("error writing metrics to InfluxDB: %s", err.Error())
+			} else {
+				logrus.Debugf("wrote metrics to InfluxDB")
+			}
+		}()
+	}()
 
 	// start a global trace
 	sp := opentracing.StartSpan(fmt.Sprintf("%s %s",
@@ -72,7 +94,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 	defer sp.Finish()
 
-	err = h.H(context.Background(), h.Metrics, h.Controller, w, r, sp)
+	err = h.H(context.Background(), m, h.Controller, w, r, sp)
 
 	// handle request errors
 	if err != nil {
@@ -92,7 +114,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 				"uri":    r.URL.EscapedPath(),
 			}).Error(e.Error())
 
-			h.Metrics.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(e.Status()), Index: true})
+			m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(e.Status()), Index: true})
 
 			errStatus, err := json.Marshal(utils.JSONErr{Code: e.Status(), Msg: e.Error()})
 			if err != nil {
@@ -119,7 +141,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 				"uri":    r.URL.EscapedPath(),
 			}).Error("unknown error")
 
-			h.Metrics.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(http.StatusInternalServerError), Index: true})
+			m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(http.StatusInternalServerError), Index: true})
 
 			errStatus, err := json.Marshal(utils.JSONErr{Code: http.StatusInternalServerError, Msg: "unknown error"})
 			if err != nil {

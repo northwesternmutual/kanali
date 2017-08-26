@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - If connection to the k8s apiserver is lost, it will be reattempted after 5 seconds.
 - When TPRs are created, the server will not start until it is confirmed that they are created.
 - Kanali process will not terminate if a connection to Jaeger cannot be made.
+- Response will not wait for metrics to be written to InfluxDB before completing.
 ### Removed
 - Status server.
 - Deprecated `enable-tracing` flag. Like InfluxDB, a best effort at a connection will be made.
