@@ -85,14 +85,6 @@ func (c *Controller) doCreateTPRs(tprs ...*tpr) error {
 			return err
 		}
 
-		for {
-			if _, err := c.ClientSet.Extensions().ThirdPartyResources().Get(tpr.Name); err == nil {
-				break
-			}
-			logrus.Debugf("thirdpartyresource %s was not found - will try again", tpr.Name)
-			time.Sleep(1 * time.Second)
-		}
-
 	}
 
 	return nil

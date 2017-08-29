@@ -151,21 +151,17 @@ func (b *APIKeyBinding) hydrateSubpathTree() {
 }
 
 func (n *subpathNode) doSetSubpath(pathSegments []string, subpath *Path) {
-
 	if n.Children == nil {
 		n.Children = map[string]*subpathNode{}
 	}
-
 	if n.Children[pathSegments[0]] == nil {
 		n.Children[pathSegments[0]] = &subpathNode{}
 	}
-
 	if len(pathSegments) < 2 {
 		n.Children[pathSegments[0]].Value = subpath
 	} else {
 		n.Children[pathSegments[0]].doSetSubpath(pathSegments[1:], subpath)
 	}
-
 }
 
 // Set takes a APIKeyBinding and either adds it to the store

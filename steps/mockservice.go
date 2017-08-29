@@ -38,15 +38,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-type mock []route
-
-type route struct {
-	Route  string      `json:"route"`
-	Code   int         `json:"code"`
-	Method string      `json:"method"`
-	Body   interface{} `json:"body"`
-}
-
 // MockServiceStep is factory that defines a step responsible for
 // discovering a mock response for the incoming request
 type MockServiceStep struct{}
@@ -70,72 +61,27 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
 
-	// the assumption here is that if you are using a mock,
-	// you don't really care about response time. Hence,
-	// we wont take the same performance enhacing measures
-	// as we do for an actual request. We won't worry about
-	// caching but instead we'll talk to the api server each
-	// and every time for the configmap data
-	cm, err := c.ClientSet.Core().ConfigMaps(proxy.ObjectMeta.Namespace).Get(proxy.Spec.Mock.ConfigMapName)
-	if err != nil {
-		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s could not be found in the namespace %s",
-			proxy.Spec.Mock.ConfigMapName,
-			proxy.ObjectMeta.Namespace,
-		)}
-	}
+  mockResponses, err := spec.ConfigMapStore.Get(proxy.Spec.Mock.ConfigMapName, proxy.ObjectMeta.Namespace)
+  if err != nil {
+    return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving ConfigMap: %s", err.Error())}
+  }
+  if cm == nil {
+    return utils.StatusError{Code: http.StatusNotFound, Err: fmt.Error("no ConfigMap found")}
+  }
 
-	// we have our config map. Now there's no guarentee that
-	// it is in the format that we require. Using a TPR for this
-	// is unnecessary and so we'll just be have to pay close attention
-	// to what's in the config map and return an error if necessary
-	mockResponse, ok := cm.Data["response"]
-	if !ok {
-
-		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. a data field named 'response' is required",
-			proxy.Spec.Mock.ConfigMapName,
-			proxy.ObjectMeta.Namespace,
-		)}
-
-	}
-
-	// we'll unmarshal the data into this var
-	var mok mock
-
-	// attempt to unmarshal json
-	if err := json.Unmarshal([]byte(mockResponse), &mok); err != nil {
-		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. a json object is required",
-			proxy.Spec.Mock.ConfigMapName,
-			proxy.ObjectMeta.Namespace,
-		)}
-	}
-
-	// alright so have an incoming path and we have a target path, if defined.
-	// figure out with the diff is and search for that in the map.
 	targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.EscapedPath())
 
-	// this variable will hold the index in the array
-	// of the matching mock response, if any
 	mockRespIndex := -1
 
-	// now we need to iterate over every route that we have and attempt
-	// to find a match
-	for i, currRoute := range mok {
-
-		if strings.Compare(currRoute.Route, targetPath) == 0 && strings.Compare(strings.ToUpper(currRoute.Method), r.Method) == 0 {
+	for i, currRoute := range mockResponses {
+		if currRoute.Route == targetPath && strings.ToUpper(currRoute.Method) == r.Method {
 			mockRespIndex = i
 			break
 		}
-
 	}
 
-	// no mock response was found for the incoming request
 	if mockRespIndex < 0 {
-
-		return utils.StatusError{Code: http.StatusNotFound, Err: fmt.Errorf("no mock response defined for the incoming path %s and target path %s",
-			r.URL.EscapedPath(),
-			targetPath,
-		)}
-
+		return utils.StatusError{Code: http.StatusNotFound, Err: fmt.Error("mock response not defined for this request")}
 	}
 
 	// we have a mock response that could be anything

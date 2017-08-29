@@ -113,7 +113,6 @@ func (c *Controller) doWatchResource(eventCh chan *event, url string) error {
 	if err != nil {
 		return fmt.Errorf("trouble connecting to k8s apiserver: %s", err.Error())
 	}
-	logrus.Debugf("successfull watch on %s", url)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			logrus.Errorf("error closing response body: %s", err.Error())
@@ -129,6 +128,8 @@ func (c *Controller) doWatchResource(eventCh chan *event, url string) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("k8s apiserver returned a %d status code", resp.StatusCode)
 	}
+
+  logrus.Debugf("successfull watch on %s", url)
 
 	decoder := json.NewDecoder(resp.Body)
 
