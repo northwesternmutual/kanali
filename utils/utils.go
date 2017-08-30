@@ -75,6 +75,22 @@ func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
 
 }
 
+// IsValidHTTPMethod validates whether a given string is a valid
+// HTTP method or not
+func IsValidHTTPMethod(m string) bool {
+	m = strings.ToUpper(m)
+
+	return m == http.MethodGet ||
+		m == http.MethodHead ||
+		m == http.MethodPost ||
+		m == http.MethodPut ||
+		m == http.MethodPatch ||
+		m == http.MethodDelete ||
+		m == http.MethodConnect ||
+		m == http.MethodOptions ||
+		m == http.MethodTrace
+}
+
 // GetAbsPath returns the absolute path given any path
 // the returned path is in a form that Kanali prefers
 func GetAbsPath(path string) (string, error) {

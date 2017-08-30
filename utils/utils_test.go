@@ -62,6 +62,14 @@ func TestAbsPath(t *testing.T) {
 
 }
 
+func TestIsValidHTTPMethod(t *testing.T) {
+	assert.False(t, IsValidHTTPMethod("foo"))
+	assert.True(t, IsValidHTTPMethod("GET"))
+	assert.True(t, IsValidHTTPMethod("get"))
+	assert.True(t, IsValidHTTPMethod("POST"))
+	assert.True(t, IsValidHTTPMethod("post"))
+}
+
 func TestOmitHeaderValues(t *testing.T) {
 
 	assert := assert.New(t)

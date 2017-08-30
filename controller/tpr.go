@@ -22,7 +22,6 @@ package controller
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/utils"

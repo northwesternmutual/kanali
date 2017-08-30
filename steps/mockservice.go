@@ -21,15 +21,14 @@
 package steps
 
 import (
+  "fmt"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
   "strconv"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 
 	"github.com/northwesternmutual/kanali/controller"
   "github.com/northwesternmutual/kanali/metrics"
@@ -61,34 +60,21 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
 
-  mockResponses, err := spec.ConfigMapStore.Get(proxy.Spec.Mock.ConfigMapName, proxy.ObjectMeta.Namespace)
+  targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.EscapedPath())
+
+  untypedMr, err := spec.MockResponseStore.Get(proxy.ObjectMeta.Namespace, proxy.Spec.Mock.ConfigMapName, targetPath, r.Method)
   if err != nil {
-    return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving ConfigMap: %s", err.Error())}
+    return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving mock response: %s", err.Error())}
   }
-  if cm == nil {
-    return utils.StatusError{Code: http.StatusNotFound, Err: fmt.Error("no ConfigMap found")}
+  if untypedMr == nil {
+    return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no mock response found")}
   }
-
-	targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.EscapedPath())
-
-	mockRespIndex := -1
-
-	for i, currRoute := range mockResponses {
-		if currRoute.Route == targetPath && strings.ToUpper(currRoute.Method) == r.Method {
-			mockRespIndex = i
-			break
-		}
+  mr, ok := untypedMr.(spec.Route)
+	if !ok {
+		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no mock response found")}
 	}
 
-	if mockRespIndex < 0 {
-		return utils.StatusError{Code: http.StatusNotFound, Err: fmt.Error("mock response not defined for this request")}
-	}
-
-	// we have a mock response that could be anything
-	// we're going to require it be JSON however.
-	// we're going to attempt to marshal it into jsonpath
-	// and pass it along
-	mockBodyData, err := json.Marshal(mok[mockRespIndex].Body)
+	mockBodyData, err := json.Marshal(mr.Body)
 	if err != nil {
 		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. while data was found for the incoming route, it was not valid json",
 			proxy.Spec.Mock.ConfigMapName,
@@ -104,12 +90,12 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 
 	// create a fake response
 	responseRecorder := &httptest.ResponseRecorder{
-		Code:      mok[mockRespIndex].Code,
+		Code:      mr.Code,
 		Body:      bytes.NewBuffer(mockBodyData),
 		HeaderMap: upstreamHeaders,
 	}
 
-  m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(mok[mockRespIndex].Code), Index: true})
+  m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(mr.Code), Index: true})
 
 	*resp = *responseRecorder.Result()
 

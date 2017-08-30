@@ -77,6 +77,7 @@ func (c *Controller) Watch() {
 	go c.watchResource(eventCh, "apis/kanali.io/v1/apiproxies?watch=true")
 	go c.watchResource(eventCh, "api/v1/secrets?fieldSelector=type%3Dkubernetes.io/tls&watch=true")
 	go c.watchResource(eventCh, "api/v1/services?watch=true")
+	go c.watchResource(eventCh, "api/v1/configmaps?watch=true")
 	go c.watchResource(eventCh, "api/v1/endpoints?watch=true")
 
 }
@@ -129,7 +130,7 @@ func (c *Controller) doWatchResource(eventCh chan *event, url string) error {
 		return fmt.Errorf("k8s apiserver returned a %d status code", resp.StatusCode)
 	}
 
-  logrus.Debugf("successfull watch on %s", url)
+	logrus.Debugf("successfull watch on %s", url)
 
 	decoder := json.NewDecoder(resp.Body)
 
@@ -203,6 +204,12 @@ func handleValidEvent(kind string, msg json.RawMessage, e *event) error {
 		(*e).Object = t
 	case "Secret":
 		t := api.Secret{}
+		if err := json.Unmarshal(msg, &t); err != nil {
+			return err
+		}
+		(*e).Object = t
+	case "ConfigMap":
+		t := api.ConfigMap{}
 		if err := json.Unmarshal(msg, &t); err != nil {
 			return err
 		}
