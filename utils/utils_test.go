@@ -21,6 +21,8 @@
 package utils
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -62,6 +64,26 @@ func TestIsValidHTTPMethod(t *testing.T) {
 	assert.True(t, IsValidHTTPMethod("get"))
 	assert.True(t, IsValidHTTPMethod("POST"))
 	assert.True(t, IsValidHTTPMethod("post"))
+}
+
+func TestFlattenHTTPHeaders(t *testing.T) {
+	h := http.Header{
+		"Foo": []string{"bar"},
+		"Bar": []string{"foo"},
+	}
+	assert.Equal(t, FlattenHTTPHeaders(h), map[string]string{
+		"Foo": "bar",
+		"Bar": "foo",
+	})
+	assert.Nil(t, FlattenHTTPHeaders(nil))
+}
+
+func TestDupReaderAndString(t *testing.T) {
+	closer := ioutil.NopCloser(bytes.NewReader([]byte("test string")))
+	closerTwo, str, _ := DupReaderAndString(closer)
+	assert.Equal(t, str, "test string")
+	data, _ := ioutil.ReadAll(closerTwo)
+	assert.Equal(t, string(data), "test string")
 }
 
 func TestOmitHeaderValues(t *testing.T) {
