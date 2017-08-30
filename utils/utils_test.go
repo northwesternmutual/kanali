@@ -48,18 +48,12 @@ func TestComputeTargetPath(t *testing.T) {
 }
 
 func TestAbsPath(t *testing.T) {
-
-	assert := assert.New(t)
-
 	p, _ := GetAbsPath("/")
-	assert.Equal("", p)
-
+	assert.Equal(t, "", p)
 	p, _ = GetAbsPath("/foo/")
-	assert.Equal("/foo", p)
-
+	assert.Equal(t, "/foo", p)
 	p, _ = GetAbsPath("//")
-	assert.Equal("", p)
-
+	assert.Equal(t, "", p)
 }
 
 func TestIsValidHTTPMethod(t *testing.T) {
