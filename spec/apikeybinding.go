@@ -122,12 +122,6 @@ func (s *BindingFactory) IsEmpty() bool {
 	return len(s.bindingMap) == 0
 }
 
-// Contains reports whether the binding store contains a particular binding
-// TODO
-func (s *BindingFactory) Contains(params ...interface{}) (bool, error) {
-	return false, errors.New("method not yet implemented")
-}
-
 func (b *APIKeyBinding) hydrateSubpathTree() {
 
 	// we need to create a subpath tree for each apikey per binding

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Store implementation for mock responses.
+### Changed
+- Improved test coverage.
+### Removed
+- `Contains` method from `Store` interface.
 
 ## [1.1.3] - 2017-08-26
 ### Added

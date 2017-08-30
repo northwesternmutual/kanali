@@ -180,12 +180,6 @@ func TestMockResponseGet(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestMockResponseContains(t *testing.T) {
-	result, err := MockResponseStore.Contains("foo")
-	assert.Equal(t, err.Error(), "method not yet implemented")
-	assert.False(t, result)
-}
-
 func TestMockResponseDelete(t *testing.T) {
 	cm := getTestConfigMaps()
 	MockResponseStore.Clear()

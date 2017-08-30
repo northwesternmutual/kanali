@@ -212,11 +212,6 @@ func (s *MockResponseFactory) Delete(obj interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-// Contains reports whether the secrets store contains a particular secret
-func (s *MockResponseFactory) Contains(params ...interface{}) (bool, error) {
-	return false, errors.New("method not yet implemented")
-}
-
 // IsEmpty reports whether the configmap store is empty
 func (s *MockResponseFactory) IsEmpty() bool {
 	s.mutex.RLock()
