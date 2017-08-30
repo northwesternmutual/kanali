@@ -175,12 +175,6 @@ func (s *ProxyFactory) Get(params ...interface{}) (interface{}, error) {
 	return *rootNode.Value, nil
 }
 
-// Contains reports whether the proxy store contains a particular proxy
-// TODO
-func (s *ProxyFactory) Contains(params ...interface{}) (bool, error) {
-	return false, errors.New("method not yet implemented")
-}
-
 // Delete will remove a particular proxy from the store
 func (s *ProxyFactory) Delete(obj interface{}) (interface{}, error) {
 	s.mutex.Lock()

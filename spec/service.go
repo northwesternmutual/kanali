@@ -143,14 +143,6 @@ func (s *ServiceFactory) Get(params ...interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-// Contains reports whether the service store contains a particular service
-// TODO
-func (s *ServiceFactory) Contains(params ...interface{}) (bool, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return false, errors.New("method not yet implemented")
-}
-
 // Delete will remove a particular service from the store
 func (s *ServiceFactory) Delete(obj interface{}) (interface{}, error) {
 	s.mutex.Lock()

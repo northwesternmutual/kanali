@@ -26,7 +26,6 @@ type Store interface {
 	Set(obj interface{}) error
 	Get(params ...interface{}) (interface{}, error)
 	Delete(obj interface{}) (interface{}, error)
-	Contains(params ...interface{}) (bool, error)
 	Clear()
 	IsEmpty() bool
 }

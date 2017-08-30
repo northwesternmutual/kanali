@@ -21,6 +21,9 @@
 package cmd
 
 import (
+	"crypto/x509"
+	"encoding/pem"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -29,8 +32,8 @@ import (
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/monitor"
 	"github.com/northwesternmutual/kanali/server"
+	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
-	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -84,7 +87,7 @@ var startCmd = &cobra.Command{
 		}
 
 		// load decryption key into memory
-		if err := utils.LoadDecryptionKey(viper.GetString("decryption-key-file")); err != nil {
+		if err := loadDecryptionKey(viper.GetString("decryption-key-file")); err != nil {
 			logrus.Fatalf("could not load decryption key: %s", err.Error())
 			os.Exit(1)
 		}
@@ -131,4 +134,25 @@ var startCmd = &cobra.Command{
 		server.Start(ctlr, influxCtlr)
 
 	},
+}
+
+func loadDecryptionKey(location string) error {
+
+	// read in private key
+	keyBytes, err := ioutil.ReadFile(location)
+	if err != nil {
+		return err
+	}
+	// create a pem block from the private key provided
+	block, _ := pem.Decode(keyBytes)
+	// parse the pem block into a private key
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return err
+	}
+
+	spec.APIKeyDecryptionKey = privateKey
+
+	return nil
+
 }

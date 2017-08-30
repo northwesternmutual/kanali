@@ -81,6 +81,12 @@ func (h k8sEventHandler) addFunc(obj interface{}) {
 				spec.KanaliEndpoints = &endpoints
 			}
 		}
+	case api.ConfigMap:
+		if cm, ok := obj.(api.ConfigMap); ok {
+			if err := spec.MockResponseStore.Set(cm); err != nil {
+				logrus.Errorf("could not add/modify configmap. skipping: %s", err.Error())
+			}
+		}
 	}
 }
 
@@ -127,6 +133,12 @@ func (h k8sEventHandler) deleteFunc(obj interface{}) {
 			_, err := spec.ServiceStore.Delete(spec.CreateService(service))
 			if err != nil {
 				logrus.Errorf("could not delete service. skipping: %s", err.Error())
+			}
+		}
+	case api.ConfigMap:
+		if cm, ok := obj.(api.ConfigMap); ok {
+			if _, err := spec.MockResponseStore.Delete(cm); err != nil {
+				logrus.Errorf("could not delete configmap. skipping: %s", err.Error())
 			}
 		}
 	}

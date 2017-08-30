@@ -18,35 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package utils
+package server
 
 import (
-	"crypto/x509"
-	"encoding/pem"
-	"io/ioutil"
+	"testing"
 
-	"github.com/northwesternmutual/kanali/spec"
+	"github.com/northwesternmutual/kanali/config"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
-// LoadDecryptionKey loads an rsa private key located at the provided path
-// and set a global variables with the value.
-func LoadDecryptionKey(location string) error {
+func TestGetKanaliPort(t *testing.T) {
+	assert.Equal(t, getKanaliPort(), 80)
 
-	// read in private key
-	keyBytes, err := ioutil.ReadFile(location)
-	if err != nil {
-		return err
-	}
-	// create a pem block from the private key provided
-	block, _ := pem.Decode(keyBytes)
-	// parse the pem block into a private key
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return err
-	}
+	viper.Set(config.FlagKanaliPort.GetLong(), 12345)
+	assert.Equal(t, getKanaliPort(), 12345)
 
-	spec.APIKeyDecryptionKey = privateKey
-
-	return nil
-
+	viper.Set(config.FlagKanaliPort.GetLong(), 0)
+	viper.Set(config.FlagTLSCertFile.GetLong(), "hi")
+	viper.Set(config.FlagTLSPrivateKeyFile.GetLong(), "bye")
+	assert.Equal(t, getKanaliPort(), 443)
 }

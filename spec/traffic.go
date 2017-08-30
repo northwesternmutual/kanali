@@ -102,7 +102,7 @@ func (s *TrafficFactory) IsQuotaViolated(binding APIKeyBinding, keyName string) 
 		if key.Quota == 0 {
 			return false
 		}
-		result, err := s.Contains(binding, keyName)
+		result, err := s.contains(binding, keyName)
 		if err != nil || !result {
 			return false
 		}
@@ -125,7 +125,7 @@ func (s *TrafficFactory) IsRateLimitViolated(binding APIKeyBinding, keyName stri
 		if key.Rate.Amount == 0 {
 			return false
 		}
-		result, err := s.Contains(binding, keyName)
+		result, err := s.contains(binding, keyName)
 		if err != nil || !result {
 			return false
 		}
@@ -135,7 +135,7 @@ func (s *TrafficFactory) IsRateLimitViolated(binding APIKeyBinding, keyName stri
 }
 
 // Contains reports whether the traffic store has any traffic for a given proxy/name combination
-func (s *TrafficFactory) Contains(params ...interface{}) (bool, error) {
+func (s *TrafficFactory) contains(params ...interface{}) (bool, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	if len(params) != 2 {

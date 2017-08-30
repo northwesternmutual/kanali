@@ -36,7 +36,6 @@ import (
 	"github.com/northwesternmutual/kanali/controller"
 	h "github.com/northwesternmutual/kanali/handlers"
 	"github.com/northwesternmutual/kanali/monitor"
-	"github.com/northwesternmutual/kanali/utils"
 	"github.com/spf13/viper"
 )
 
@@ -52,7 +51,7 @@ func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
 
 	address := fmt.Sprintf("%s:%d",
 		viper.GetString(config.FlagBindAddress.GetLong()),
-		utils.GetKanaliPort(),
+		getKanaliPort(),
 	)
 
 	server := &http.Server{Addr: address, Handler: router}
@@ -106,4 +105,16 @@ func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
 		os.Exit(1)
 	}
 
+}
+
+func getKanaliPort() int {
+	if viper.GetInt(config.FlagKanaliPort.GetLong()) > 0 {
+		return viper.GetInt(config.FlagKanaliPort.GetLong())
+	}
+	if viper.GetString(config.FlagTLSCertFile.GetLong()) == "" || viper.GetString(config.FlagTLSPrivateKeyFile.GetLong()) == "" {
+		viper.Set(config.FlagKanaliPort.GetLong(), 80)
+		return 80
+	}
+	viper.Set(config.FlagKanaliPort.GetLong(), 443)
+	return 443
 }

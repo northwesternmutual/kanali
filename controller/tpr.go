@@ -22,7 +22,6 @@ package controller
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/utils"
@@ -83,14 +82,6 @@ func (c *Controller) doCreateTPRs(tprs ...*tpr) error {
 			Description: tpr.Description,
 		}); err != nil {
 			return err
-		}
-
-		for {
-			if _, err := c.ClientSet.Extensions().ThirdPartyResources().Get(tpr.Name); err == nil {
-				break
-			}
-			logrus.Debugf("thirdpartyresource %s was not found - will try again", tpr.Name)
-			time.Sleep(1 * time.Second)
 		}
 
 	}

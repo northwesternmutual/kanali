@@ -21,6 +21,8 @@
 package utils
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -48,18 +50,40 @@ func TestComputeTargetPath(t *testing.T) {
 }
 
 func TestAbsPath(t *testing.T) {
-
-	assert := assert.New(t)
-
 	p, _ := GetAbsPath("/")
-	assert.Equal("", p)
-
+	assert.Equal(t, "", p)
 	p, _ = GetAbsPath("/foo/")
-	assert.Equal("/foo", p)
-
+	assert.Equal(t, "/foo", p)
 	p, _ = GetAbsPath("//")
-	assert.Equal("", p)
+	assert.Equal(t, "", p)
+}
 
+func TestIsValidHTTPMethod(t *testing.T) {
+	assert.False(t, IsValidHTTPMethod("foo"))
+	assert.True(t, IsValidHTTPMethod("GET"))
+	assert.True(t, IsValidHTTPMethod("get"))
+	assert.True(t, IsValidHTTPMethod("POST"))
+	assert.True(t, IsValidHTTPMethod("post"))
+}
+
+func TestFlattenHTTPHeaders(t *testing.T) {
+	h := http.Header{
+		"Foo": []string{"bar"},
+		"Bar": []string{"foo"},
+	}
+	assert.Equal(t, FlattenHTTPHeaders(h), map[string]string{
+		"Foo": "bar",
+		"Bar": "foo",
+	})
+	assert.Nil(t, FlattenHTTPHeaders(nil))
+}
+
+func TestDupReaderAndString(t *testing.T) {
+	closer := ioutil.NopCloser(bytes.NewReader([]byte("test string")))
+	closerTwo, str, _ := DupReaderAndString(closer)
+	assert.Equal(t, str, "test string")
+	data, _ := ioutil.ReadAll(closerTwo)
+	assert.Equal(t, string(data), "test string")
 }
 
 func TestOmitHeaderValues(t *testing.T) {

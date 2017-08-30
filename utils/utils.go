@@ -28,9 +28,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-
-	"github.com/northwesternmutual/kanali/config"
-	"github.com/spf13/viper"
 )
 
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
@@ -75,6 +72,22 @@ func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
 
 }
 
+// IsValidHTTPMethod validates whether a given string is a valid
+// HTTP method or not
+func IsValidHTTPMethod(m string) bool {
+	m = strings.ToUpper(m)
+
+	return m == http.MethodGet ||
+		m == http.MethodHead ||
+		m == http.MethodPost ||
+		m == http.MethodPut ||
+		m == http.MethodPatch ||
+		m == http.MethodDelete ||
+		m == http.MethodConnect ||
+		m == http.MethodOptions ||
+		m == http.MethodTrace
+}
+
 // GetAbsPath returns the absolute path given any path
 // the returned path is in a form that Kanali prefers
 func GetAbsPath(path string) (string, error) {
@@ -110,20 +123,6 @@ func DupReaderAndString(closer io.ReadCloser) (io.ReadCloser, string, error) {
 
 	return rdr2, string(requestData), nil
 
-}
-
-// GetKanaliPort sets the correct and usable Kanali port based on the
-// provided configuration values.
-func GetKanaliPort() int {
-	if viper.GetInt(config.FlagKanaliPort.GetLong()) != 0 {
-		return viper.GetInt(config.FlagKanaliPort.GetLong())
-	}
-	if viper.GetString(config.FlagTLSCertFile.GetLong()) == "" || viper.GetString(config.FlagTLSPrivateKeyFile.GetLong()) == "" {
-		viper.Set(config.FlagKanaliPort.GetLong(), 80)
-		return 80
-	}
-	viper.Set(config.FlagKanaliPort.GetLong(), 443)
-	return 443
 }
 
 // OmitHeaderValues masks specified values with the provided "mask" message

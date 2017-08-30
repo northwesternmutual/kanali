@@ -11,11 +11,12 @@ env:
   - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
 
 before_install:
-  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  - sudo apt-get update
-  - sudo apt-get -y install docker-ce
-  - docker --version
+- curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+- sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu
+  $(lsb_release -cs) stable"
+- sudo apt-get update
+- sudo apt-get -y install docker-ce
+- docker --version
 
 install:
 - make install_ci
@@ -26,3 +27,8 @@ script:
 
 after_success:
 - bash ./travis/build-docker-images.sh
+
+notifications:
+  slack:
+    rooms:
+      secure: Qkh1Ucluku5Q3mimju0VtMLaIr2ugzIYLf/wlyqIO60IZd1zYMnegl0FY7PwrbOAJfTxTADbaP5egPzDbKt71EAQnuu1s5vHzxac1kdvMtEFpUyJVxfJ/EqumUDdVOgb0QGKRbu252Y2HzPDT0de0xFvVuZR15mo1ntTI5D1UyCIzXA2ypO8RN4xS4pEppTMWx19QoDi8L8JuOKA5gpybaKk+aIv81eSLQMEheTln9pFza02ZoOY99b0Gv06CcUAyuXTXjPONM+M8HnlyeNxcdghBt6ovAl59YfpvLruDq30+zYTkUTHeaMfKoT1gyGuukZsU3sv1SeR4NCJ3l11H5wezREp4W56XJpZjert0x2nABNQui/JfRfm0Ofs7LJ/HDYXkIcAd0lyPMjjySq+27LMxpaUTO6EHYDoDbZq6egmjx02zJYhSil/14Y6b2PS1zfa3ZEe0qSHP5fIArfll5NP5bdLWZgzObBaqhiLPQXOoEg4BKkwOGfa0/MlqlxjqV7ObGwD8g8Tj2UBKmzX0j7iBOwo9McLaz2pkCJYLFbdZ6mlyQxbAQbCGr7fVwUMlAUNvZttQdZ6kisj8WDw1UqI3XlYMy0ca3IRclk7S28AtkqJaqv5dooqFCeHMz3CubQNb8TwHqDo5bb5QLX+u6ly1eNY2zokwokic5WOl6k=

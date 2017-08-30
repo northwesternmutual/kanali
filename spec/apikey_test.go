@@ -73,39 +73,6 @@ func TestAPIKeyClear(t *testing.T) {
 	assert.Equal(0, len(store.keyMap), "empty store should have no keys")
 }
 
-func TestAPIKeyContains(t *testing.T) {
-	assert := assert.New(t)
-	store := KeyStore
-	keyList := getTestAPIKeyList()
-
-	store.Clear()
-	store.Set(keyList.Keys[0])
-	result, _ := store.Contains("iamencrypted1")
-	assert.True(result)
-	result, _ = store.Contains("iamencrypted2")
-	assert.False(result)
-	result, _ = store.Contains(keyList.Keys[0])
-	assert.True(result)
-	result, _ = store.Contains(APIKey{})
-	assert.False(result)
-	result, _ = store.Contains("abc123", "foo")
-	assert.True(result)
-	result, _ = store.Contains("abc123", "bar")
-	assert.False(result)
-	result, err := store.Contains(5, "bar")
-	assert.False(result)
-	assert.Equal("first parameter should be a string", err.Error(), "wrong error string")
-	result, err = store.Contains("", 5)
-	assert.False(result)
-	assert.Equal("second parameter should be a string", err.Error(), "wrong error string")
-	result, err = store.Contains("abc123", "foo", "frank")
-	assert.False(result)
-	assert.Equal("too many parameters", err.Error(), "wrong error string")
-	result, err = store.Contains(APIProxy{})
-	assert.False(result)
-	assert.Equal("could not recongized type of parameter", err.Error(), "wrong error string")
-}
-
 func TestAPIKeyIsEmpty(t *testing.T) {
 	assert := assert.New(t)
 	store := KeyStore

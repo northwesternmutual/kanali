@@ -104,27 +104,6 @@ func TestSecretGet(t *testing.T) {
 	assert.Equal(secretList[1], result, "secret should exist")
 }
 
-func TestSecretContains(t *testing.T) {
-	assert := assert.New(t)
-	store := SecretStore
-	secretList := getTestSecretList()
-
-	store.Clear()
-	store.Set(secretList[0])
-	result, _ := store.Contains("secret-one", "foo")
-	assert.True(result)
-	result, _ = store.Contains("secret-two", "bar")
-	assert.False(result)
-	result, _ = store.Contains("secret-two", "foo")
-	assert.False(result)
-	_, err := store.Contains("secret-two")
-	assert.Equal(err.Error(), "containers requires 2 params", "wrong error")
-	_, err = store.Contains("secret-two", 5)
-	assert.Equal(err.Error(), "second parameter should be a string", "wrong error")
-	_, err = store.Contains(5, "")
-	assert.Equal(err.Error(), "first parameter should be a string", "wrong error")
-}
-
 func TestSecretDelete(t *testing.T) {
 	assert := assert.New(t)
 	store := SecretStore

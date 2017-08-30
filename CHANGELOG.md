@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Store implementation for mock responses.
+- Slack integration for TravisCI.
+### Changed
+- Improved test coverage.
+### Removed
+- `Contains` method from `Store` interface.
+
 ## [1.1.3] - 2017-08-26
 ### Added
 - *Go Report* GitHub badge
@@ -39,7 +48,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed issue that reported api key tag to wrong span
 
 ## [1.0.2] - 2017-08-11
-## Added
+### Added
 - Improved test coverage.
 ### Changed
 - Fixed issue where Docker images were not pushed for tag builds.
@@ -50,7 +59,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Improved test coverage.
 ### Changed
-- Upgraded to Go version 1.8.3
+- Upgraded Go version to `1.8.3`
 - Resolved bug that did not handle potential panics from plugins.
 - Fixed typos in README.
 - Updated Postman collection.

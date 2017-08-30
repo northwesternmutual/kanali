@@ -122,12 +122,6 @@ func (s *BindingFactory) IsEmpty() bool {
 	return len(s.bindingMap) == 0
 }
 
-// Contains reports whether the binding store contains a particular binding
-// TODO
-func (s *BindingFactory) Contains(params ...interface{}) (bool, error) {
-	return false, errors.New("method not yet implemented")
-}
-
 func (b *APIKeyBinding) hydrateSubpathTree() {
 
 	// we need to create a subpath tree for each apikey per binding
@@ -151,21 +145,17 @@ func (b *APIKeyBinding) hydrateSubpathTree() {
 }
 
 func (n *subpathNode) doSetSubpath(pathSegments []string, subpath *Path) {
-
 	if n.Children == nil {
 		n.Children = map[string]*subpathNode{}
 	}
-
 	if n.Children[pathSegments[0]] == nil {
 		n.Children[pathSegments[0]] = &subpathNode{}
 	}
-
 	if len(pathSegments) < 2 {
 		n.Children[pathSegments[0]].Value = subpath
 	} else {
 		n.Children[pathSegments[0]].doSetSubpath(pathSegments[1:], subpath)
 	}
-
 }
 
 // Set takes a APIKeyBinding and either adds it to the store
