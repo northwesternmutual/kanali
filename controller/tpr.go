@@ -22,10 +22,12 @@ package controller
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/northwesternmutual/kanali/utils"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/errors"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 )
 
@@ -56,7 +58,7 @@ func (c *Controller) CreateTPRs() error {
 		Version:     "v1",
 		Description: "api key binding TPR",
 	}); err != nil {
-		if !utils.IsKubernetesResourceAlreadyExistError(err) {
+		if !isKubernetesResourceAlreadyExistError(err) {
 			return fmt.Errorf("Fail to create TPR: %v", err)
 		}
 	}
@@ -88,4 +90,15 @@ func (c *Controller) doCreateTPRs(tprs ...*tpr) error {
 
 	return nil
 
+}
+
+func isKubernetesResourceAlreadyExistError(err error) bool {
+	se, ok := err.(*errors.StatusError)
+	if !ok {
+		return false
+	} else if se.Status().Code == http.StatusConflict && se.Status().Reason == unversioned.StatusReasonAlreadyExists {
+		return true
+	} else {
+		return false
+	}
 }
