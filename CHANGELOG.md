@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [1.1.3] - 2017-08-26
 ### Added
 - *Go Report* GitHub badge
-- [License] (./LICENSE) file
+- [License](./LICENSE) file
 ### Changed
 - If connection to the k8s apiserver is lost, it will be reattempted after 5 seconds.
 - When TPRs are created, the server will not start until it is confirmed that they are created.
