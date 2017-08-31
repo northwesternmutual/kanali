@@ -41,3 +41,13 @@ func TestAdd(t *testing.T) {
 	assert.Equal(t, (*f)[1].Value, "valueTwo")
 	assert.Equal(t, (*f)[2].Value, "valueThree")
 }
+
+func TestGet(t *testing.T) {
+	f := &Metrics{}
+	f.Add(Metric{"nameOne", "valueOne", false})
+	f.Add(Metric{"nameTwo", "valueTwo", true}, Metric{"nameThree", "valueThree", false})
+	assert.Nil(t, f.Get("nameFour"))
+	assert.Equal(t, f.Get("nameOne"), &Metric{"nameOne", "valueOne", false})
+	assert.Equal(t, f.Get("nameTwo"), &Metric{"nameTwo", "valueTwo", true})
+	assert.Equal(t, f.Get("nameThree"), &Metric{"nameThree", "valueThree", false})
+}

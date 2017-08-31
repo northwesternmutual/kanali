@@ -36,3 +36,13 @@ func (m *Metrics) Add(metrics ...Metric) {
 		*m = append(*m, metric)
 	}
 }
+
+// Get retrives a specific metric by name
+func (m *Metrics) Get(name string) *Metric {
+	for _, metric := range *m {
+		if metric.Name == name {
+			return &metric
+		}
+	}
+	return nil
+}
