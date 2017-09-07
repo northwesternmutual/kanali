@@ -194,10 +194,7 @@ func (up *upstream) setUpstreamURL(p *proxy) *upstream {
 	u, err := p.setK8sDiscoveredURI()
 
 	if err != nil {
-		up.Error = utils.StatusError{
-			Code: http.StatusInternalServerError,
-			Err:  err,
-		}
+		up.Error = *err
 	} else {
 		u.Path = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.Path)
 		u.RawPath = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.EscapedPath())
@@ -258,7 +255,7 @@ func (up *upstream) performProxy(trace opentracing.Span) *upstream {
 
 }
 
-func (p *proxy) setK8sDiscoveredURI() (*url.URL, error) {
+func (p *proxy) setK8sDiscoveredURI() (*url.URL, *utils.StatusError) {
 
 	scheme := "http"
 
@@ -268,12 +265,12 @@ func (p *proxy) setK8sDiscoveredURI() (*url.URL, error) {
 
 	untypedSvc, err := spec.ServiceStore.Get(p.Target.Spec.Service, p.Source.Header)
 	if err != nil || untypedSvc == nil {
-		return nil, utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
+		return nil, &utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
 	}
 
 	svc, ok := untypedSvc.(spec.Service)
 	if !ok {
-		return nil, utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
+		return nil, &utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
 	}
 
 	uri := fmt.Sprintf("%s.%s.svc.cluster.local",
