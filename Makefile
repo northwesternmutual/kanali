@@ -1,6 +1,7 @@
 ALL_SRC := $(shell find . -name "*.go" | grep -v -e vendor \
         -e ".*/\..*" \
         -e ".*/_.*" \
+				-e ".*/*.pb.go" \
         -e ".*/mocks.*")
 
 BINARY=$(shell echo $${PWD\#\#*/})
@@ -53,7 +54,7 @@ lint:
 	@$(GOVET) $(PACKAGES)
 	@$(ERRCHECK) $(PACKAGES)
 	@cat /dev/null > $(LINT_LOG)
-	@$(foreach pkg, $(PACKAGES), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
+	@$(foreach pkg, $(ALL_SRC), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
 	@[ ! -s "$(LINT_LOG)" ] || (echo "Lint Failures" | cat - $(LINT_LOG) && false)
 	@$(GOFMT) -e -s -l $(ALL_SRC) > $(FMT_LOG)
 	@[ ! -s "$(FMT_LOG)" ] || (echo "Go Fmt Failures, run 'make fmt'" | cat - $(FMT_LOG) && false)

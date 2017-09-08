@@ -135,7 +135,12 @@ func TestGetTrafficVolume(t *testing.T) {
 }
 
 func TestTrafficStoreSet(t *testing.T) {
-	assert.Nil(t, TrafficStore.Set("namespace-one,proxy-one,key-one"))
+	assert.Nil(t, TrafficStore.doSet(TrafficPoint{
+		Time:      time.Now().UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	}))
 	TrafficStore.Clear()
 }
 
@@ -154,28 +159,57 @@ func TestTrafficStoreGet(t *testing.T) {
 func TestTrafficStoreIsEmpty(t *testing.T) {
 	TrafficStore.Clear()
 	assert.True(t, TrafficStore.IsEmpty())
-	TrafficStore.Set("namespace-one,proxy-one,key-one")
+	TrafficStore.doSet(TrafficPoint{
+		Time:      time.Now().UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
 	assert.False(t, TrafficStore.IsEmpty())
 }
 
 func TestTrafficStoreDoSet(t *testing.T) {
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
 	TrafficStore.Clear()
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
-	TrafficStore.doSet("namespace-one,proxy-two,key-one", currTime)
-	TrafficStore.doSet("namespace-one,proxy-three,key-one", currTime)
-	TrafficStore.doSet("namespace-one,proxy-three,key-two", currTime)
+	TrafficStore.doSet(TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
+	TrafficStore.doSet(TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-two",
+		KeyName:   "key-one",
+	})
+	TrafficStore.doSet(TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-three",
+		KeyName:   "key-one",
+	})
+	TrafficStore.doSet(TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-three",
+		KeyName:   "key-two",
+	})
 	assert.Equal(t, 1, len(TrafficStore.trafficMap))
 	assert.Equal(t, 3, len(TrafficStore.trafficMap["namespace-one"]))
 	assert.Equal(t, 2, len(TrafficStore.trafficMap["namespace-one"]["proxy-three"]))
-	assert.Equal(t, TrafficStore.doSet(5, currTime).Error(), "parameter not of type string")
-	assert.Equal(t, TrafficStore.doSet("bad-string", currTime).Error(), "kgram must have 3")
+	assert.Equal(t, TrafficStore.doSet(5).Error(), "parameter not of type TrafficPoint")
 }
 
 func TestTrafficStoreClear(t *testing.T) {
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
 	TrafficStore.Clear()
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	TrafficStore.doSet(TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
 	TrafficStore.Clear()
 	assert.Equal(t, 0, len(TrafficStore.trafficMap))
 }
@@ -183,13 +217,28 @@ func TestTrafficStoreClear(t *testing.T) {
 func TestIsQuotaViolated(t *testing.T) {
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
 	TrafficStore.Clear()
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	TrafficStore.doSet(TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
 	assert.False(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
 
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	TrafficStore.doSet(TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
 	assert.True(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
 
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
+	TrafficStore.doSet(TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
 	assert.True(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-one"))
 
 	assert.True(t, TrafficStore.IsQuotaViolated(getTestAPIKeyBinding(), "key-frank"))
@@ -211,15 +260,30 @@ func TestIsRateLimitViolated(t *testing.T) {
 	assert.False(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
 	tmpTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:04.14 -0000 CST 2017")
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", tmpTime)
+	TrafficStore.doSet(TrafficPoint{
+		Time:      tmpTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
 	assert.False(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
 	tmpTime, _ = time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:06.01 -0000 CST 2017")
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", tmpTime)
+	TrafficStore.doSet(TrafficPoint{
+		Time:      tmpTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
 	assert.False(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
 	tmpTime, _ = time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:08.99 -0000 CST 2017")
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", tmpTime)
+	TrafficStore.doSet(TrafficPoint{
+		Time:      tmpTime.UnixNano(),
+		Namespace: "namespace-one",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	})
 	assert.True(t, TrafficStore.IsRateLimitViolated(testBinding, "key-one", currTime))
 
 	testBinding.Spec.Keys[0].Rate = &Rate{}

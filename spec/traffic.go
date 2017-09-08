@@ -59,28 +59,24 @@ func (s *TrafficFactory) Clear() {
 func (s *TrafficFactory) Set(obj interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	return s.doSet(obj, time.Now())
+	return s.doSet(obj)
 }
 
-func (s *TrafficFactory) doSet(obj interface{}, currTime time.Time) error {
-	kgram, ok := obj.(string)
+func (s *TrafficFactory) doSet(obj interface{}) error {
+	tp, ok := obj.(TrafficPoint)
 	if !ok {
-		return errors.New("parameter not of type string")
+		return errors.New("parameter not of type TrafficPoint")
 	}
-	nSpace, pName, keyName, err := decodeKanaliGram(kgram, ",")
-	if err != nil {
-		return err
+	if _, ok := s.trafficMap[tp.Namespace]; !ok {
+		s.trafficMap[tp.Namespace] = make(trafficByAPIProxy)
 	}
-	if _, ok := s.trafficMap[nSpace]; !ok {
-		s.trafficMap[nSpace] = make(trafficByAPIProxy)
+	if _, ok := s.trafficMap[tp.Namespace][tp.ProxyName]; !ok {
+		s.trafficMap[tp.Namespace][tp.ProxyName] = make(trafficByAPIKey)
 	}
-	if _, ok := s.trafficMap[nSpace][pName]; !ok {
-		s.trafficMap[nSpace][pName] = make(trafficByAPIKey)
+	if _, ok := s.trafficMap[tp.Namespace][tp.ProxyName][tp.KeyName]; !ok {
+		s.trafficMap[tp.Namespace][tp.ProxyName][tp.KeyName] = make([]time.Time, 0)
 	}
-	if _, ok := s.trafficMap[nSpace][pName][keyName]; !ok {
-		s.trafficMap[nSpace][pName][keyName] = make([]time.Time, 0)
-	}
-	s.trafficMap[nSpace][pName][keyName] = append(s.trafficMap[nSpace][pName][keyName], time.Now())
+	s.trafficMap[tp.Namespace][tp.ProxyName][tp.KeyName] = append(s.trafficMap[tp.Namespace][tp.ProxyName][tp.KeyName], time.Unix(0, tp.Time))
 	return nil
 }
 
@@ -212,12 +208,4 @@ func compareTime(t1, t2 time.Time) int {
 		return -1
 	}
 	return 1
-}
-
-func decodeKanaliGram(gram, delimiter string) (string, string, string, error) {
-	arr := strings.Split(gram, delimiter)
-	if len(arr) != 3 {
-		return "", "", "", errors.New("kgram must have 3")
-	}
-	return arr[0], arr[1], arr[2], nil
 }

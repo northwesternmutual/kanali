@@ -192,6 +192,41 @@ var (
 		value: "apikey",
 		usage: "Name of the HTTP header holding the apikey.",
 	}
+	// FlagEtcdEndpoints specifies the list of etcd endpoints to connect with (scheme://ip:port), comma separated.
+	FlagEtcdEndpoints = flag{
+		long:  "etcd-endpoints",
+		short: "",
+		value: []string{},
+		usage: "List of etcd endpoints to connect with (scheme://ip:port), comma separated.",
+	}
+	// FlagEtcdCAFile specifies the SSL Certificate Authority file used to secure etcd communication
+	FlagEtcdCAFile = flag{
+		long:  "etcd-cafile",
+		short: "",
+		value: "",
+		usage: "SSL Certificate Authority file used to secure etcd communication.",
+	}
+	// FlagEtcdCertFile specifies the SSL certification file used to secure etcd communication.
+	FlagEtcdCertFile = flag{
+		long:  "etcd-certfile",
+		short: "",
+		value: "",
+		usage: "SSL certification file used to secure etcd communication.",
+	}
+	// FlagEtcdKeyFile specifies the SSL key file used to secure etcd communication.
+	FlagEtcdKeyFile = flag{
+		long:  "etcd-keyfile",
+		short: "",
+		value: "",
+		usage: "SSL key file used to secure etcd communication.",
+	}
+	// FlagEtcdPrefix specifies the prefix to prepend to all resource paths in etcd.
+	FlagEtcdPrefix = flag{
+		long:  "etcd-prefix",
+		short: "",
+		value: "kanali",
+		usage: "The prefix to prepend to all resource paths in etcd.",
+	}
 )
 
 // Flags represents the complete set of configuration options that Kanali can use
@@ -244,6 +279,8 @@ func (f flags) AddAll(cmd *cobra.Command) error {
 			cmd.Flags().StringP(currFlag.long, currFlag.short, v, currFlag.usage)
 		case time.Duration:
 			cmd.Flags().DurationP(currFlag.long, currFlag.short, v, currFlag.usage)
+		case []string:
+			cmd.Flags().StringSliceP(currFlag.long, currFlag.short, v, currFlag.usage)
 		default:
 			return errors.New("unsupported flag type")
 		}
