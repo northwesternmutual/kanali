@@ -69,7 +69,7 @@ func TestAddAll(t *testing.T) {
 			value: d,
 			usage: "for testing",
 		},
-    Flag{
+		Flag{
 			long:  "slice",
 			short: "p",
 			value: []string{"foo"},
@@ -81,7 +81,7 @@ func TestAddAll(t *testing.T) {
 	cobraValTwo, _ := cmd.Flags().GetBool("bool")
 	cobraValThree, _ := cmd.Flags().GetString("string")
 	cobraValFour, _ := cmd.Flags().GetDuration("duration")
-  cobraValFive, _ := cmd.Flags().GetStringSlice("slice")
+	cobraValFive, _ := cmd.Flags().GetStringSlice("slice")
 	assert.Equal(t, viper.GetString("string"), "hello world")
 	assert.Equal(t, viper.GetInt("int"), 1)
 	assert.True(t, viper.GetBool("bool"))
@@ -90,7 +90,7 @@ func TestAddAll(t *testing.T) {
 	assert.True(t, cobraValTwo)
 	assert.Equal(t, cobraValThree, "hello world")
 	assert.Equal(t, cobraValFour, d)
-  assert.Equal(t, cobraValFive, []string{"foo"})
+	assert.Equal(t, cobraValFive, []string{"foo"})
 	f = flags{
 		Flag{
 			long:  "wrong",

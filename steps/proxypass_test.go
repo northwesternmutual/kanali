@@ -25,8 +25,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/spec"
-  "github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
