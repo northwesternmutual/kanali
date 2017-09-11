@@ -30,7 +30,7 @@ import (
 )
 
 func TestGetters(t *testing.T) {
-	f := flag{
+	f := Flag{
 		long:  "test",
 		short: "t",
 		value: "hello world",
@@ -45,28 +45,34 @@ func TestAddAll(t *testing.T) {
 	cmd := &cobra.Command{}
 	d, _ := time.ParseDuration("0h0m0s")
 	f := flags{
-		flag{
+		Flag{
 			long:  "int",
 			short: "i",
 			value: 1,
 			usage: "for testing",
 		},
-		flag{
+		Flag{
 			long:  "bool",
 			short: "b",
 			value: true,
 			usage: "for testing",
 		},
-		flag{
+		Flag{
 			long:  "string",
 			short: "s",
 			value: "hello world",
 			usage: "for testing",
 		},
-		flag{
+		Flag{
 			long:  "duration",
 			short: "d",
 			value: d,
+			usage: "for testing",
+		},
+    Flag{
+			long:  "slice",
+			short: "p",
+			value: []string{"foo"},
 			usage: "for testing",
 		},
 	}
@@ -75,6 +81,7 @@ func TestAddAll(t *testing.T) {
 	cobraValTwo, _ := cmd.Flags().GetBool("bool")
 	cobraValThree, _ := cmd.Flags().GetString("string")
 	cobraValFour, _ := cmd.Flags().GetDuration("duration")
+  cobraValFive, _ := cmd.Flags().GetStringSlice("slice")
 	assert.Equal(t, viper.GetString("string"), "hello world")
 	assert.Equal(t, viper.GetInt("int"), 1)
 	assert.True(t, viper.GetBool("bool"))
@@ -83,8 +90,9 @@ func TestAddAll(t *testing.T) {
 	assert.True(t, cobraValTwo)
 	assert.Equal(t, cobraValThree, "hello world")
 	assert.Equal(t, cobraValFour, d)
+  assert.Equal(t, cobraValFive, []string{"foo"})
 	f = flags{
-		flag{
+		Flag{
 			long:  "wrong",
 			short: "w",
 			value: make(chan int),

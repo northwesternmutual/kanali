@@ -47,7 +47,7 @@ func IncomingRequest(ctx context.Context, m *metrics.Metrics, ctlr *controller.C
 		steps.ValidateProxyStep{},
 		steps.PluginsOnRequestStep{},
 	)
-	if viper.GetBool(config.FlagEnableMock.GetLong()) && mockIsDefined(r.URL.Path) {
+	if viper.GetBool(config.FlagProxyEnableMockResponses.GetLong()) && mockIsDefined(r.URL.Path) {
 		f.Add(steps.MockServiceStep{})
 	} else {
 		f.Add(steps.ProxyPassStep{})

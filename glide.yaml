@@ -11,7 +11,7 @@ import:
 - package: github.com/spf13/cobra
 - package: github.com/NYTimes/gziphandler
 - package: github.com/spf13/viper
-  version: be5ff3e4840cf692388bde7a057595a474ef379e
+  version: v1.0.0
 - package: github.com/armon/go-proxyproto
 - package: github.com/influxdata/influxdb/client/v2
 - package: k8s.io/kubernetes

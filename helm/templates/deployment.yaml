@@ -19,22 +19,9 @@ spec:
       - name: kanali
         imagePullPolicy: {{default "IfNotPresent" .Values.pullPolicy}}
         image: {{.Values.imageRegistry}}/kanali:{{.Values.dockerImageTag}}
-        args:
+        command:
+        - /kanali
         - start
-        - --kanali-port=8443
-        - --bind-address=0.0.0.0
-        - --log-level=info
-        - --enable-mock
-        - --enable-cluster-ip
-        - --tls-cert-file=/etc/pki/tls.crt
-        - --tls-private-key-file=/etc/pki/tls.key
-        - --decryption-key-file=/etc/kanali/key.pem
-        - --plugins-location=/
-        - --disable-tls-cn-validation
-        - --influxdb-addr=http://kanali-influxdb.default.svc.cluster.local:8086
-        - --influxdb-database=kanali
-        - --jaeger-sampler-server-url=jaeger-agent.kube-system.svc.cluster.local
-        - --jaeger-agent-url=jaeger-agent.kube-system.svc.cluster.local
         env:
         - name: POD_IP
           valueFrom:
@@ -45,16 +32,27 @@ spec:
             cpu: "50m"
         ports:
         - containerPort: 8443
-        - containerPort: 8080
         volumeMounts:
         - name: pki
           mountPath: /etc/pki
-        - name: decrypt-key
+        - name: config
           mountPath: /etc/kanali
       volumes:
       - name: pki
-        secret:
-          secretName: {{.Values.tlsSecretName}}
-      - name: decrypt-key
-        secret:
-          secretName: {{.Values.decryptKeySecretName}}
+        projected:
+          sources:
+          - secret:
+              name: {{.Values.tlsSecretName}}
+              items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+          - secret:
+              name: {{.Values.decryptKeySecretName}}
+              items:
+              - key: key.pem
+                path: key.pem
+      - name: config
+        configMap:
+          name: kanali-config

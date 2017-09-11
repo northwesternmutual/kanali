@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/northwesternmutual/kanali/spec"
+  "github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -82,7 +83,7 @@ func TestSetK8sDiscoveredURI(t *testing.T) {
 		Host:   "bar.foo.svc.cluster.local:8080",
 	})
 
-	viper.SetDefault("enable-cluster-ip", true)
+	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), true)
 
 	urlOne, _ = proxies[0].setK8sDiscoveredURI()
 	assert.Equal(*urlOne, url.URL{
@@ -90,7 +91,7 @@ func TestSetK8sDiscoveredURI(t *testing.T) {
 		Host:   "1.2.3.4:8080",
 	})
 
-	viper.SetDefault("enable-cluster-ip", false)
+	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), false)
 
 	urlTwo, _ := proxies[1].setK8sDiscoveredURI()
 	assert.Equal(*urlTwo, url.URL{
@@ -98,7 +99,7 @@ func TestSetK8sDiscoveredURI(t *testing.T) {
 		Host:   "bar.foo.svc.cluster.local:8080",
 	})
 
-	viper.SetDefault("enable-cluster-ip", true)
+	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), true)
 
 	urlTwo, _ = proxies[1].setK8sDiscoveredURI()
 	assert.Equal(*urlTwo, url.URL{
