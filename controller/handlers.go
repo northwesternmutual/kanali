@@ -75,12 +75,6 @@ func (h k8sEventHandler) addFunc(obj interface{}) {
 				logrus.Errorf("could not add/modify service. skipping: %s", err.Error())
 			}
 		}
-	case api.Endpoints:
-		if endpoints, ok := obj.(api.Endpoints); ok {
-			if endpoints.ObjectMeta.Name == "kanali" {
-				spec.KanaliEndpoints = &endpoints
-			}
-		}
 	case api.ConfigMap:
 		if cm, ok := obj.(api.ConfigMap); ok {
 			if err := spec.MockResponseStore.Set(cm); err != nil {

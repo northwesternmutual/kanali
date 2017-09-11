@@ -253,6 +253,11 @@ var Flags = flags{
 	FlagUpstreamTimeout,
 	FlagHeaderMaskValue,
 	FlagApikeyHeaderKey,
+  FlagEtcdEndpoints,
+  FlagEtcdCAFile,
+  FlagEtcdCertFile,
+  FlagEtcdKeyFile,
+  FlagEtcdPrefix,
 }
 
 func (f flag) GetLong() string {

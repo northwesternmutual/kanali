@@ -33,6 +33,8 @@ func (ctlr *EtcdController) ReportTraffic(ctx context.Context, pt *spec.TrafficP
 		return
 	}
 
+  logrus.Debug("traffic point reported")
+
 }
 
 // MonitorTraffic watches for new traffic and adds to to the in memory traffic store
@@ -59,5 +61,7 @@ func handleNewTrafficPoint(data []byte) {
 	if err := spec.TrafficStore.Set(*tp); err != nil {
 		logrus.Errorf("could not add traffic point to store: %s", err.Error())
 	}
+
+  logrus.Debug("traffic point received and processed")
 
 }

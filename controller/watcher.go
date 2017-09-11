@@ -78,7 +78,6 @@ func (c *Controller) Watch() {
 	go c.watchResource(eventCh, "api/v1/secrets?fieldSelector=type%3Dkubernetes.io/tls&watch=true")
 	go c.watchResource(eventCh, "api/v1/services?watch=true")
 	go c.watchResource(eventCh, "api/v1/configmaps?watch=true")
-	go c.watchResource(eventCh, "api/v1/endpoints?watch=true")
 
 }
 
@@ -216,12 +215,6 @@ func handleValidEvent(kind string, msg json.RawMessage, e *event) error {
 		(*e).Object = t
 	case "Service":
 		t := api.Service{}
-		if err := json.Unmarshal(msg, &t); err != nil {
-			return err
-		}
-		(*e).Object = t
-	case "Endpoints":
-		t := api.Endpoints{}
 		if err := json.Unmarshal(msg, &t); err != nil {
 			return err
 		}
