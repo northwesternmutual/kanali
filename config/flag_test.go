@@ -31,10 +31,10 @@ import (
 
 func TestGetters(t *testing.T) {
 	f := Flag{
-		long:  "test",
-		short: "t",
-		value: "hello world",
-		usage: "for testing",
+		Long:  "test",
+		Short: "t",
+		Value: "hello world",
+		Usage: "for testing",
 	}
 	assert.Equal(t, f.GetLong(), "test")
 	assert.Equal(t, f.GetShort(), "t")
@@ -46,34 +46,34 @@ func TestAddAll(t *testing.T) {
 	d, _ := time.ParseDuration("0h0m0s")
 	f := flags{
 		Flag{
-			long:  "int",
-			short: "i",
-			value: 1,
-			usage: "for testing",
+			Long:  "int",
+			Short: "i",
+			Value: 1,
+			Usage: "for testing",
 		},
 		Flag{
-			long:  "bool",
-			short: "b",
-			value: true,
-			usage: "for testing",
+			Long:  "bool",
+			Short: "b",
+			Value: true,
+			Usage: "for testing",
 		},
 		Flag{
-			long:  "string",
-			short: "s",
-			value: "hello world",
-			usage: "for testing",
+			Long:  "string",
+			Short: "s",
+			Value: "hello world",
+			Usage: "for testing",
 		},
 		Flag{
-			long:  "duration",
-			short: "d",
-			value: d,
-			usage: "for testing",
+			Long:  "duration",
+			Short: "d",
+			Value: d,
+			Usage: "for testing",
 		},
 		Flag{
-			long:  "slice",
-			short: "p",
-			value: []string{"foo"},
-			usage: "for testing",
+			Long:  "slice",
+			Short: "p",
+			Value: []string{"foo"},
+			Usage: "for testing",
 		},
 	}
 	assert.Nil(t, f.AddAll(cmd))
@@ -93,10 +93,10 @@ func TestAddAll(t *testing.T) {
 	assert.Equal(t, cobraValFive, []string{"foo"})
 	f = flags{
 		Flag{
-			long:  "wrong",
-			short: "w",
-			value: make(chan int),
-			usage: "for testing",
+			Long:  "wrong",
+			Short: "w",
+			Value: make(chan int),
+			Usage: "for testing",
 		},
 	}
 	assert.Equal(t, f.AddAll(cmd).Error(), "unsupported flag type")

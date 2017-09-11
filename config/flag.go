@@ -30,10 +30,10 @@ import (
 
 // Flag is a simplified representation of a configuration item.
 type Flag struct {
-	long  string
-	short string
-	value interface{}
-	usage string
+	Long  string
+	Short string
+	Value interface{}
+	Usage string
 }
 
 type flags []Flag
@@ -49,40 +49,40 @@ func (f *flags) Add(a ...Flag) {
 
 // GetLong returns the name of the flag
 func (f Flag) GetLong() string {
-	return f.long
+	return f.Long
 }
 
-// GetShort returns the short name of the flag
+// GetShort returns the Short name of the flag
 func (f Flag) GetShort() string {
-	return f.short
+	return f.Short
 }
 
 // GetUsage returns the flag's description.
 func (f Flag) GetUsage() string {
-	return f.usage
+	return f.Usage
 }
 
 func (f flags) AddAll(cmd *cobra.Command) error {
 
 	for _, currFlag := range f {
-		switch v := currFlag.value.(type) {
+		switch v := currFlag.Value.(type) {
 		case int:
-			cmd.Flags().IntP(currFlag.long, currFlag.short, v, currFlag.usage)
+			cmd.Flags().IntP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
 		case bool:
-			cmd.Flags().BoolP(currFlag.long, currFlag.short, v, currFlag.usage)
+			cmd.Flags().BoolP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
 		case string:
-			cmd.Flags().StringP(currFlag.long, currFlag.short, v, currFlag.usage)
+			cmd.Flags().StringP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
 		case time.Duration:
-			cmd.Flags().DurationP(currFlag.long, currFlag.short, v, currFlag.usage)
+			cmd.Flags().DurationP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
 		case []string:
-			cmd.Flags().StringSliceP(currFlag.long, currFlag.short, v, currFlag.usage)
+			cmd.Flags().StringSliceP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
 		default:
 			return errors.New("unsupported flag type")
 		}
-		if err := viper.BindPFlag(currFlag.long, cmd.Flags().Lookup(currFlag.long)); err != nil {
+		if err := viper.BindPFlag(currFlag.Long, cmd.Flags().Lookup(currFlag.Long)); err != nil {
 			return err
 		}
-		viper.SetDefault(currFlag.long, currFlag.value)
+		viper.SetDefault(currFlag.Long, currFlag.Value)
 	}
 
 	return nil

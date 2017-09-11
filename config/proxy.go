@@ -34,44 +34,44 @@ func init() {
 var (
 	// FlagProxyEnableClusterIP enables to use of cluster ip as opposed to Kubernetes DNS for upstream routing
 	FlagProxyEnableClusterIP = Flag{
-		long:  "proxy.enable_cluster_ip",
-		short: "",
-		value: false,
-		usage: "Enables to use of cluster ip as opposed to Kubernetes DNS for upstream routing.",
+		Long:  "proxy.enable_cluster_ip",
+		Short: "",
+		Value: false,
+		Usage: "Enables to use of cluster ip as opposed to Kubernetes DNS for upstream routing.",
 	}
-	// FlagProxyHeaderMaskValue sets the value to be used when omitting header values
+	// FlagProxyHeaderMaskValue sets the Value to be used when omitting header Values
 	FlagProxyHeaderMaskValue = Flag{
-		long:  "proxy.header_mask_value",
-		short: "",
-		value: "ommitted",
-		usage: "Sets the value to be used when omitting header values.",
+		Long:  "proxy.header_mask_Value",
+		Short: "",
+		Value: "ommitted",
+		Usage: "Sets the Value to be used when omitting header Values.",
 	}
 	// FlagProxyEnableMockResponses enables Kanali's mock responses feature. Read the documentation for more information
 	FlagProxyEnableMockResponses = Flag{
-		long:  "proxy.enable_mock_responses",
-		short: "",
-		value: false,
-		usage: "Enables Kanali's mock responses feature. Read the documentation for more information.",
+		Long:  "proxy.enable_mock_responses",
+		Short: "",
+		Value: false,
+		Usage: "Enables Kanali's mock responses feature. Read the documentation for more information.",
 	}
 	// FlagProxyUpstreamTimeout sets the length of upstream timeout
 	FlagProxyUpstreamTimeout = Flag{
-		long:  "proxy.upstream_timeout",
-		short: "",
-		value: "0h0m10s",
-		usage: "Set length of upstream timeout. Defaults to none",
+		Long:  "proxy.upstream_timeout",
+		Short: "",
+		Value: "0h0m10s",
+		Usage: "Set length of upstream timeout. Defaults to none",
 	}
 	// FlagProxyMaskHeaderKeys specifies which headers to mask.
 	FlagProxyMaskHeaderKeys = Flag{
-		long:  "proxy.mask_header_keys",
-		short: "",
-		value: []string{},
-		usage: "Specify which headers to mask",
+		Long:  "proxy.mask_header_keys",
+		Short: "",
+		Value: []string{},
+		Usage: "Specify which headers to mask",
 	}
 	// FlagProxyTLSCommonNameValidation determins whether common name validation occurs as part of an SSL handshake
 	FlagProxyTLSCommonNameValidation = Flag{
-		long:  "proxy.tls_common_name_validation",
-		short: "",
-		value: true,
-		usage: "Should common name validate as part of an SSL handshake.",
+		Long:  "proxy.tls_common_name_validation",
+		Short: "",
+		Value: true,
+		Usage: "Should common name validate as part of an SSL handshake.",
 	}
 )

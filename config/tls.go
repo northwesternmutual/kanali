@@ -31,23 +31,23 @@ func init() {
 var (
 	// FlagTLSCertFile specifies the path to x509 certificate for HTTPS servers.
 	FlagTLSCertFile = Flag{
-		long:  "tls.cert_file",
-		short: "c",
-		value: "",
-		usage: "Path to x509 certificate for HTTPS servers.",
+		Long:  "tls.cert_file",
+		Short: "c",
+		Value: "",
+		Usage: "Path to x509 certificate for HTTPS servers.",
 	}
 	// FlagTLSKeyFile pecifies the path to x509 private key matching --tls-cert-file
 	FlagTLSKeyFile = Flag{
-		long:  "tls.key_file",
-		short: "k",
-		value: "",
-		usage: "Path to x509 private key matching --tls-cert-file.",
+		Long:  "tls.key_file",
+		Short: "k",
+		Value: "",
+		Usage: "Path to x509 private key matching --tls-cert-file.",
 	}
 	// FlagTLSCaFile specifies the path to x509 certificate authority bundle for mutual TLS
 	FlagTLSCaFile = Flag{
-		long:  "tls.ca_file",
-		short: "",
-		value: "",
-		usage: "Path to x509 certificate authority bundle for mutual TLS.",
+		Long:  "tls.ca_file",
+		Short: "",
+		Value: "",
+		Usage: "Path to x509 certificate authority bundle for mutual TLS.",
 	}
 )

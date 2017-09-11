@@ -32,30 +32,30 @@ func init() {
 var (
 	// FlagServerPort sets the port that Kanali will listen on for incoming requests
 	FlagServerPort = Flag{
-		long:  "server.port",
-		short: "p",
-		value: 0,
-		usage: "Sets the port that Kanali will listen on for incoming requests.",
+		Long:  "server.port",
+		Short: "p",
+		Value: 0,
+		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerBindAddress specifies the network address that Kanali will listen on for incoming requests
 	FlagServerBindAddress = Flag{
-		long:  "server.bind_address",
-		short: "b",
-		value: "0.0.0.0",
-		usage: "Network address that Kanali will listen on for incoming requests.",
+		Long:  "server.bind_address",
+		Short: "b",
+		Value: "0.0.0.0",
+		Usage: "Network address that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerPeerUDPPort sets the port that all Kanali instances will communicate to each other over
 	FlagServerPeerUDPPort = Flag{
-		long:  "server.peer_udp_port",
-		short: "",
-		value: 10001,
-		usage: "Sets the port that all Kanali instances will communicate to each other over.",
+		Long:  "server.peer_udp_port",
+		Short: "",
+		Value: 10001,
+		Usage: "Sets the port that all Kanali instances will communicate to each other over.",
 	}
 	// FlagServerProxyProtocol maintains the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header
 	FlagServerProxyProtocol = Flag{
-		long:  "server.proxy_protocol",
-		short: "",
-		value: false,
-		usage: "Maintain the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header.",
+		Long:  "server.proxy_protocol",
+		Short: "",
+		Value: false,
+		Usage: "Maintain the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header.",
 	}
 )
