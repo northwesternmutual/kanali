@@ -24,8 +24,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/Sirupsen/logrus"
-  "github.com/NYTimes/gziphandler"
 )
 
 // Logger creates a custom http.Handler that logs details around a request
@@ -45,6 +45,6 @@ func Logger(inner Handler) http.Handler {
 
 	})
 
-  return gziphandler.GzipHandler(h)
+	return gziphandler.GzipHandler(h)
 
 }
