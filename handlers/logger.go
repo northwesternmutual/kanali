@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+  "github.com/NYTimes/gziphandler"
 )
 
 // Logger creates a custom http.Handler that logs details around a request
@@ -32,7 +33,7 @@ import (
 // these metrics will be writtin to Influxdb
 func Logger(inner Handler) http.Handler {
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		inner.serveHTTP(w, r)
 
@@ -43,5 +44,7 @@ func Logger(inner Handler) http.Handler {
 		}).Info("request details")
 
 	})
+
+  return gziphandler.GzipHandler(h)
 
 }
