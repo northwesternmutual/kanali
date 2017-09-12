@@ -27,9 +27,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
-        resources:
-          requests:
-            cpu: "50m"
         ports:
         - containerPort: 8443
         volumeMounts:
@@ -55,4 +52,4 @@ spec:
                 path: key.pem
       - name: config
         configMap:
-          name: kanali-config
+          name: {{.Values.kanaliConfigName}}

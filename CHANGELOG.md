@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Using versioned API key plugin in distributed `Dockefile` and examples.
 - Refactored configuration items.
 - Using `TOML` as configuration format in distribution and examples.
+- Improved test coverage.
 
 ## [1.1.4] - 2017-08-31
 ### Added
