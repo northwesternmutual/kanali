@@ -204,6 +204,116 @@ func TestUpdateFunc(t *testing.T) {
 	assert.Nil(t, result)
 	result, _ = spec.ProxyStore.Get("/modified/path")
 	assert.NotNil(t, result)
+
+	handlers.updateFunc(spec.APIKey{
+		ObjectMeta: api.ObjectMeta{
+			Name: "def456",
+		},
+		Spec: spec.APIKeySpec{
+			APIKeyData: "encrypted",
+		},
+	})
+	handlers.addFunc(spec.APIKey{
+		ObjectMeta: api.ObjectMeta{
+			Name: "abc123",
+		},
+		Spec: spec.APIKeySpec{
+			APIKeyData: "9210f613f32a54eca4601d199b81dda5a4f93c0540ee6a8b9634c2d4976b13399a03276820cd85a35b625a96ffdeffa2e094f1349e1ed7510afd7f0f904595f0f1bd8707170a46e6d366395456568323e4de71973977d872ab9aa733b35fbdeec279fc1f4bc147e242f414652bae8d46b7c53af76a1c37254096e4e0aa89dfdf86d599692ab74849bfedd7ecc6b4409b01d1e4d989cdd9ca6db7c1a90cd86086da7508f85186d938ab2922e862832eb07281e5934d417addaba0ddc43f57f3613ab0aff4f353fdadc1116f9dca10338562a842904eb7b3ab77b6f919ac244a8b8fa4d2634ac2f9bec60ee4631894e6b823dd200dc0c793f5d1dfc08b749b2bba",
+		},
+	})
+	result, err := spec.KeyStore.Get("i3CZlcRnDhJZeZfkDw9BgeEtZuFQKiw9")
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	handlers.updateFunc(spec.APIKeyBinding{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "abc123",
+			Namespace: "foo",
+		},
+		Spec: spec.APIKeyBindingSpec{
+			APIProxyName: "api-proxy-one",
+			Keys: []spec.Key{
+				{
+					Name: "franks-api-key",
+				},
+			},
+		},
+	})
+	result, err = spec.BindingStore.Get("api-proxy-one", "foo")
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	handlers.updateFunc(api.Secret{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "secret-one",
+			Namespace: "foo",
+		},
+		Type: "kubernetes.io/tls",
+		Data: map[string][]byte{
+			"tls.key": []byte("YWJjMTIz"),
+			"tls.crt": []byte("ZGVmNDU2"),
+		},
+	})
+	result, err = spec.SecretStore.Get("secret-one", "foo")
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	handlers.updateFunc(api.Service{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "foo",
+			Namespace: "bar",
+			Labels: map[string]string{
+				"release":  "production",
+				"name-two": "value-two",
+			},
+		},
+	})
+	result, err = spec.ServiceStore.Get(spec.Service{
+		Namespace: "bar",
+		Labels: spec.Labels{
+			spec.Label{
+				Name:  "release",
+				Value: "production",
+			},
+			spec.Label{
+				Name:  "name-two",
+				Value: "value-two",
+			},
+		},
+	}, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	ep := api.Endpoints{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "kanali",
+			Namespace: "bar",
+		},
+	}
+	handlers.updateFunc(ep)
+	assert.Equal(t, *(spec.KanaliEndpoints), ep)
+
+	mockOne, _ := json.Marshal([]spec.Route{
+		{
+			Route:  "/foo",
+			Code:   200,
+			Method: "GET",
+			Body:   "{\"foo\": \"bar\"}",
+		},
+	})
+
+	handlers.updateFunc(api.ConfigMap{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "cm-one",
+			Namespace: "foo",
+		},
+		Data: map[string]string{
+			"response": string(mockOne),
+		},
+	})
+	result, err = spec.MockResponseStore.Get("foo", "cm-one", "/foo", "GET")
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
 }
 
 func clearAllStores() {
