@@ -119,6 +119,86 @@ func TestMockResponseSet(t *testing.T) {
 
 }
 
+func TestMockResponseUpdate(t *testing.T) {
+	cm := getTestConfigMaps()
+
+	MockResponseStore.Clear()
+
+	assert.Equal(t, MockResponseStore.Update("hi").Error(), "obj was not a ConfigMap")
+	assert.Nil(t, MockResponseStore.Update(api.ConfigMap{
+		TypeMeta: unversioned.TypeMeta{},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "cm-one",
+			Namespace: "foo",
+		},
+		Data: map[string]string{
+			"foo": "bar",
+		},
+	}))
+	assert.Nil(t, MockResponseStore.Update(api.ConfigMap{
+		TypeMeta: unversioned.TypeMeta{},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "cm-one",
+			Namespace: "foo",
+		},
+		Data: map[string]string{
+			"response": "bad",
+		},
+	}))
+	MockResponseStore.Update(cm[0])
+	assert.Equal(t, len(MockResponseStore.mockRespTree), 1)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]), 1)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]["cm-one"]), 1)
+
+	MockResponseStore.Update(cm[1])
+	assert.Equal(t, len(MockResponseStore.mockRespTree), 1)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]), 2)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]["cm-two"]["GET"].Children), 1)
+	assert.Equal(t, MockResponseStore.mockRespTree["foo"]["cm-two"]["GET"].Children["bar"].Value, &Route{
+		Route:  "/bar",
+		Code:   200,
+		Method: "GET",
+		Body:   "{\"foo\": \"bar\"}",
+	})
+	assert.Equal(t, MockResponseStore.mockRespTree["foo"]["cm-two"]["GET"].Value, &Route{
+		Route:  "/",
+		Code:   200,
+		Method: "GET",
+		Body:   "{\"frank\": \"greco\"}",
+	})
+
+	MockResponseStore.Update(cm[2])
+	assert.Equal(t, len(MockResponseStore.mockRespTree), 1)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]), 3)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]["cm-three"]["GET"].Children), 1)
+	assert.Equal(t, MockResponseStore.mockRespTree["foo"]["cm-three"]["GET"].Value, &Route{
+		Route:  "",
+		Code:   200,
+		Method: "GET",
+		Body:   "{\"foo\": \"bar\"}",
+	})
+	assert.Equal(t, MockResponseStore.mockRespTree["foo"]["cm-three"]["GET"].Children["foo"].Value, &Route{
+		Route:  "foo",
+		Code:   200,
+		Method: "GET",
+		Body:   "{\"foo\": \"bar\"}",
+	})
+	assert.Equal(t, MockResponseStore.mockRespTree["foo"]["cm-three"]["POST"].Children["foo"].Children["bar"].Children["car"].Value, &Route{
+		Route:  "/foo/bar/car",
+		Code:   200,
+		Method: "POST",
+		Body:   "{\"foo\": \"bar\"}",
+	})
+	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]["cm-three"]["GET"].Children["foo"].Children), 0)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]["cm-three"]["POST"].Children["foo"].Children), 1)
+
+	MockResponseStore.Set(cm[3])
+	assert.Equal(t, len(MockResponseStore.mockRespTree), 2)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["bar"]), 1)
+	assert.Equal(t, len(MockResponseStore.mockRespTree["bar"]["cm-four"]), 1)
+
+}
+
 func TestMockResponseClear(t *testing.T) {
 	cm := getTestConfigMaps()
 	MockResponseStore.Clear()

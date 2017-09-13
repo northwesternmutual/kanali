@@ -118,10 +118,7 @@ func (s *ProxyFactory) Update(obj interface{}) error {
 }
 
 func (s *ProxyFactory) update(p APIProxy) error {
-	untyped, err := s.get(p.Spec.Path)
-	if err != nil {
-		return err
-	}
+	untyped := s.get(p.Spec.Path)
 	if untyped != nil {
 		typed, ok := untyped.(APIProxy)
 		if !ok {
@@ -156,7 +153,7 @@ func (s *ProxyFactory) Set(obj interface{}) error {
 	defer s.mutex.Unlock()
 	p, ok := obj.(APIProxy)
 	if !ok {
-		return errors.New("grrr - you're only allowed add api proxies to the api proxy store.... duh")
+		return errors.New("parameter was not of type APIProxy")
 	}
 	p.Spec.Service.Namespace = p.ObjectMeta.Namespace
 	logrus.Debugf("adding APIProxy %s", p.ObjectMeta.Name)
@@ -197,12 +194,12 @@ func (s *ProxyFactory) Get(params ...interface{}) (interface{}, error) {
 	if !ok {
 		return nil, errors.New("when retrieving a proxy, use the proxy path")
 	}
-	return s.get(path)
+	return s.get(path), nil
 }
 
-func (s *ProxyFactory) get(path string) (interface{}, error) {
+func (s *ProxyFactory) get(path string) interface{} {
 	if len(s.proxyTree.Children) == 0 || path == "" {
-		return nil, nil
+		return nil
 	}
 	if path[0] == '/' {
 		path = path[1:]
@@ -215,9 +212,9 @@ func (s *ProxyFactory) get(path string) (interface{}, error) {
 		rootNode = rootNode.Children[part]
 	}
 	if rootNode.Value == nil {
-		return nil, nil
+		return nil
 	}
-	return *rootNode.Value, nil
+	return *rootNode.Value
 }
 
 // Delete will remove a particular proxy from the store

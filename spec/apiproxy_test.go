@@ -53,10 +53,38 @@ func TestAPIProxySet(t *testing.T) {
 	store.Set(proxyList.Proxies[1])
 	store.Set(proxyList.Proxies[2])
 	err := store.Set(APIKey{})
-	assert.Equal(err.Error(), "grrr - you're only allowed add api proxies to the api proxy store.... duh", "wrong error")
+	assert.Equal(err.Error(), "parameter was not of type APIProxy")
 	assert.Equal(proxyList.Proxies[0], *store.proxyTree.Children["api"].Children["v1"].Children["accounts"].Value, "proxy should exist")
 	assert.Equal(proxyList.Proxies[1], *store.proxyTree.Children["api"].Children["v1"].Children["field"].Value, "proxy should exist")
 	assert.Equal(proxyList.Proxies[2], *store.proxyTree.Children["api"].Value, "proxy should exist")
+}
+
+func TestAPIProxyUpdate(t *testing.T) {
+	assert := assert.New(t)
+	store := ProxyStore
+	proxyList := getTestAPIProxyList()
+
+	store.Clear()
+	store.Update(proxyList.Proxies[0])
+	store.Update(proxyList.Proxies[1])
+	store.Update(proxyList.Proxies[2])
+	err := store.Update(APIKey{})
+	assert.Equal(err.Error(), "parameter was not of type APIProxy")
+	assert.Equal(proxyList.Proxies[0], *store.proxyTree.Children["api"].Children["v1"].Children["accounts"].Value, "proxy should exist")
+	assert.Equal(proxyList.Proxies[1], *store.proxyTree.Children["api"].Children["v1"].Children["field"].Value, "proxy should exist")
+	assert.Equal(proxyList.Proxies[2], *store.proxyTree.Children["api"].Value, "proxy should exist")
+
+	proxy := proxyList.Proxies[0]
+	proxy.Spec.Path = "/modified/foo/bar"
+	store.Update(proxy)
+	assert.Equal(proxy, *store.proxyTree.Children["modified"].Children["foo"].Children["bar"].Value, "proxy should exist")
+
+	proxy.Spec.Target = "/frank/greco/jr"
+	proxy.ObjectMeta = api.ObjectMeta{
+		Name:      "frank",
+		Namespace: "greco",
+	}
+	assert.Equal(store.Update(proxy).Error(), "there exists an APIProxy as the targeted path - APIProxy can not be updated - consider using kanalictl to avoid this error in the future")
 }
 
 func TestAPIProxyClear(t *testing.T) {

@@ -61,6 +61,23 @@ func TestAPIKeySet(t *testing.T) {
 	assert.Equal(keyList.Keys[2], store.keyMap["iamencrypted3"], message)
 }
 
+func TestAPIKeyUpdate(t *testing.T) {
+	assert := assert.New(t)
+	store := KeyStore
+	keyList := getTestAPIKeyList()
+	message := "key received is not expected"
+
+	store.Clear()
+	store.Update(keyList.Keys[0])
+	store.Update(keyList.Keys[1])
+	store.Update(keyList.Keys[2])
+	err := store.Update(APIProxy{})
+	assert.Equal("grrr - you're only allowed add api keys to the api key store.... duh", err.Error(), "error expected")
+	assert.Equal(keyList.Keys[0], store.keyMap["iamencrypted1"], message)
+	assert.Equal(keyList.Keys[1], store.keyMap["iamencrypted2"], message)
+	assert.Equal(keyList.Keys[2], store.keyMap["iamencrypted3"], message)
+}
+
 func TestAPIKeyClear(t *testing.T) {
 	assert := assert.New(t)
 	store := KeyStore
