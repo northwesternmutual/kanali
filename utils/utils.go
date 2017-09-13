@@ -28,6 +28,10 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/PuerkitoBio/purell"
+	"github.com/Sirupsen/logrus"
+	"k8s.io/kubernetes/pkg/api"
 )
 
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
@@ -152,4 +156,37 @@ func FlattenHTTPHeaders(h http.Header) map[string]string {
 		headers[k] = h.Get(k)
 	}
 	return headers
+}
+
+// CompareObjectMeta will loosly determine whether two ObjectMeta objects are equal.
+// It does this by comparing the name and namespace
+func CompareObjectMeta(c1, c2 api.ObjectMeta) bool {
+	return c1.Namespace == c2.Namespace && c1.Name == c2.Name
+}
+
+// NormalizePath will correct a URL path that might be valid but no ideally formatted
+func NormalizePath(path string) string {
+	result, err := purell.NormalizeURLString(path, purell.FlagRemoveDotSegments|purell.FlagRemoveDuplicateSlashes|purell.FlagRemoveTrailingSlash)
+	if err != nil {
+		logrus.Errorf("error normalizing url path - using original url path: %s", err.Error())
+		return removeDupLeadingSlashes(path)
+	}
+	return removeDupLeadingSlashes(result)
+}
+
+func removeDupLeadingSlashes(path string) string {
+	if len(path) < 1 {
+		return "/"
+	}
+	var buffer bytes.Buffer
+	var i int
+	buffer.WriteString("/")
+	for i = 0; i < len(path); i++ {
+		if path[i] == '/' {
+			continue
+		}
+		break
+	}
+	buffer.WriteString(path[i:])
+	return buffer.String()
 }

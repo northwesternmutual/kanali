@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Gzip support.
+- `Update` method to `Store` interface.
 ### Changed
+- Fixed [#61](https://github.com/northwesternmutual/kanali/issues/61)
 - Fixed [#57](https://github.com/northwesternmutual/kanali/issues/57).
 - Using versioned API key plugin in distributed `Dockefile` and examples.
 - Refactored configuration items.

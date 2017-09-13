@@ -27,6 +27,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/utils"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 )
@@ -104,8 +105,52 @@ func (s *ProxyFactory) Clear() {
 	*(s.proxyTree) = proxyNode{}
 }
 
-// Set takes an APIProxy and either adds it to the store
-// or updates it
+// Update will update an APIProxy and preform necessary clean up of old APIProxy is necessary.
+func (s *ProxyFactory) Update(obj interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	p, ok := obj.(APIProxy)
+	if !ok {
+		return errors.New("parameter was not of type APIProxy")
+	}
+	normalize(&p)
+	return s.update(p)
+}
+
+func (s *ProxyFactory) update(p APIProxy) error {
+	untyped, err := s.get(p.Spec.Path)
+	if err != nil {
+		return err
+	}
+	if untyped != nil {
+		typed, ok := untyped.(APIProxy)
+		if !ok {
+			return errors.New("received interface not of type APIProxy")
+		}
+		if !utils.CompareObjectMeta(p.ObjectMeta, typed.ObjectMeta) {
+			return errors.New("there exists an APIProxy as the targeted path - APIProxy can not be updated - consider using kanalictl to avoid this error in the future")
+		}
+	}
+	s.proxyTree.deletePreviousProxy(p)
+	p.Spec.Service.Namespace = p.ObjectMeta.Namespace
+	logrus.Debugf("updating APIProxy %s", p.ObjectMeta.Name)
+	s.proxyTree.doSet(strings.Split(p.Spec.Path[1:], "/"), &p)
+	return nil
+}
+
+func (n *proxyNode) deletePreviousProxy(p APIProxy) {
+	for k := range n.Children {
+		n.Children[k].deletePreviousProxy(p)
+		if len(n.Children[k].Children) == 0 && n.Children[k].Value == nil {
+			delete(n.Children, k)
+		}
+	}
+	if n.Value != nil && utils.CompareObjectMeta(p.ObjectMeta, n.Value.ObjectMeta) {
+		n.Value = nil
+	}
+}
+
+// Set creates or updates an APIProxy
 func (s *ProxyFactory) Set(obj interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -113,14 +158,10 @@ func (s *ProxyFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add api proxies to the api proxy store.... duh")
 	}
-	// set service namespace
 	p.Spec.Service.Namespace = p.ObjectMeta.Namespace
-	logrus.Infof("Adding new APIProxy named %s", p.ObjectMeta.Name)
-	if p.Spec.Path[0] == '/' {
-		s.proxyTree.doSet(strings.Split(p.Spec.Path[1:], "/"), &p)
-	} else {
-		s.proxyTree.doSet(strings.Split(p.Spec.Path, "/"), &p)
-	}
+	logrus.Debugf("adding APIProxy %s", p.ObjectMeta.Name)
+	normalize(&p)
+	s.proxyTree.doSet(strings.Split(p.Spec.Path[1:], "/"), &p)
 	return nil
 }
 
@@ -156,6 +197,10 @@ func (s *ProxyFactory) Get(params ...interface{}) (interface{}, error) {
 	if !ok {
 		return nil, errors.New("when retrieving a proxy, use the proxy path")
 	}
+	return s.get(path)
+}
+
+func (s *ProxyFactory) get(path string) (interface{}, error) {
 	if len(s.proxyTree.Children) == 0 || path == "" {
 		return nil, nil
 	}
@@ -163,8 +208,8 @@ func (s *ProxyFactory) Get(params ...interface{}) (interface{}, error) {
 		path = path[1:]
 	}
 	rootNode := s.proxyTree
-	for _, part := range strings.Split(path, "/") {
-		if rootNode.Children[part] == nil {
+	for i, part := range strings.Split(path, "/") {
+		if rootNode.Children[part] == nil || (rootNode.Children[part].Value == nil && i == len(strings.Split(path, "/"))-1) {
 			break
 		}
 		rootNode = rootNode.Children[part]
@@ -233,4 +278,9 @@ func (p Plugin) GetFileName() string {
 		)
 	}
 	return p.Name
+}
+
+func normalize(p *APIProxy) {
+	(*p).Spec.Path = utils.NormalizePath(p.Spec.Path)
+	(*p).Spec.Target = utils.NormalizePath(p.Spec.Target)
 }

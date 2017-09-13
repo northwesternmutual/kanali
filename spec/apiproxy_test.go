@@ -69,6 +69,45 @@ func TestAPIProxyClear(t *testing.T) {
 	assert.Equal(0, len(store.proxyTree.Children), "store should be empty")
 }
 
+func TestDeletePreviousProxy(t *testing.T) {
+	ProxyStore.Clear()
+	defer ProxyStore.Clear()
+	proxyList := getTestAPIProxyList()
+	ProxyStore.Set(proxyList.Proxies[0])
+	ProxyStore.Set(proxyList.Proxies[1])
+	ProxyStore.Set(proxyList.Proxies[2])
+	ProxyStore.Set(proxyList.Proxies[3])
+
+	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children["v1"].Children), 2)
+	ProxyStore.proxyTree.deletePreviousProxy(proxyList.Proxies[1])
+	assert.False(t, ProxyStore.IsEmpty())
+	assert.Equal(t, len(ProxyStore.proxyTree.Children), 1)
+	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children), 1)
+	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children["v1"].Children), 1)
+	untyped, _ := ProxyStore.Get("/api/v1/field")
+	typed, _ := untyped.(APIProxy)
+	assert.Equal(t, typed.Spec.Path, "/api/v1")
+	untyped, _ = ProxyStore.Get("/api/v1")
+	typed, _ = untyped.(APIProxy)
+	assert.Equal(t, typed.Spec.Path, "/api/v1")
+	ProxyStore.proxyTree.deletePreviousProxy(proxyList.Proxies[3])
+	untyped, _ = ProxyStore.Get("/api/v1")
+	typed, _ = untyped.(APIProxy)
+	untyped, _ = ProxyStore.Get("/api/v1")
+	typed, _ = untyped.(APIProxy)
+	assert.Equal(t, typed.Spec.Path, "/api")
+	assert.Equal(t, len(ProxyStore.proxyTree.Children), 1)
+	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children), 1)
+	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children["v1"].Children), 1)
+	untyped, _ = ProxyStore.Get("/api/v1/accounts")
+	assert.NotNil(t, untyped)
+
+	ProxyStore.proxyTree.deletePreviousProxy(proxyList.Proxies[0])
+	assert.False(t, ProxyStore.IsEmpty())
+	ProxyStore.proxyTree.deletePreviousProxy(proxyList.Proxies[2])
+	assert.True(t, ProxyStore.IsEmpty())
+}
+
 func TestAPIProxyIsEmpty(t *testing.T) {
 	assert := assert.New(t)
 	store := ProxyStore
@@ -101,8 +140,11 @@ func TestAPIProxyGet(t *testing.T) {
 	assert.Nil(result, "proxy should not be returned")
 	result, _ = store.Get("bar")
 	assert.Nil(result, "proxy should not be returned")
+	// result, _ = store.Get("api/v1")
+	// assert.Nil(result, "proxy should not be returned")
 	result, _ = store.Get("api/v1")
-	assert.Nil(result, "proxy should not be returned")
+	assert.Equal(proxyList.Proxies[2], result, "proxy should be returned")
+
 	result, _ = store.Get("foo/bar")
 	assert.Nil(result, "proxy should not be returned")
 	result, _ = store.Get("api/v1/accounts")
@@ -201,6 +243,28 @@ func TestGetSSLCertificates(t *testing.T) {
 	assert.Equal(SSL{"mySecret"}, *result.GetSSLCertificates("bar.foo.com"), message)
 }
 
+func TestNormalize(t *testing.T) {
+	p1 := APIProxy{
+		Spec: APIProxySpec{
+			Path:   "///foo/bar///car",
+			Target: "foo///bar//car",
+		},
+	}
+	p2 := APIProxy{
+		Spec: APIProxySpec{
+			Path:   "",
+			Target: "///",
+		},
+	}
+	normalize(&p1)
+	normalize(&p2)
+
+	assert.Equal(t, p1.Spec.Path, "/foo/bar/car")
+	assert.Equal(t, p1.Spec.Target, "/foo/bar/car")
+	assert.Equal(t, p2.Spec.Path, "/")
+	assert.Equal(t, p2.Spec.Target, "/")
+}
+
 func getTestAPIProxyList() *APIProxyList {
 
 	return &APIProxyList{
@@ -214,7 +278,8 @@ func getTestAPIProxyList() *APIProxyList {
 					Namespace: "foo",
 				},
 				Spec: APIProxySpec{
-					Path: "api/v1/accounts",
+					Path:   "/api/v1/accounts",
+					Target: "/",
 					Hosts: []Host{
 						{
 							Name: "foo.bar.com",
@@ -252,7 +317,8 @@ func getTestAPIProxyList() *APIProxyList {
 					Namespace: "foo",
 				},
 				Spec: APIProxySpec{
-					Path: "/api/v1/field",
+					Path:   "/api/v1/field",
+					Target: "/",
 					Hosts: []Host{
 						{
 							Name: "https://www.google.com",
@@ -283,7 +349,8 @@ func getTestAPIProxyList() *APIProxyList {
 					Namespace: "foo",
 				},
 				Spec: APIProxySpec{
-					Path: "/api",
+					Path:   "/api",
+					Target: "/",
 					Hosts: []Host{
 						{
 							Name: "https://www.google.com",
@@ -320,7 +387,8 @@ func getTestAPIProxyList() *APIProxyList {
 					Namespace: "foo",
 				},
 				Spec: APIProxySpec{
-					Path: "/api/v1",
+					Path:   "/api/v1",
+					Target: "/",
 					Hosts: []Host{
 						{
 							Name: "https://www.google.com",

@@ -1,5 +1,5 @@
-hash: f2a38705d488ed00d19c9efcaa88390b3f08a87ff9efe6c645e58b99048939f2
-updated: 2017-09-11T14:11:48.45293284-05:00
+hash: fef28cb1eeb12b2ee5c3f4b546ccac6a917f820eba49761bd90c27f2dd296c2c
+updated: 2017-09-13T10:24:53.596553494-05:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -184,7 +184,7 @@ imports:
 - name: github.com/pkg/sftp
   version: 4d0e916071f68db74f8a73926335f809396d6b42
 - name: github.com/PuerkitoBio/purell
-  version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
+  version: 0bcb03f4b4d0a9428594752bd2a3b9aa0a9d4bd4
 - name: github.com/PuerkitoBio/urlesc
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
 - name: github.com/Sirupsen/logrus

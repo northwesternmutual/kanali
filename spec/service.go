@@ -78,6 +78,17 @@ func (s *ServiceFactory) Clear() {
 	}
 }
 
+// Update will update a service
+func (s *ServiceFactory) Update(obj interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	service, ok := obj.(Service)
+	if !ok {
+		return errors.New("grrr - you're only allowed add services to the services store.... duh")
+	}
+	return s.set(service)
+}
+
 // Set takes a Service and either adds it to the store
 // or updates it
 func (s *ServiceFactory) Set(obj interface{}) error {
@@ -87,6 +98,10 @@ func (s *ServiceFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add services to the services store.... duh")
 	}
+	return s.set(service)
+}
+
+func (s *ServiceFactory) set(service Service) error {
 	logrus.Infof("Adding new Service named %s", service.Name)
 	if s.serviceMap[service.Namespace] == nil {
 		s.serviceMap[service.Namespace] = []Service{service}

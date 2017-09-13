@@ -51,6 +51,8 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
 	m := &metrics.Metrics{}
 
+	normalize(r)
+
 	defer func() {
 		m.Add(
 			metrics.Metric{Name: "total_time", Value: int(time.Now().Sub(t0) / time.Millisecond), Index: false},
@@ -160,4 +162,9 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 		}
 	}
+}
+
+func normalize(r *http.Request) {
+	r.URL.Path = utils.NormalizePath(r.URL.Path)
+	r.URL.RawPath = r.URL.EscapedPath()
 }

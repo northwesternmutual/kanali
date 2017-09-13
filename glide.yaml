@@ -10,6 +10,8 @@ import:
 - package: github.com/fsnotify/fsnotify
 - package: github.com/spf13/cobra
 - package: github.com/NYTimes/gziphandler
+- package: github.com/PuerkitoBio/purell
+  version: v1.1.0
 - package: github.com/spf13/viper
   version: v1.0.0
 - package: github.com/armon/go-proxyproto
