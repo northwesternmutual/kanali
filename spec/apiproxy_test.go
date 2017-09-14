@@ -147,6 +147,10 @@ func TestAPIProxyIsEmpty(t *testing.T) {
 	assert.False(store.IsEmpty())
 	store.Clear()
 	assert.True(store.IsEmpty())
+
+	store.Set(proxyList.Proxies[0])
+	store.Delete(proxyList.Proxies[0])
+	assert.True(store.IsEmpty())
 }
 
 func TestAPIProxyGet(t *testing.T) {
@@ -168,11 +172,8 @@ func TestAPIProxyGet(t *testing.T) {
 	assert.Nil(result, "proxy should not be returned")
 	result, _ = store.Get("bar")
 	assert.Nil(result, "proxy should not be returned")
-	// result, _ = store.Get("api/v1")
-	// assert.Nil(result, "proxy should not be returned")
 	result, _ = store.Get("api/v1")
 	assert.Equal(proxyList.Proxies[2], result, "proxy should be returned")
-
 	result, _ = store.Get("foo/bar")
 	assert.Nil(result, "proxy should not be returned")
 	result, _ = store.Get("api/v1/accounts")

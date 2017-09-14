@@ -316,6 +316,155 @@ func TestUpdateFunc(t *testing.T) {
 	assert.NotNil(t, result)
 }
 
+func TestDeleteFunc(t *testing.T) {
+	clearAllStores()
+	defer clearAllStores()
+	handlers := k8sEventHandler{}
+	setDecryptionKey(t)
+
+	spec.ProxyStore.Set(spec.APIProxy{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "exampleAPIProxyOne",
+			Namespace: "foo",
+		},
+		Spec: spec.APIProxySpec{
+			Path: "api/v1/accounts",
+			Service: spec.Service{
+				Name: "my-service",
+				Port: 8080,
+			},
+		},
+	})
+	assert.False(t, spec.ProxyStore.IsEmpty())
+	handlers.deleteFunc(spec.APIProxy{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "exampleAPIProxyOne",
+			Namespace: "foo",
+		},
+		Spec: spec.APIProxySpec{
+			Path: "api/v1/accounts",
+			Service: spec.Service{
+				Name: "my-service",
+				Port: 8080,
+			},
+		},
+	})
+	assert.True(t, spec.ProxyStore.IsEmpty())
+
+	spec.BindingStore.Set(spec.APIKeyBinding{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "abc123",
+			Namespace: "foo",
+		},
+		Spec: spec.APIKeyBindingSpec{
+			APIProxyName: "api-proxy-one",
+			Keys: []spec.Key{
+				{
+					Name: "franks-api-key",
+				},
+			},
+		},
+	})
+	assert.False(t, spec.BindingStore.IsEmpty())
+	handlers.deleteFunc(spec.APIKeyBinding{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "abc123",
+			Namespace: "foo",
+		},
+		Spec: spec.APIKeyBindingSpec{
+			APIProxyName: "api-proxy-one",
+			Keys: []spec.Key{
+				{
+					Name: "franks-api-key",
+				},
+			},
+		},
+	})
+	assert.True(t, spec.BindingStore.IsEmpty())
+
+	spec.KeyStore.Set(spec.APIKey{
+		ObjectMeta: api.ObjectMeta{
+			Name: "def456",
+		},
+		Spec: spec.APIKeySpec{
+			APIKeyData: "i3CZlcRnDhJZeZfkDw9BgeEtZuFQKiw9",
+		},
+	})
+	assert.False(t, spec.KeyStore.IsEmpty())
+	handlers.deleteFunc(spec.APIKey{
+		ObjectMeta: api.ObjectMeta{
+			Name: "abc123",
+		},
+		Spec: spec.APIKeySpec{
+			APIKeyData: "9210f613f32a54eca4601d199b81dda5a4f93c0540ee6a8b9634c2d4976b13399a03276820cd85a35b625a96ffdeffa2e094f1349e1ed7510afd7f0f904595f0f1bd8707170a46e6d366395456568323e4de71973977d872ab9aa733b35fbdeec279fc1f4bc147e242f414652bae8d46b7c53af76a1c37254096e4e0aa89dfdf86d599692ab74849bfedd7ecc6b4409b01d1e4d989cdd9ca6db7c1a90cd86086da7508f85186d938ab2922e862832eb07281e5934d417addaba0ddc43f57f3613ab0aff4f353fdadc1116f9dca10338562a842904eb7b3ab77b6f919ac244a8b8fa4d2634ac2f9bec60ee4631894e6b823dd200dc0c793f5d1dfc08b749b2bba",
+		},
+	})
+	assert.True(t, spec.KeyStore.IsEmpty())
+
+	secret := api.Secret{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "secret-one",
+			Namespace: "foo",
+		},
+		Type: "kubernetes.io/tls",
+		Data: map[string][]byte{
+			"tls.key": []byte("YWJjMTIz"),
+			"tls.crt": []byte("ZGVmNDU2"),
+		},
+	}
+	spec.SecretStore.Set(secret)
+	assert.False(t, spec.SecretStore.IsEmpty())
+	handlers.deleteFunc(secret)
+	assert.True(t, spec.SecretStore.IsEmpty())
+	handlers.deleteFunc(spec.APIKey{
+		ObjectMeta: api.ObjectMeta{
+			Name: "def456",
+		},
+		Spec: spec.APIKeySpec{
+			APIKeyData: "encrypted",
+		},
+	})
+
+	service := api.Service{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "foo",
+			Namespace: "bar",
+			Labels: map[string]string{
+				"release":  "production",
+				"name-two": "value-two",
+			},
+		},
+	}
+
+	spec.ServiceStore.Set(spec.CreateService(service))
+	assert.False(t, spec.ServiceStore.IsEmpty())
+	handlers.deleteFunc(service)
+	assert.True(t, spec.ServiceStore.IsEmpty())
+
+	mockOne, _ := json.Marshal([]spec.Route{
+		{
+			Route:  "/foo",
+			Code:   200,
+			Method: "GET",
+			Body:   "{\"foo\": \"bar\"}",
+		},
+	})
+	cm := api.ConfigMap{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "cm-one",
+			Namespace: "foo",
+		},
+		Data: map[string]string{
+			"response": string(mockOne),
+		},
+	}
+
+	spec.MockResponseStore.Set(cm)
+	assert.False(t, spec.MockResponseStore.IsEmpty())
+	handlers.deleteFunc(cm)
+	assert.True(t, spec.MockResponseStore.IsEmpty())
+}
+
 func clearAllStores() {
 	spec.ProxyStore.Clear()
 	spec.KeyStore.Clear()

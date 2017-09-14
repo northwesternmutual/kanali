@@ -101,6 +101,11 @@ func TestAPIKeyIsEmpty(t *testing.T) {
 	assert.False(store.IsEmpty())
 	store.Clear()
 	assert.True(store.IsEmpty())
+
+	store.Set(keyList.Keys[0])
+	assert.False(store.IsEmpty())
+	store.Delete(keyList.Keys[0])
+	assert.True(store.IsEmpty())
 }
 
 func TestAPIKeyGet(t *testing.T) {

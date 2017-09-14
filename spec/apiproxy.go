@@ -224,35 +224,29 @@ func (s *ProxyFactory) Delete(obj interface{}) (interface{}, error) {
 	if obj == nil {
 		return nil, nil
 	}
-	proxy, ok := obj.(APIProxy)
+	p, ok := obj.(APIProxy)
 	if !ok {
 		return nil, errors.New("there's no way this api proxy could've gotten in here")
 	}
-	var curr *APIProxy
-	var prev *proxyNode
-	path := proxy.Spec.Path
-	if path[0] == '/' {
-		path = path[1:]
-	}
-	rootNode := s.proxyTree
-	arr := strings.Split(path, "/")
-	for _, part := range arr {
-		if rootNode.Children[part] == nil {
-			break
-		} else {
-			prev = rootNode
-			rootNode = rootNode.Children[part]
-		}
-	}
-	if len(rootNode.Children) == 0 {
-		delete(prev.Children, arr[len(arr)-1])
-	}
-	curr = rootNode.Value
-	rootNode.Value = nil
-	if curr == nil {
+	normalize(&p)
+	result := s.proxyTree.delete(strings.Split(p.Spec.Path[1:], "/"))
+	if result == nil {
 		return nil, nil
 	}
-	return *curr, nil
+	return *result, nil
+}
+
+func (n *proxyNode) delete(segments []string) *APIProxy {
+	if len(segments) == 0 {
+		tmp := n.Value
+		n.Value = nil
+		return tmp
+	}
+	result := n.Children[segments[0]].delete(segments[1:])
+	if len(n.Children[segments[0]].Children) == 0 && n.Children[segments[0]].Value == nil {
+		delete(n.Children, segments[0])
+	}
+	return result
 }
 
 // GetSSLCertificates retreives the SSL object for a given hostname

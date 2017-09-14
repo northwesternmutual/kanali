@@ -54,6 +54,11 @@ func TestIsEmpty(t *testing.T) {
 	assert.False(store.IsEmpty())
 	store.Clear()
 	assert.True(store.IsEmpty())
+
+	store.Set(serviceList[0])
+	assert.False(store.IsEmpty())
+	store.Delete(serviceList[0])
+	assert.True(store.IsEmpty())
 }
 
 func TestCreateService(t *testing.T) {

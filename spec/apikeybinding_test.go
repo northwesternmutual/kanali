@@ -92,6 +92,11 @@ func TestAPIKeyBindingIsEmpty(t *testing.T) {
 	assert.False(store.IsEmpty())
 	store.Clear()
 	assert.True(store.IsEmpty())
+
+	store.Set(keyBindingList.Bindings[0])
+	assert.False(store.IsEmpty())
+	store.Delete(keyBindingList.Bindings[0])
+	assert.True(store.IsEmpty())
 }
 
 func TestAPIKeyBindingClear(t *testing.T) {

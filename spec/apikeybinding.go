@@ -229,14 +229,14 @@ func (s *BindingFactory) Delete(obj interface{}) (interface{}, error) {
 	if !ok {
 		return nil, errors.New("there's no way this api key binding could've gotten in here")
 	}
-	if _, ok := s.bindingMap[binding.ObjectMeta.Namespace]; !ok {
-		return nil, nil
-	}
 	val, ok := s.bindingMap[binding.ObjectMeta.Namespace][binding.Spec.APIProxyName]
 	if !ok {
 		return nil, nil
 	}
 	delete(s.bindingMap[binding.ObjectMeta.Namespace], binding.Spec.APIProxyName)
+	if len(s.bindingMap[binding.ObjectMeta.Namespace]) == 0 {
+		delete(s.bindingMap, binding.ObjectMeta.Namespace)
+	}
 	return val, nil
 }
 
