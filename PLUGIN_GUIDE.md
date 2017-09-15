@@ -48,7 +48,7 @@ A plugin has the ability to define any configuration items it might require. Thi
 
 ```go
 var flagPluginsAPIKeyHeaderKey = config.Flag{
-	Long:  "plugins.apiKey.header_key",
+	Long:  "plugins.apiKey.header_key", // please use the convention of plugins.<plugin name>.<configuration name>
 	Short: "",
 	Value: "apikey",
 	Usage: "Name of the HTTP header holding the apikey.",
