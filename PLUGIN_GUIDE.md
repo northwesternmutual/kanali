@@ -44,6 +44,21 @@ type StatusError struct {
 }
 ```
 
+A plugin has the ability to define any configuration items it might require. This allows a plugin to be configured via a cli flag, environment variable, or a configuration file. Reference the configuration [documentation](https://github.com/northwesternmutual/kanali#usage-and-configuration) for details. Below is an example of how the [API key plugin](https://github.com/northwesternmutual/kanali-plugin-apikey) uses this feature:
+
+```go
+var flagPluginsAPIKeyHeaderKey = config.Flag{
+	Long:  "plugins.apiKey.header_key",
+	Short: "",
+	Value: "apikey",
+	Usage: "Name of the HTTP header holding the apikey.",
+}
+
+func init() {
+	config.Flags.Add(flagPluginsAPIKeyHeaderKey)
+}
+```
+
 A series of method parameters are provided for optional usage inside of your plugin logic. Here is a table providing detailing their purpose:
 
 name        | type             | methods              |mutability |description

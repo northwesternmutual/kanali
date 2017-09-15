@@ -18,15 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package spec
+package config
 
-// Store is an interface that provides a common set of operations for
-// a data structure
-type Store interface {
-	Set(obj interface{}) error
-	Update(obj interface{}) error
-	Get(params ...interface{}) (interface{}, error)
-	Delete(obj interface{}) (interface{}, error)
-	Clear()
-	IsEmpty() bool
+func init() {
+	Flags.Add(
+		FlagProcessLogLevel,
+	)
 }
+
+var (
+	// FlagProcessLogLevel sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'
+	FlagProcessLogLevel = Flag{
+		Long:  "process.log_level",
+		Short: "l",
+		Value: "info",
+		Usage: "Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'.",
+	}
+)

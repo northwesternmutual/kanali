@@ -18,15 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package spec
+package config
 
-// Store is an interface that provides a common set of operations for
-// a data structure
-type Store interface {
-	Set(obj interface{}) error
-	Update(obj interface{}) error
-	Get(params ...interface{}) (interface{}, error)
-	Delete(obj interface{}) (interface{}, error)
-	Clear()
-	IsEmpty() bool
+func init() {
+	Flags.Add(
+		FlagTLSCertFile,
+		FlagTLSKeyFile,
+		FlagTLSCaFile,
+	)
 }
+
+var (
+	// FlagTLSCertFile specifies the path to x509 certificate for HTTPS servers.
+	FlagTLSCertFile = Flag{
+		Long:  "tls.cert_file",
+		Short: "c",
+		Value: "",
+		Usage: "Path to x509 certificate for HTTPS servers.",
+	}
+	// FlagTLSKeyFile pecifies the path to x509 private key matching --tls-cert-file
+	FlagTLSKeyFile = Flag{
+		Long:  "tls.key_file",
+		Short: "k",
+		Value: "",
+		Usage: "Path to x509 private key matching --tls.cert_file.",
+	}
+	// FlagTLSCaFile specifies the path to x509 certificate authority bundle for mutual TLS
+	FlagTLSCaFile = Flag{
+		Long:  "tls.ca_file",
+		Short: "",
+		Value: "",
+		Usage: "Path to x509 certificate authority bundle for mutual TLS.",
+	}
+)

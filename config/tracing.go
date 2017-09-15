@@ -18,15 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package spec
+package config
 
-// Store is an interface that provides a common set of operations for
-// a data structure
-type Store interface {
-	Set(obj interface{}) error
-	Update(obj interface{}) error
-	Get(params ...interface{}) (interface{}, error)
-	Delete(obj interface{}) (interface{}, error)
-	Clear()
-	IsEmpty() bool
+func init() {
+	Flags.Add(
+		FlagTracingJaegerServerURL,
+		FlagTracingJaegerAgentURL,
+	)
 }
+
+var (
+	// FlagTracingJaegerServerURL specifies the endpoint to the Jaeger server
+	FlagTracingJaegerServerURL = Flag{
+		Long:  "tracing.jaeger_server_url",
+		Short: "",
+		Value: "jaeger-all-in-one-agent.default.svc.cluster.local",
+		Usage: "Endpoint to the Jaeger server",
+	}
+	// FlagTracingJaegerAgentURL specifies the endpoint to the Jaeger agent
+	FlagTracingJaegerAgentURL = Flag{
+		Long:  "tracing.jaeger_agent_url",
+		Short: "",
+		Value: "jaeger-all-in-one-agent.default.svc.cluster.local",
+		Usage: "Endpoint to the Jaeger agent",
+	}
+)

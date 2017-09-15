@@ -18,15 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package spec
+package handlers
 
-// Store is an interface that provides a common set of operations for
-// a data structure
-type Store interface {
-	Set(obj interface{}) error
-	Update(obj interface{}) error
-	Get(params ...interface{}) (interface{}, error)
-	Delete(obj interface{}) (interface{}, error)
-	Clear()
-	IsEmpty() bool
+import (
+	"net/http"
+	"net/url"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestNormalize(t *testing.T) {
+	r1 := &http.Request{
+		URL: &url.URL{
+			Path: "///foo//bar/car",
+		},
+	}
+	r2 := &http.Request{
+		URL: &url.URL{
+			Path: "foo//bar/car/",
+		},
+	}
+	r3 := &http.Request{
+		URL: &url.URL{
+			Path: "",
+		},
+	}
+	r4 := &http.Request{
+		URL: &url.URL{
+			Path: "////",
+		},
+	}
+	normalize(r1)
+	normalize(r2)
+	normalize(r3)
+	normalize(r4)
+
+	assert.Equal(t, "/foo/bar/car", r1.URL.Path)
+	assert.Equal(t, "/foo/bar/car", r2.URL.Path)
+	assert.Equal(t, "/", r3.URL.Path)
+	assert.Equal(t, "/", r4.URL.Path)
+
 }

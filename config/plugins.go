@@ -18,15 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package spec
+package config
 
-// Store is an interface that provides a common set of operations for
-// a data structure
-type Store interface {
-	Set(obj interface{}) error
-	Update(obj interface{}) error
-	Get(params ...interface{}) (interface{}, error)
-	Delete(obj interface{}) (interface{}, error)
-	Clear()
-	IsEmpty() bool
+func init() {
+	Flags.Add(
+		FlagPluginsLocation,
+		FlagPluginsAPIKeyDecriptionKeyFile,
+	)
 }
+
+var (
+	// FlagPluginsLocation sets the location of custom plugins shared object (.so) files
+	FlagPluginsLocation = Flag{
+		Long:  "plugins.location",
+		Short: "",
+		Value: "/",
+		Usage: "Location of custom plugins shared object (.so) files.",
+	}
+	// FlagPluginsAPIKeyDecriptionKeyFile set the location of the decryption RSA key file to be used to decrypt incoming API keys.
+	FlagPluginsAPIKeyDecriptionKeyFile = Flag{
+		Long:  "plugins.apiKey.decryption_key_file",
+		Short: "",
+		Value: "",
+		Usage: "Path to valid PEM-encoded private key that matches the public key used to encrypt API keys.",
+	}
+)

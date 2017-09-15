@@ -61,6 +61,7 @@ spec:
     name: example-six
   plugins:
   - name: apiKey
+    version: v1.1.0
 
 ---
 

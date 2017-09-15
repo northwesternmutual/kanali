@@ -27,6 +27,6 @@ import (
 // RootCmd is the base command of this project
 var RootCmd = &cobra.Command{
 	Use:   "kanali",
-	Short: "layer 7 load balancer for Kubernetes with API managment",
-	Long:  "kanali provides a dynamic layer 7 load balancer for a Kubernetes cluster coupled tightly with an API managment solution",
+	Short: "layer 7 load balancer for Kubernetes with API management",
+	Long:  "kanali provides a dynamic layer 7 load balancer for a Kubernetes cluster coupled tightly with an API management solution",
 }

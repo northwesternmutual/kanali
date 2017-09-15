@@ -18,15 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package spec
+package config
 
-// Store is an interface that provides a common set of operations for
-// a data structure
-type Store interface {
-	Set(obj interface{}) error
-	Update(obj interface{}) error
-	Get(params ...interface{}) (interface{}, error)
-	Delete(obj interface{}) (interface{}, error)
-	Clear()
-	IsEmpty() bool
+func init() {
+	Flags.Add(
+		FlagAnalyticsInfluxAddr,
+		FlagAnalyticsInfluxDb,
+	)
 }
+
+var (
+	// FlagAnalyticsInfluxAddr specifies the Influxdb address. Address should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port'
+	FlagAnalyticsInfluxAddr = Flag{
+		Long:  "analytics.influx_addr",
+		Short: "",
+		Value: "http://monitoring-influxdb.kube-system.svc.cluster.local:8086",
+		Usage: "InfluxDB address. Address should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port'.",
+	}
+	// FlagAnalyticsInfluxDb specifies the name of the InfluxDB database
+	FlagAnalyticsInfluxDb = Flag{
+		Long:  "analytics.influx_db",
+		Short: "",
+		Value: "k8s",
+		Usage: "InfluxDB database name",
+	}
+	// FlagAnalyticsInfluxUsername specifies the InfluxDB username
+	FlagAnalyticsInfluxUsername = Flag{
+		Long:  "analytics.influx_username",
+		Short: "",
+		Value: "",
+		Usage: "InfluxDB username",
+	}
+	// FlagAnalyticsInfluxPassword specifies the InfluxDB password
+	FlagAnalyticsInfluxPassword = Flag{
+		Long:  "analytics.influx_password",
+		Short: "",
+		Value: "",
+		Usage: "InfluxDB password",
+	}
+)

@@ -31,11 +31,11 @@ import (
 func TestGetKanaliPort(t *testing.T) {
 	assert.Equal(t, getKanaliPort(), 80)
 
-	viper.Set(config.FlagKanaliPort.GetLong(), 12345)
+	viper.Set(config.FlagServerPort.GetLong(), 12345)
 	assert.Equal(t, getKanaliPort(), 12345)
 
-	viper.Set(config.FlagKanaliPort.GetLong(), 0)
+	viper.Set(config.FlagServerPort.GetLong(), 0)
 	viper.Set(config.FlagTLSCertFile.GetLong(), "hi")
-	viper.Set(config.FlagTLSPrivateKeyFile.GetLong(), "bye")
+	viper.Set(config.FlagTLSKeyFile.GetLong(), "bye")
 	assert.Equal(t, getKanaliPort(), 443)
 }

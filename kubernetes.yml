@@ -57,36 +57,16 @@ spec:
       - name: kanali
         imagePullPolicy: IfNotPresent
         image: northwesternmutual/kanali:v1.1.3
-        args:
+        command:
+        - /kanali
         - start
-        - --kanali-port=8443
-        - --bind-address=0.0.0.0
-        - --log-level=info
-        - --enable-mock
-        - --enable-cluster-ip
-        - --tls-cert-file=/etc/pki/tls.crt
-        - --tls-private-key-file=/etc/pki/tls.key
-        - --decryption-key-file=/etc/pki/key.pem
-        - --plugins-location=/
         env:
         - name: POD_IP
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        resources:
-          requests:
-            cpu: "50m"
         ports:
         - containerPort: 8443
-        - containerPort: 8080
         volumeMounts:
         - name: pki
           mountPath: /etc/pki
@@ -120,12 +100,50 @@ metadata:
   name: kanali-config
   namespace: default
 data:
-  config.json: |-
-    {
-      "headers": {
-          "x-nm-deployment": "stable"
-      }
-    }
+  config.toml: |-
+    [tracing]
+    jaeger_server_url = "jaeger-agent.kube-system.svc.cluster.local"
+    jaeger_agent_url = "jaeger-agent.kube-system.svc.cluster.local"
+
+    [analytics]
+    influx_addr = "http://kanali-influxdb.default.svc.cluster.local:8086"
+    influx_db = "kanali"
+    influx_username = ""
+    influx_password = ""
+
+    [plugins]
+    location = "/"
+
+    [plugins.apiKey]
+    decryption_key_file = "/etc/pki/key.pem"
+    header_key = "apikey"
+
+    [tls]
+    cert_file = "/etc/pki/tls.crt"
+    key_file = "/etc/pki/tls.key"
+    ca_file = ""
+
+    [server]
+    port = 8443
+    bind_address = "0.0.0.0"
+    peer_udp_port = 10001
+    proxy_protocol = false
+
+    [process]
+    log_level = "info"
+
+    [proxy]
+    enable_cluster_ip = true
+    enable_mock_responses = true
+    upstream_timeout = "0h0m10s"
+    header_mask_value = "ommitted"
+    tls_common_name_validation = false
+    mask_header_keys = [
+      "apikey"
+    ]
+
+    [proxy.default_header_values]
+    x-canary-deployment = "stable"
 
 ---
 
@@ -167,11 +185,8 @@ rules:
     resources: ["thirdpartyresources"]
     verbs: ["create"]
   - apiGroups: [""]
-    resources: ["services", "secrets", "endpoints"]
+    resources: ["services", "secrets", "endpoints", "configmaps"]
     verbs: ["watch"]
-  - apiGroups: [""]
-    resources: ["endpoints"]
-    verbs: ["list"]
 
 ---
 

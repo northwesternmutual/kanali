@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"k8s.io/kubernetes/pkg/api"
 )
 
 func TestComputeTargetPath(t *testing.T) {
@@ -95,29 +96,62 @@ func TestOmitHeaderValues(t *testing.T) {
 		"Three": []string{"four"},
 	}
 
-	copy := OmitHeaderValues(h, "ommitted", "one")
+	copy := OmitHeaderValues(h, "omitted", "one")
 	assert.Equal(h, http.Header{
 		"One":   []string{"two"},
 		"Three": []string{"four"},
 	}, "original map should not change")
 	assert.Equal(copy, http.Header{
-		"One":   []string{"ommitted"},
+		"One":   []string{"omitted"},
 		"Three": []string{"four"},
 	}, "map should be equal")
 
-	copy = OmitHeaderValues(h, "ommitted", "one", "foo", "bar")
+	copy = OmitHeaderValues(h, "omitted", "one", "foo", "bar")
 	assert.Equal(copy, http.Header{
-		"One":   []string{"ommitted"},
+		"One":   []string{"omitted"},
 		"Three": []string{"four"},
 	}, "map should be equal")
 
-	copy = OmitHeaderValues(h, "ommitted")
+	copy = OmitHeaderValues(h, "omitted")
 	assert.Equal(copy, http.Header{
 		"One":   []string{"two"},
 		"Three": []string{"four"},
 	}, "original map should not change")
 
-	copy = OmitHeaderValues(nil, "ommitted")
+	copy = OmitHeaderValues(nil, "omitted")
 	assert.Nil(copy, "map should be equal")
 
+}
+
+func TestCompareObjectMeta(t *testing.T) {
+	c1 := api.ObjectMeta{
+		Name:      "foo",
+		Namespace: "bar",
+	}
+	c2 := api.ObjectMeta{
+		Name:      "bar",
+		Namespace: "foo",
+	}
+	c3 := api.ObjectMeta{
+		Name:      "foo",
+		Namespace: "car",
+	}
+	c4 := api.ObjectMeta{
+		Name:      "bar",
+		Namespace: "car",
+	}
+
+	assert.True(t, CompareObjectMeta(c1, c1))
+	assert.False(t, CompareObjectMeta(c1, c2))
+	assert.False(t, CompareObjectMeta(c1, c3))
+	assert.False(t, CompareObjectMeta(c3, c4))
+}
+
+func TestNormalizePath(t *testing.T) {
+	assert.Equal(t, "/foo/bar", NormalizePath("foo////bar"))
+	assert.Equal(t, "/foo", NormalizePath("foo"))
+	assert.Equal(t, "/foo", NormalizePath("foo////"))
+	assert.Equal(t, "/foo/bar", NormalizePath("///foo////bar//"))
+	assert.Equal(t, "/", NormalizePath(""))
+	assert.Equal(t, "/", NormalizePath("////"))
 }

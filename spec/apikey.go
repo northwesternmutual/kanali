@@ -79,6 +79,17 @@ func (s *KeyFactory) Clear() {
 	}
 }
 
+// Update will update an APIKeyBinding
+func (s *KeyFactory) Update(obj interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	key, ok := obj.(APIKey)
+	if !ok {
+		return errors.New("grrr - you're only allowed add api keys to the api key store.... duh")
+	}
+	return s.set(key)
+}
+
 // Set takes a APIKey and either adds it to the store
 // or updates it
 func (s *KeyFactory) Set(obj interface{}) error {
@@ -88,6 +99,10 @@ func (s *KeyFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add api keys to the api key store.... duh")
 	}
+	return s.set(key)
+}
+
+func (s *KeyFactory) set(key APIKey) error {
 	logrus.Infof("Adding new APIKey named %s in namespace %s", key.ObjectMeta.Name, key.ObjectMeta.Namespace)
 	s.keyMap[key.Spec.APIKeyData] = key
 	return nil

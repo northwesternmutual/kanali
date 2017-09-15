@@ -31,6 +31,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
@@ -102,7 +103,7 @@ func create(p *proxy) *upstream {
 	up := &upstream{
 		Request: new,
 		Client: &http.Client{
-			Timeout: viper.GetDuration("upstream-timeout"),
+			Timeout: viper.GetDuration(config.FlagProxyUpstreamTimeout.GetLong()),
 		},
 		Error: utils.StatusError{},
 	}
@@ -159,7 +160,7 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 			caCertPool.AppendCertsFromPEM(secret.Data["tls.ca"])
 		}
 
-		if viper.GetBool("disable-tls-cn-validation") {
+		if viper.GetBool(config.FlagProxyTLSCommonNameValidation.GetLong()) {
 			tlsConfig.InsecureSkipVerify = true
 			tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
 				opts := x509.VerifyOptions{
@@ -278,7 +279,7 @@ func (p *proxy) setK8sDiscoveredURI() (*url.URL, *utils.StatusError) {
 		p.Target.ObjectMeta.Namespace,
 	)
 
-	if viper.GetBool("enable-cluster-ip") {
+	if viper.GetBool(config.FlagProxyEnableClusterIP.GetLong()) {
 		uri = svc.ClusterIP
 	}
 

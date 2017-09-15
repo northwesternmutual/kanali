@@ -57,6 +57,22 @@ func TestSecretSet(t *testing.T) {
 	assert.Equal(secretList[1], store.secretMap["foo"]["secret-two"], "secret should exist")
 }
 
+func TestSecretUpdate(t *testing.T) {
+	assert := assert.New(t)
+	store := SecretStore
+	secretList := getTestSecretList()
+
+	store.Clear()
+	store.Update(secretList[0])
+	store.Update(secretList[1])
+	err := store.Update(APIProxy{})
+	assert.Equal(err.Error(), "grrr - you're only allowed add secrets to the secrets store.... duh", "error not what expected")
+	assert.Equal(1, len(store.secretMap), "there should be one namespace in the secret store")
+	assert.Equal(2, len(store.secretMap["foo"]), "there should be two secrets in the secret store")
+	assert.Equal(secretList[0], store.secretMap["foo"]["secret-one"], "secret should exist")
+	assert.Equal(secretList[1], store.secretMap["foo"]["secret-two"], "secret should exist")
+}
+
 func TestSecretClear(t *testing.T) {
 	assert := assert.New(t)
 	store := SecretStore

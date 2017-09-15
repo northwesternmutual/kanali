@@ -69,6 +69,17 @@ func (s *MockResponseFactory) Clear() {
 	}
 }
 
+// Update will update an Mock Response
+func (s *MockResponseFactory) Update(obj interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	cm, ok := obj.(api.ConfigMap)
+	if !ok {
+		return errors.New("obj was not a ConfigMap")
+	}
+	return s.set(cm)
+}
+
 // Set takes an APIProxy and either adds it to the store
 // or updates it
 func (s *MockResponseFactory) Set(obj interface{}) error {
@@ -78,7 +89,10 @@ func (s *MockResponseFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("obj was not a ConfigMap")
 	}
+	return s.set(cm)
+}
 
+func (s *MockResponseFactory) set(cm api.ConfigMap) error {
 	mockResponse, ok := cm.Data["response"]
 	if !ok {
 		logrus.Debugf("ConfigMap %s does not contains a response data field", cm.ObjectMeta.Name)

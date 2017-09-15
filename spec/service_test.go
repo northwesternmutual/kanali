@@ -54,6 +54,11 @@ func TestIsEmpty(t *testing.T) {
 	assert.False(store.IsEmpty())
 	store.Clear()
 	assert.True(store.IsEmpty())
+
+	store.Set(serviceList[0])
+	assert.False(store.IsEmpty())
+	store.Delete(serviceList[0])
+	assert.True(store.IsEmpty())
 }
 
 func TestCreateService(t *testing.T) {
@@ -115,6 +120,31 @@ func TestServiceSet(t *testing.T) {
 	assert.Equal(svcOne, store.serviceMap["foo"][0], "service should be present")
 	assert.Equal(svcTwo, store.serviceMap["bar"][0], "service should be present")
 	store.Set(serviceList[2])
+	assert.Equal(serviceList[2], store.serviceMap["bar"][1], "service should be present")
+}
+
+func TestServiceUpdate(t *testing.T) {
+	assert := assert.New(t)
+	store := ServiceStore
+	serviceList := getTestServiceList()
+
+	store.Clear()
+	store.Update(serviceList[0])
+	store.Update(serviceList[1])
+	err := store.Update(APIProxy{})
+	assert.Equal(err.Error(), "grrr - you're only allowed add services to the services store.... duh", "wrong error")
+	assert.Equal(2, len(store.serviceMap), "store should have 2 namespaces represented")
+	assert.Equal(serviceList[0], store.serviceMap["foo"][0], "service should be present")
+	assert.Equal(serviceList[1], store.serviceMap["bar"][0], "service should be present")
+	svcOne := serviceList[0]
+	svcTwo := serviceList[1]
+	svcOne.Labels[1].Name = "name-foo"
+	svcTwo.Labels[1].Name = "name-foo"
+	store.Update(serviceList[0])
+	store.Update(serviceList[1])
+	assert.Equal(svcOne, store.serviceMap["foo"][0], "service should be present")
+	assert.Equal(svcTwo, store.serviceMap["bar"][0], "service should be present")
+	store.Update(serviceList[2])
 	assert.Equal(serviceList[2], store.serviceMap["bar"][1], "service should be present")
 }
 

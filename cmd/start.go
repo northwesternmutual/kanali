@@ -72,7 +72,7 @@ var startCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// set logging level
-		if level, err := logrus.ParseLevel(viper.GetString("log-level")); err != nil {
+		if level, err := logrus.ParseLevel(viper.GetString(config.FlagProcessLogLevel.GetLong())); err != nil {
 			logrus.SetLevel(logrus.InfoLevel)
 			logrus.Info("could not parse logging level")
 		} else {
@@ -87,7 +87,7 @@ var startCmd = &cobra.Command{
 		}
 
 		// load decryption key into memory
-		if err := loadDecryptionKey(viper.GetString("decryption-key-file")); err != nil {
+		if err := loadDecryptionKey(viper.GetString(config.FlagPluginsAPIKeyDecriptionKeyFile.GetLong())); err != nil {
 			logrus.Fatalf("could not load decryption key: %s", err.Error())
 			os.Exit(1)
 		}

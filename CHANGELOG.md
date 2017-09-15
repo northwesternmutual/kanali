@@ -4,9 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.5] - 2017-09-14
+### Added
+- Gzip support.
+- `Update` method to `Store` interface.
 ### Changed
-- Fixed [#57](https://github.com/northwesternmutual/kanali/issues/57)
+- Fixed [#61](https://github.com/northwesternmutual/kanali/issues/61)
+- Fixed [#57](https://github.com/northwesternmutual/kanali/issues/57).
+- Using versioned API key plugin in distributed `Dockefile` and examples.
+- Refactored configuration items.
+- Using `TOML` as configuration format in distribution and examples.
+- Improved test coverage.
 
 ## [1.1.4] - 2017-08-31
 ### Added

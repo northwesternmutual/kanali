@@ -40,7 +40,7 @@ func (h k8sEventHandler) addFunc(obj interface{}) {
 		if proxy, ok := obj.(spec.APIProxy); ok {
 			err := spec.ProxyStore.Set(proxy)
 			if err != nil {
-				logrus.Errorf("could not add/modify api proxy. skipping: %s", err.Error())
+				logrus.Errorf("could not add api proxy. skipping: %s", err.Error())
 			}
 		}
 	case spec.APIKey:
@@ -48,7 +48,7 @@ func (h k8sEventHandler) addFunc(obj interface{}) {
 			if err := key.Decrypt(); err == nil {
 				err := spec.KeyStore.Set(key)
 				if err != nil {
-					logrus.Errorf("could not add/modify apikey. skipping: %s", err.Error())
+					logrus.Errorf("could not add apikey. skipping: %s", err.Error())
 				}
 			} else {
 				logrus.Error("could not decrypt apikey. skipping...")
@@ -58,21 +58,21 @@ func (h k8sEventHandler) addFunc(obj interface{}) {
 		if binding, ok := obj.(spec.APIKeyBinding); ok {
 			err := spec.BindingStore.Set(binding)
 			if err != nil {
-				logrus.Errorf("could not add/modify apikey binding. skipping: %s", err.Error())
+				logrus.Errorf("could not add apikey binding. skipping: %s", err.Error())
 			}
 		}
 	case api.Secret:
 		if secret, ok := obj.(api.Secret); ok {
 			err := spec.SecretStore.Set(secret)
 			if err != nil {
-				logrus.Errorf("could not add/modify secret. skipping: %s", err.Error())
+				logrus.Errorf("could not add secret. skipping: %s", err.Error())
 			}
 		}
 	case api.Service:
 		if service, ok := obj.(api.Service); ok {
 			err := spec.ServiceStore.Set(spec.CreateService(service))
 			if err != nil {
-				logrus.Errorf("could not add/modify service. skipping: %s", err.Error())
+				logrus.Errorf("could not add service. skipping: %s", err.Error())
 			}
 		}
 	case api.Endpoints:
@@ -84,14 +84,66 @@ func (h k8sEventHandler) addFunc(obj interface{}) {
 	case api.ConfigMap:
 		if cm, ok := obj.(api.ConfigMap); ok {
 			if err := spec.MockResponseStore.Set(cm); err != nil {
-				logrus.Errorf("could not add/modify configmap. skipping: %s", err.Error())
+				logrus.Errorf("could not add configmap. skipping: %s", err.Error())
 			}
 		}
 	}
 }
 
 func (h k8sEventHandler) updateFunc(obj interface{}) {
-	h.addFunc(obj)
+	switch obj.(type) {
+	case spec.APIProxy:
+		if proxy, ok := obj.(spec.APIProxy); ok {
+			err := spec.ProxyStore.Update(proxy)
+			if err != nil {
+				logrus.Errorf("could not modify api proxy. skipping: %s", err.Error())
+			}
+		}
+	case spec.APIKey:
+		if key, ok := obj.(spec.APIKey); ok {
+			if err := key.Decrypt(); err == nil {
+				err := spec.KeyStore.Update(key)
+				if err != nil {
+					logrus.Errorf("could not modify apikey. skipping: %s", err.Error())
+				}
+			} else {
+				logrus.Error("could not decrypt apikey. skipping...")
+			}
+		}
+	case spec.APIKeyBinding:
+		if binding, ok := obj.(spec.APIKeyBinding); ok {
+			err := spec.BindingStore.Update(binding)
+			if err != nil {
+				logrus.Errorf("could not modify apikey binding. skipping: %s", err.Error())
+			}
+		}
+	case api.Secret:
+		if secret, ok := obj.(api.Secret); ok {
+			err := spec.SecretStore.Update(secret)
+			if err != nil {
+				logrus.Errorf("could not modify secret. skipping: %s", err.Error())
+			}
+		}
+	case api.Service:
+		if service, ok := obj.(api.Service); ok {
+			err := spec.ServiceStore.Update(spec.CreateService(service))
+			if err != nil {
+				logrus.Errorf("could not modify service. skipping: %s", err.Error())
+			}
+		}
+	case api.Endpoints:
+		if endpoints, ok := obj.(api.Endpoints); ok {
+			if endpoints.ObjectMeta.Name == "kanali" {
+				spec.KanaliEndpoints = &endpoints
+			}
+		}
+	case api.ConfigMap:
+		if cm, ok := obj.(api.ConfigMap); ok {
+			if err := spec.MockResponseStore.Update(cm); err != nil {
+				logrus.Errorf("could not modify configmap. skipping: %s", err.Error())
+			}
+		}
+	}
 }
 
 func (h k8sEventHandler) deleteFunc(obj interface{}) {

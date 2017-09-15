@@ -27,9 +27,9 @@ COPY ./ /go/src/github.com/northwesternmutual/kanali/
 # Set project version
 RUN sed -ie "s/changeme/`echo ${VERSION}`/g" /go/src/github.com/northwesternmutual/kanali/cmd/version.go
 # download apikey plugin
-RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/master/plugin.go
+RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/v1.1.0/plugin.go
 # compile plugin
-RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -buildmode=plugin -o apiKey.so plugin.go
+RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -buildmode=plugin -o apiKey_v1.1.0.so plugin.go
 # Build project
 RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -o kanali
 
@@ -40,7 +40,8 @@ MAINTAINER frankgreco@northwesternmutual.com
 # add ca certificates bundle
 RUN curl http://curl.haxx.se/ca/cacert.pem -o /etc/pki/tls/certs/ca-bundle.crt
 # load plugin
-COPY --from=build-stage /go/src/github.com/northwesternmutual/kanali/apiKey.so ./apiKey.so
+COPY --from=build-stage /go/src/github.com/northwesternmutual/kanali/apiKey_v1.1.0.so ./apiKey_v1.1.0.so
+COPY --from=build-stage /go/src/github.com/northwesternmutual/kanali/apiKey_v1.1.0.so ./apiKey.so
 # copy compiled binary from our build stage
 COPY --from=build-stage /go/src/github.com/northwesternmutual/kanali/kanali .
 # set our entrypoint

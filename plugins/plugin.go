@@ -49,7 +49,7 @@ type Plugin interface {
 func GetPlugin(plugin spec.Plugin) (*Plugin, error) {
 	path, err := utils.GetAbsPath(viper.GetString(config.FlagPluginsLocation.GetLong()))
 	if err != nil {
-		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("file path %s could not be found", viper.GetString("plugins-path"))}
+		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("file path %s could not be found", viper.GetString(config.FlagPluginsLocation.GetLong()))}
 	}
 
 	plug, err := pluginPkg.Open(fmt.Sprintf("%s/%s.so",
