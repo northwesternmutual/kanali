@@ -27,7 +27,7 @@ COPY ./ /go/src/github.com/northwesternmutual/kanali/
 # Set project version
 RUN sed -ie "s/changeme/`echo ${VERSION}`/g" /go/src/github.com/northwesternmutual/kanali/cmd/version.go
 # download apikey plugin
-RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/options-method/plugin.go
+RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/v1.1.0/plugin.go
 # compile plugin
 RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -buildmode=plugin -o apiKey_v1.1.0.so plugin.go
 # Build project

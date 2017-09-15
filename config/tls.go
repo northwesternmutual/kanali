@@ -41,7 +41,7 @@ var (
 		Long:  "tls.key_file",
 		Short: "k",
 		Value: "",
-		Usage: "Path to x509 private key matching --tls-cert-file.",
+		Usage: "Path to x509 private key matching --tls.cert_file.",
 	}
 	// FlagTLSCaFile specifies the path to x509 certificate authority bundle for mutual TLS
 	FlagTLSCaFile = Flag{

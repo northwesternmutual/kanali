@@ -107,7 +107,7 @@ func TestAddFunc(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 
-	handlers.addFunc(api.Service{
+	service := api.Service{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "foo",
 			Namespace: "bar",
@@ -116,20 +116,9 @@ func TestAddFunc(t *testing.T) {
 				"name-two": "value-two",
 			},
 		},
-	})
-	result, err = spec.ServiceStore.Get(spec.Service{
-		Namespace: "bar",
-		Labels: spec.Labels{
-			spec.Label{
-				Name:  "release",
-				Value: "production",
-			},
-			spec.Label{
-				Name:  "name-two",
-				Value: "value-two",
-			},
-		},
-	}, nil)
+	}
+	handlers.addFunc(service)
+	result, err = spec.ServiceStore.Get(spec.CreateService(service), nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 
@@ -172,7 +161,7 @@ func TestUpdateFunc(t *testing.T) {
 	handlers := k8sEventHandler{}
 	setDecryptionKey(t)
 
-	spec.ProxyStore.Set(spec.APIProxy{
+	proxy := spec.APIProxy{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "exampleAPIProxyOne",
 			Namespace: "foo",
@@ -184,22 +173,12 @@ func TestUpdateFunc(t *testing.T) {
 				Port: 8080,
 			},
 		},
-	})
+	}
+	spec.ProxyStore.Set(proxy)
 	result, _ := spec.ProxyStore.Get("/api/v1/accounts")
 	assert.NotNil(t, result)
-	handlers.updateFunc(spec.APIProxy{
-		ObjectMeta: api.ObjectMeta{
-			Name:      "exampleAPIProxyOne",
-			Namespace: "foo",
-		},
-		Spec: spec.APIProxySpec{
-			Path: "/modified/path",
-			Service: spec.Service{
-				Name: "my-service",
-				Port: 8080,
-			},
-		},
-	})
+	proxy.Spec.Path = "/modified/path"
+	handlers.updateFunc(proxy)
 	result, _ = spec.ProxyStore.Get("/api/v1/accounts")
 	assert.Nil(t, result)
 	result, _ = spec.ProxyStore.Get("/modified/path")
@@ -258,7 +237,7 @@ func TestUpdateFunc(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 
-	handlers.updateFunc(api.Service{
+	service := api.Service{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "foo",
 			Namespace: "bar",
@@ -267,20 +246,9 @@ func TestUpdateFunc(t *testing.T) {
 				"name-two": "value-two",
 			},
 		},
-	})
-	result, err = spec.ServiceStore.Get(spec.Service{
-		Namespace: "bar",
-		Labels: spec.Labels{
-			spec.Label{
-				Name:  "release",
-				Value: "production",
-			},
-			spec.Label{
-				Name:  "name-two",
-				Value: "value-two",
-			},
-		},
-	}, nil)
+	}
+	handlers.updateFunc(service)
+	result, err = spec.ServiceStore.Get(spec.CreateService(service), nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 
@@ -322,7 +290,7 @@ func TestDeleteFunc(t *testing.T) {
 	handlers := k8sEventHandler{}
 	setDecryptionKey(t)
 
-	spec.ProxyStore.Set(spec.APIProxy{
+	proxy := spec.APIProxy{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "exampleAPIProxyOne",
 			Namespace: "foo",
@@ -334,24 +302,13 @@ func TestDeleteFunc(t *testing.T) {
 				Port: 8080,
 			},
 		},
-	})
+	}
+	spec.ProxyStore.Set(proxy)
 	assert.False(t, spec.ProxyStore.IsEmpty())
-	handlers.deleteFunc(spec.APIProxy{
-		ObjectMeta: api.ObjectMeta{
-			Name:      "exampleAPIProxyOne",
-			Namespace: "foo",
-		},
-		Spec: spec.APIProxySpec{
-			Path: "api/v1/accounts",
-			Service: spec.Service{
-				Name: "my-service",
-				Port: 8080,
-			},
-		},
-	})
+	handlers.deleteFunc(proxy)
 	assert.True(t, spec.ProxyStore.IsEmpty())
 
-	spec.BindingStore.Set(spec.APIKeyBinding{
+	binding := spec.APIKeyBinding{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "abc123",
 			Namespace: "foo",
@@ -364,22 +321,10 @@ func TestDeleteFunc(t *testing.T) {
 				},
 			},
 		},
-	})
+	}
+	spec.BindingStore.Set(binding)
 	assert.False(t, spec.BindingStore.IsEmpty())
-	handlers.deleteFunc(spec.APIKeyBinding{
-		ObjectMeta: api.ObjectMeta{
-			Name:      "abc123",
-			Namespace: "foo",
-		},
-		Spec: spec.APIKeyBindingSpec{
-			APIProxyName: "api-proxy-one",
-			Keys: []spec.Key{
-				{
-					Name: "franks-api-key",
-				},
-			},
-		},
-	})
+	handlers.deleteFunc(binding)
 	assert.True(t, spec.BindingStore.IsEmpty())
 
 	spec.KeyStore.Set(spec.APIKey{
