@@ -1,7 +1,7 @@
 
-imageRegistry: fbgrecojr
+imageRegistry: northwesternmutual
 
-dockerImageTag: test
+dockerImageTag: latest
 
 pullPolicy: Always
 
