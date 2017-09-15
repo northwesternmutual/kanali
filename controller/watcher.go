@@ -130,7 +130,7 @@ func (c *Controller) doWatchResource(eventCh chan *event, url string) error {
 		return fmt.Errorf("k8s apiserver returned a %d status code", resp.StatusCode)
 	}
 
-	logrus.Debugf("successfull watch on %s", url)
+	logrus.Debugf("successful watch on %s", url)
 
 	decoder := json.NewDecoder(resp.Body)
 

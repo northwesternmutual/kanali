@@ -13,7 +13,7 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 * **Analytics & Monitoring:** Kanali uses [Grafana](https://grafana.com/) and [InfluxDB](https://www.influxdata.com/) to provide a customizable and visually appealing experience so that you can get real time alerting and visualization around Kanali's metrics. Find out more [here](#analytics-and-monitoring)!
 * **Production Ready:** [Northwestern Mutual](https://www.northwesternmutual.com/) uses Kanali in Production to proxy, manage, and secure all Kubernetes hosted services.
 * **Easy Installation:** Kanali does not rely on an external database, infrastructure agents or workers, dedicated servers, etc. Kanali is deployed in the same manner as any other service in Kubernetes. Find installation instructions [here](#installation)
-* **Open Tracing Integration:** Kanali integrates with [Open Tracing](http://opentracing.io/), endorsed by the [Cloud Native Foundation](https://www.cncf.io/), which provides consistent, expressive, vendor-neutral APIs allowing you to trace the entire lifecycle of a request. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system open sourced by Uber Technologies, is supported out of the box providing a visual representation for your traces.
+* **Open Tracing Integration:** Kanali integrates with [Open Tracing](http://opentracing.io/), hosted by the [Cloud Native Foundation](https://www.cncf.io/), which provides consistent, expressive, vendor-neutral APIs allowing you to trace the entire lifecycle of a request. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system open sourced by Uber Technologies and recently accepted into the Cloud Native Foundation, is supported out of the box to provide a visual representation for your traces.
 
 # Table of Contents
 
@@ -21,6 +21,7 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 * [Tutorial](#tutorial)
 * [Documentation](#documentation)
 * [Plugins](#plugins)
+* [Security](#security)
 * [Analytics, Monitoring, and Tracing](#analytics-monitoring-and-tracing)
 * [Installation](#installation)
   * [Helm](#helm)
@@ -54,6 +55,10 @@ Looking for documentation for the custom Kubernetes resources that Kanali create
 # Plugins
 
 While Kanali has its own built in plugins, it boasts a decoupled plugin framework that makes it easy for anyone to write and integrate their own custom and version controlled plugin! The guided tutorial can be found [here](./PLUGIN_GUIDE.md).
+
+# Security
+
+Kanali is lightweight and does not require the deployment of a sidecar container in each application pod. Because of this, there is the potential for internal service to service traffic to occur unauthenticated. Hence, this must be mitigated. Kubernetes provides a resource for this called a [`NetworkPolicy`](https://kubernetes.io/docs/concepts/services-networking/network-policies/). This allows you to require the source of any ingress traffic to a pod be from Kanali. In order to use a `NetworkPolicy`, your Kubernetes cluster must use an overlay network that implements the controller for this resource. Such overlay networks include [Calico](https://docs.projectcalico.org/v2.0/getting-started/kubernetes/) and [WeaveNet](https://www.weave.works/blog/weave-net-kubernetes-integration/).
 
 # Analytics, Monitoring, and Tracing
 

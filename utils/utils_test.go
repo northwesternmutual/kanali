@@ -96,29 +96,29 @@ func TestOmitHeaderValues(t *testing.T) {
 		"Three": []string{"four"},
 	}
 
-	copy := OmitHeaderValues(h, "ommitted", "one")
+	copy := OmitHeaderValues(h, "omitted", "one")
 	assert.Equal(h, http.Header{
 		"One":   []string{"two"},
 		"Three": []string{"four"},
 	}, "original map should not change")
 	assert.Equal(copy, http.Header{
-		"One":   []string{"ommitted"},
+		"One":   []string{"omitted"},
 		"Three": []string{"four"},
 	}, "map should be equal")
 
-	copy = OmitHeaderValues(h, "ommitted", "one", "foo", "bar")
+	copy = OmitHeaderValues(h, "omitted", "one", "foo", "bar")
 	assert.Equal(copy, http.Header{
-		"One":   []string{"ommitted"},
+		"One":   []string{"omitted"},
 		"Three": []string{"four"},
 	}, "map should be equal")
 
-	copy = OmitHeaderValues(h, "ommitted")
+	copy = OmitHeaderValues(h, "omitted")
 	assert.Equal(copy, http.Header{
 		"One":   []string{"two"},
 		"Three": []string{"four"},
 	}, "original map should not change")
 
-	copy = OmitHeaderValues(nil, "ommitted")
+	copy = OmitHeaderValues(nil, "omitted")
 	assert.Nil(copy, "map should be equal")
 
 }

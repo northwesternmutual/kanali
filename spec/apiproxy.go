@@ -62,7 +62,7 @@ type Mock struct {
 	ConfigMapName string `json:"configMapName,omitempty"`
 }
 
-// Plugin defines a plugin which may be version controled
+// Plugin defines a plugin which may be version controlled
 type Plugin struct {
 	Name    string `json:"name"`
 	Version string `json:"version,omitempty"`
