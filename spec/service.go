@@ -22,12 +22,12 @@ package spec
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/spf13/viper"
 	"k8s.io/kubernetes/pkg/api"
 )
@@ -215,23 +215,17 @@ func (one Labels) contains(other Label, headers http.Header) bool {
 }
 
 func (one Label) equals(other Label, headers http.Header) bool {
-	// is the name of the label the same
-	if strings.Compare(strings.ToLower(one.Name), strings.ToLower(other.Name)) == 0 {
-		// is header specified - only on 'one'
-		if len(one.Header) > 0 {
-			if len(headers.Get(one.Header)) > 0 {
-				return strings.Compare(strings.ToLower(headers.Get(one.Header)), strings.ToLower(other.Value)) == 0
-			}
-			// the header that we are looking for was not part of the request headers
-			// so now we need to check the default values and match against those
-			if len(viper.GetString(fmt.Sprintf("headers.%s", one.Header))) > 0 {
-				return strings.Compare(strings.ToLower(viper.GetString(fmt.Sprintf("headers.%s", one.Header))), strings.ToLower(other.Value)) == 0
-			}
-			return false
-		}
-		return strings.Compare(other.Value, one.Value) == 0
+	if strings.ToLower(one.Name) != strings.ToLower(other.Name) {
+		return false
 	}
-	return false
+	if len(one.Header) < 1 {
+		return other.Value == one.Value
+	}
+	if len(headers.Get(one.Header)) > 0 {
+		return strings.ToLower(headers.Get(one.Header)) == strings.ToLower(other.Value)
+	}
+	defaultHeaderValue, ok := viper.GetStringMapString(config.FlagProxyDefaultHeaderValues.GetLong())[one.Header]
+	return ok && len(defaultHeaderValue) > 0 && strings.ToLower(defaultHeaderValue) == strings.ToLower(other.Value)
 }
 
 func (a services) indexOf(s Service) (int, *Service) {

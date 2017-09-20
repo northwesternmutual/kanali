@@ -1,5 +1,5 @@
-hash: fef28cb1eeb12b2ee5c3f4b546ccac6a917f820eba49761bd90c27f2dd296c2c
-updated: 2017-09-13T10:24:53.596553494-05:00
+hash: 09dde83c9aca4daf66c9b2977c6a14846b2c7775a39b09a3647a23eb99dee222
+updated: 2017-09-15T11:21:23.87595025-05:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -204,10 +204,6 @@ imports:
   version: 5ccb023bc27df288a957c5e994cd44fd19619465
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
-- name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
-  subpackages:
-  - assert
 - name: github.com/uber/jaeger-client-go
   version: 3e3870040def0ebdaf65a003863fa64f5cb26139
   subpackages:
@@ -474,3 +470,7 @@ testImports:
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert

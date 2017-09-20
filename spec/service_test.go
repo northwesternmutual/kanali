@@ -21,9 +21,11 @@
 package spec
 
 import (
+	"bytes"
 	"net/http"
 	"testing"
 
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/kubernetes/pkg/api"
@@ -160,6 +162,55 @@ func TestServiceClear(t *testing.T) {
 	assert.Equal(0, len(store.serviceMap), "store should be empty")
 }
 
+func TestEquals(t *testing.T) {
+	defer viper.Reset()
+	h := http.Header{}
+	h.Add("x-nm-deploy", "production")
+	l1 := Label{
+		Name:   "release",
+		Header: "x-nm-deploy",
+	}
+	l2 := Label{
+		Name:   "release",
+		Header: "x-nm-deploy-foo",
+	}
+	assert.True(t, l1.equals(Label{
+		Name:  "release",
+		Value: "production",
+	}, h))
+	assert.False(t, l1.equals(Label{
+		Name:  "release",
+		Value: "test",
+	}, h))
+
+	viper.SetConfigType("toml")
+	viper.ReadConfig(bytes.NewBuffer([]byte(`
+    [proxy.default_header_values]
+    x-nm-deploy = "stable"
+    x-nm-deploy-foo = "hello"
+  `)))
+	h.Del("x-nm-deploy")
+	assert.True(t, l1.equals(Label{
+		Name:  "release",
+		Value: "stable",
+	}, h))
+	assert.True(t, l2.equals(Label{
+		Name:  "release",
+		Value: "hello",
+	}, h))
+
+	viper.Reset()
+	viper.SetConfigType("toml")
+	viper.ReadConfig(bytes.NewBuffer([]byte(`
+    [proxy.default_header_values]
+    x-nm-deploy = ""
+  `)))
+	assert.False(t, l1.equals(Label{
+		Name:  "release",
+		Value: "stable",
+	}, h))
+}
+
 func TestServiceGet(t *testing.T) {
 	assert := assert.New(t)
 	store := ServiceStore
@@ -180,7 +231,9 @@ func TestServiceGet(t *testing.T) {
 	headerTwo := http.Header{}
 	headerTwo.Add("X-nM-dePloy", "pRoduCtion")
 
-	viper.SetDefault("headers.x-nm-deploy", "production")
+	viper.SetDefault(config.FlagProxyDefaultHeaderValues.GetLong(), map[string]string{
+		"x-nm-deploy": "production",
+	})
 
 	result, _ := store.Get(Service{}, nil)
 	assert.Nil(result, "nil service should return nil")
@@ -222,7 +275,9 @@ func TestServiceGet(t *testing.T) {
 		},
 	}, nil)
 	assert.Equal(serviceList[0], result, "service should exist")
-	viper.SetDefault("headers.x-nm-deploy", "")
+	viper.SetDefault(config.FlagProxyDefaultHeaderValues.GetLong(), map[string]string{
+		"x-nm-deploy": "",
+	})
 	result, _ = store.Get(Service{
 		Namespace: "foo",
 		Labels: Labels{

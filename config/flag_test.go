@@ -91,13 +91,4 @@ func TestAddAll(t *testing.T) {
 	assert.Equal(t, cobraValThree, "hello world")
 	assert.Equal(t, cobraValFour, d)
 	assert.Equal(t, cobraValFive, []string{"foo"})
-	f = flags{
-		Flag{
-			Long:  "wrong",
-			Short: "w",
-			Value: make(chan int),
-			Usage: "for testing",
-		},
-	}
-	assert.Equal(t, f.AddAll(cmd).Error(), "unsupported flag type")
 }

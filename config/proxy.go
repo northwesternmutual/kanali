@@ -28,6 +28,7 @@ func init() {
 		FlagProxyUpstreamTimeout,
 		FlagProxyMaskHeaderKeys,
 		FlagProxyTLSCommonNameValidation,
+		FlagProxyDefaultHeaderValues,
 	)
 }
 
@@ -73,5 +74,12 @@ var (
 		Short: "",
 		Value: true,
 		Usage: "Should common name validate as part of an SSL handshake.",
+	}
+	// FlagProxyDefaultHeaderValues specifies the default values for HTTP headers to be used in dynamic service discovery
+	FlagProxyDefaultHeaderValues = Flag{
+		Long:  "proxy.default_header_values",
+		Short: "",
+		Value: map[string]string{},
+		Usage: "Specifies the default values for HTTP headers to be used in dynamic service discovery.",
 	}
 )

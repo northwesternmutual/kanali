@@ -21,7 +21,6 @@
 package config
 
 import (
-	"errors"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -77,7 +76,7 @@ func (f flags) AddAll(cmd *cobra.Command) error {
 		case []string:
 			cmd.Flags().StringSliceP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
 		default:
-			return errors.New("unsupported flag type")
+			return nil
 		}
 		if err := viper.BindPFlag(currFlag.Long, cmd.Flags().Lookup(currFlag.Long)); err != nil {
 			return err

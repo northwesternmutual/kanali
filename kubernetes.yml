@@ -56,7 +56,7 @@ spec:
       containers:
       - name: kanali
         imagePullPolicy: IfNotPresent
-        image: northwesternmutual/kanali:latest
+        image: northwesternmutual/kanali:v1.1.5
         command:
         - /kanali
         - start
@@ -66,31 +66,32 @@ spec:
             fieldRef:
               fieldPath: status.podIP
         ports:
-        - containerPort: 8443
+        - containerPort: 443
         volumeMounts:
-        - name: pki
-          mountPath: /etc/pki
-        - name: config
+        - name: kanali
           mountPath: /etc/kanali
       volumes:
-      - name: pki
+      - name: kanali
         projected:
           sources:
+          - configMap:
+              name: kanali-config
+              items:
+              - key: config.toml
+                mode: 0644
+                path: config.toml
           - secret:
               name: kanali
               items:
               - key: tls.crt
-                path: tls.crt
+                path: pki/tls.crt
               - key: tls.key
-                path: tls.key
+                path: pki/tls.key
           - secret:
               name: kanali-key-decription
               items:
               - key: key.pem
-                path: key.pem
-      - name: config
-        configMap:
-          name: kanali-config
+                path: rsa/key.pem
 
 ---
 
@@ -115,12 +116,12 @@ data:
     location = "/"
 
     [plugins.apiKey]
-    decryption_key_file = "/etc/pki/key.pem"
+    decryption_key_file = "/etc/kanali/rsa/key.pem"
     header_key = "apikey"
 
     [tls]
-    cert_file = "/etc/pki/tls.crt"
-    key_file = "/etc/pki/tls.key"
+    cert_file = "/etc/kanali/pki/tls.crt"
+    key_file = "/etc/kanali/pki/tls.key"
     ca_file = ""
 
     [server]

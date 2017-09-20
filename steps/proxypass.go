@@ -160,7 +160,7 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 			caCertPool.AppendCertsFromPEM(secret.Data["tls.ca"])
 		}
 
-		if viper.GetBool(config.FlagProxyTLSCommonNameValidation.GetLong()) {
+		if !viper.GetBool(config.FlagProxyTLSCommonNameValidation.GetLong()) {
 			tlsConfig.InsecureSkipVerify = true
 			tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
 				opts := x509.VerifyOptions{
@@ -266,11 +266,13 @@ func (p *proxy) setK8sDiscoveredURI() (*url.URL, *utils.StatusError) {
 
 	untypedSvc, err := spec.ServiceStore.Get(p.Target.Spec.Service, p.Source.Header)
 	if err != nil || untypedSvc == nil {
+		logrus.Debug("service was non of type spec.Service")
 		return nil, &utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
 	}
 
 	svc, ok := untypedSvc.(spec.Service)
 	if !ok {
+		logrus.Debug("service was non of type spec.Service")
 		return nil, &utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
 	}
 

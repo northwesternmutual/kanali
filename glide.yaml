@@ -1,13 +1,8 @@
 package: github.com/northwesternmutual/kanali
 import:
-- package: github.com/stretchr/testify
-  version: v1.1.4
-  subpackages:
-  - assert
 - package: github.com/Sirupsen/logrus
   version: 0.11.5
 - package: github.com/spf13/pflag
-- package: github.com/fsnotify/fsnotify
 - package: github.com/spf13/cobra
 - package: github.com/NYTimes/gziphandler
 - package: github.com/PuerkitoBio/purell
@@ -30,3 +25,8 @@ import:
   version: 1.0.2
 - package: github.com/uber/jaeger-client-go
   version: 2.9.0
+testImport:
+- package: github.com/stretchr/testify
+  version: v1.1.4
+  subpackages:
+  - assert

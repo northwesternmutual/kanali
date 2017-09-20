@@ -49,4 +49,4 @@ data:
     ]
 
     [proxy.default_header_values]
-    x-canary-deployment = "stable"
+    deployment = "production"
