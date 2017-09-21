@@ -62,7 +62,6 @@ func (f Flag) GetUsage() string {
 }
 
 func (f flags) AddAll(cmd *cobra.Command) error {
-
 	for _, currFlag := range f {
 		switch v := currFlag.Value.(type) {
 		case int:
