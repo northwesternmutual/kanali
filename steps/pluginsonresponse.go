@@ -80,8 +80,5 @@ func doOnResponse(ctx context.Context, m *metrics.Metrics, name string, proxy sp
 	sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_RESPONSE: %s", name), opentracing.ChildOf(span.Context()))
 	defer sp.Finish()
 
-	if err := p.OnResponse(ctx, m, proxy, ctlr, req, resp, sp); err != nil {
-		return err
-	}
-	return nil
+	return p.OnResponse(ctx, m, proxy, ctlr, req, resp, sp)
 }
