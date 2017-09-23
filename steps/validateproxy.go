@@ -29,6 +29,7 @@ import (
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
+	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 )
@@ -52,8 +53,8 @@ func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 			logrus.Error(err.Error())
 		}
 
-		trace.SetTag("kanali.proxy_name", "unknown")
-		trace.SetTag("kanali.proxy_namespace", "unknown")
+		trace.SetTag(tracer.KanaliProxyName, "unknown")
+		trace.SetTag(tracer.KanaliProxyNamespace, "unknown")
 
 		m.Add(
 			metrics.Metric{Name: "proxy_name", Value: "unknown", Index: true},
@@ -66,8 +67,8 @@ func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 	proxy, ok := untypedProxy.(spec.APIProxy)
 	if !ok {
 
-		trace.SetTag("kanali.proxy_name", "unknown")
-		trace.SetTag("kanali.proxy_namespace", "unknown")
+		trace.SetTag(tracer.KanaliProxyName, "unknown")
+		trace.SetTag(tracer.KanaliProxyNamespace, "unknown")
 
 		m.Add(
 			metrics.Metric{Name: "proxy_name", Value: "unknown", Index: true},
@@ -77,8 +78,8 @@ func (step ValidateProxyStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
 
-	trace.SetTag("kanali.proxy_name", proxy.ObjectMeta.Name)
-	trace.SetTag("kanali.proxy_namespace", proxy.ObjectMeta.Namespace)
+	trace.SetTag(tracer.KanaliProxyName, proxy.ObjectMeta.Name)
+	trace.SetTag(tracer.KanaliProxyNamespace, proxy.ObjectMeta.Namespace)
 
 	m.Add(
 		metrics.Metric{Name: "proxy_name", Value: proxy.ObjectMeta.Name, Index: true},

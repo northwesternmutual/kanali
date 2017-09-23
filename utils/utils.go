@@ -22,9 +22,6 @@ package utils
 
 import (
 	"bytes"
-	"errors"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -110,52 +107,6 @@ func GetAbsPath(path string) (string, error) {
 
 	return p, nil
 
-}
-
-// DupReaderAndString takes reader, copies it, drains it and returns a copy
-// of the original reader as well as the contents of the reader as a string
-func DupReaderAndString(closer io.ReadCloser) (io.ReadCloser, string, error) {
-
-	buf, _ := ioutil.ReadAll(closer)
-	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
-	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-
-	requestData, err := ioutil.ReadAll(rdr1)
-	if err != nil {
-		return nil, "", errors.New("could not read from io stream - tracing tags my not reflect actual request")
-	}
-
-	return rdr2, string(requestData), nil
-
-}
-
-// OmitHeaderValues masks specified values with the provided "mask" message
-func OmitHeaderValues(h http.Header, msg string, keys ...string) http.Header {
-	if h == nil {
-		return nil
-	}
-	copy := http.Header{}
-	for k, v := range h {
-		copy[strings.Title(k)] = v
-	}
-	for _, key := range keys {
-		if copy.Get(key) != "" {
-			copy.Set(key, msg)
-		}
-	}
-	return copy
-}
-
-// FlattenHTTPHeaders turns HTTP headers into key/value instead of key/array
-func FlattenHTTPHeaders(h http.Header) map[string]string {
-	if h == nil {
-		return nil
-	}
-	headers := map[string]string{}
-	for k := range h {
-		headers[k] = h.Get(k)
-	}
-	return headers
 }
 
 // CompareObjectMeta will loosly determine whether two ObjectMeta objects are equal.

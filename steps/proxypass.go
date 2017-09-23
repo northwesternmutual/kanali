@@ -29,12 +29,14 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
+	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
@@ -83,7 +85,7 @@ func (step ProxyPassStep) Do(ctx context.Context, m *metrics.Metrics, c *control
 		Target: typedProxy, // shouldn't be nil (unless the proxy is removed within the microseconds it takes to get to this code)
 	}
 
-	up := create(p).setUpstreamURL(p).configureTLS(p).setUpstreamHeaders(p).performProxy(trace)
+	up := create(p).setUpstreamURL(p).configureTLS(p).setUpstreamHeaders(p).performProxy(m, trace)
 
 	if up.Error != (utils.StatusError{}) {
 		logrus.Errorf("error performing proxypass: %s", up.Error)
@@ -226,34 +228,44 @@ func (up *upstream) setUpstreamHeaders(p *proxy) *upstream {
 
 }
 
-func (up *upstream) performProxy(trace opentracing.Span) *upstream {
-
+func (up *upstream) performProxy(m *metrics.Metrics, span opentracing.Span) *upstream {
 	if up.Error != (utils.StatusError{}) {
 		return up
 	}
 
-	logrus.Infof("upstream url: %s", up.Request.URL.String())
-
-	err := trace.Tracer().Inject(trace.Context(),
+	if err := span.Tracer().Inject(
+		span.Context(),
 		opentracing.TextMap,
-		opentracing.HTTPHeadersCarrier(up.Request.Header))
-
-	if err != nil {
-		logrus.Error("could not inject headers")
+		opentracing.HTTPHeadersCarrier(up.Request.Header),
+	); err != nil {
+		logrus.Error("error injecting headers")
 	}
 
+	sp := opentracing.StartSpan(fmt.Sprintf("%s %s",
+		up.Request.Method,
+		up.Request.URL.EscapedPath(),
+	), opentracing.ChildOf(span.Context()))
+	defer sp.Finish()
+
+	tracer.HydrateSpanFromRequest(up.Request, sp)
+
+	t0 := time.Now()
 	resp, err := up.Client.Do(up.Request)
 	if err != nil {
 		up.Error = utils.StatusError{
 			Code: http.StatusInternalServerError,
 			Err:  err,
 		}
-	} else {
-		up.Response = resp
 	}
 
-	return up
+	m.Add(
+		metrics.Metric{Name: "total_target_time", Value: int(time.Now().Sub(t0) / time.Millisecond), Index: false},
+	)
 
+	tracer.HydrateSpanFromResponse(resp, sp)
+
+	up.Response = resp
+	return up
 }
 
 func (p *proxy) setK8sDiscoveredURI() (*url.URL, *utils.StatusError) {

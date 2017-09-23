@@ -27,6 +27,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
+	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -46,7 +47,7 @@ func (f *Flow) Play(ctx context.Context, metrics *metrics.Metrics, ctlr *control
 	for _, step := range *f {
 		logrus.Debugf("playing step %s", step.GetName())
 		if err := step.Do(ctx, metrics, ctlr, w, r, resp, trace); err != nil {
-			trace.SetTag("error", true)
+			trace.SetTag(tracer.Error, true)
 			trace.LogKV(
 				"event", "error",
 				"error.message", err.Error(),
@@ -55,5 +56,4 @@ func (f *Flow) Play(ctx context.Context, metrics *metrics.Metrics, ctlr *control
 		}
 	}
 	return nil
-
 }

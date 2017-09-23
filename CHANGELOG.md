@@ -8,10 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Gzip support.
 - `Update` method to `Store` interface.
+- Additional Opentracing span to capture target request.
+- _Average Target Response Time_ Grafana panel.
 ### Changed
 - Fixed [#61](https://github.com/northwesternmutual/kanali/issues/61)
 - Fixed [#57](https://github.com/northwesternmutual/kanali/issues/57).
-- Using Alpine as base Docker image.
 - Using versioned API key plugin in distributed `Dockefile` and examples.
 - Refactored configuration items.
 - Using `TOML` as configuration format in distribution and examples.
