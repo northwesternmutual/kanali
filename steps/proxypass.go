@@ -28,7 +28,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -115,55 +114,45 @@ func createTargetClient(proxy *spec.APIProxy, originalRequest *http.Request) (*h
 
 func configureTargetTLS(proxy *spec.APIProxy, originalRequest *http.Request) (*http.Transport, error) {
 
-	// get secret for this request - if any
 	untypedSecret, err := spec.SecretStore.Get(proxy.GetSSLCertificates(originalRequest.Host).SecretName, proxy.ObjectMeta.Namespace)
 	if err != nil {
 		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: err}
 	}
 
+	if untypedSecret == nil {
+		logrus.Debug("TLS not configured for this proxy")
+		return nil, nil
+	}
+
 	tlsConfig := &tls.Config{}
 	caCertPool := x509.NewCertPool()
 
-	// ssl is not configured for this request
-	if untypedSecret == nil {
+	secret, _ := untypedSecret.(api.Secret)
 
-		// if upstream option is being used, if the scheme
-		// is https we need to add the root ca bundle
-		if strings.Compare(originalRequest.URL.Scheme, "https") != 0 {
-			logrus.Debug("TLS not configured for this proxy")
-			return nil, nil
-		}
+	// server side tls must be configured
+	cert, err := spec.X509KeyPair(secret)
+	if err != nil {
+		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: err}
+	}
+	tlsConfig.Certificates = []tls.Certificate{*cert}
 
-	} else {
+	if secret.Data["tls.ca"] != nil {
+		caCertPool.AppendCertsFromPEM(secret.Data["tls.ca"])
+	}
 
-		secret, _ := untypedSecret.(api.Secret)
-
-		// server side tls must be configured
-		cert, err := spec.X509KeyPair(secret)
-		if err != nil {
-			return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: err}
-		}
-		tlsConfig.Certificates = []tls.Certificate{*cert}
-
-		if secret.Data["tls.ca"] != nil {
-			caCertPool.AppendCertsFromPEM(secret.Data["tls.ca"])
-		}
-
-		if !viper.GetBool(config.FlagProxyTLSCommonNameValidation.GetLong()) {
-			tlsConfig.InsecureSkipVerify = true
-			tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-				opts := x509.VerifyOptions{
-					Roots: caCertPool,
-				}
-				cert, err := x509.ParseCertificate(rawCerts[0])
-				if err != nil {
-					return err
-				}
-				_, err = cert.Verify(opts)
+	if !viper.GetBool(config.FlagProxyTLSCommonNameValidation.GetLong()) {
+		tlsConfig.InsecureSkipVerify = true
+		tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+			opts := x509.VerifyOptions{
+				Roots: caCertPool,
+			}
+			cert, err := x509.ParseCertificate(rawCerts[0])
+			if err != nil {
 				return err
 			}
+			_, err = cert.Verify(opts)
+			return err
 		}
-
 	}
 
 	tlsConfig.RootCAs = caCertPool

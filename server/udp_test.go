@@ -20,49 +20,51 @@
 
 package server
 
-// import (
-// 	"net"
-// 	"testing"
-// 	"time"
-//
-// 	"github.com/northwesternmutual/kanali/spec"
-// 	"github.com/spf13/viper"
-// 	"github.com/stretchr/testify/assert"
-// )
+import (
+	"net"
+	"testing"
+	"time"
 
-// func TestStartUdpServer(t *testing.T) {
-//
-// 	assert := assert.New(t)
-//
-// 	viper.SetDefault("peer-udp-port", 10001)
-//
-// 	go func() {
-// 		if err := StartUdpServer(); err != nil {
-// 			assert.Fail("upd server threw an error: ", err.Error())
-// 		}
-// 	}()
-//
-// 	time.Sleep(time.Millisecond * 100)
-//
-// 	serverAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10001")
-// 	if err != nil {
-// 		assert.Fail("there was an error: ", err.Error())
-// 	}
-//
-// 	conn, err := net.DialUDP("udp", nil, serverAddr)
-// 	if err != nil {
-// 		assert.Fail("there was an error: ", err.Error())
-// 	}
-//
-// 	defer conn.Close()
-//
-// 	_, err = conn.Write([]byte("namespace-one,proxy-one,key-one"))
-// 	if err != nil {
-// 		assert.Fail("there was an error: ", err.Error())
-// 	}
-//
-// 	time.Sleep(time.Millisecond * 100)
-//
-// 	assert.Equal(1, len(spec.GetTrafficStore()))
-//
-// }
+	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/spec"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestStartUDPServer(t *testing.T) {
+
+	assert := assert.New(t)
+
+	viper.SetDefault(config.FlagServerPeerUDPPort.GetLong(), 10001)
+	defer viper.Reset()
+
+	go func() {
+		if err := StartUDPServer(); err != nil {
+			assert.Fail("upd server threw an error: ", err.Error())
+		}
+	}()
+
+	time.Sleep(time.Millisecond * 100)
+
+	serverAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10001")
+	if err != nil {
+		assert.Fail("there was an error: ", err.Error())
+	}
+
+	conn, err := net.DialUDP("udp", nil, serverAddr)
+	if err != nil {
+		assert.Fail("there was an error: ", err.Error())
+	}
+
+	defer conn.Close()
+
+	_, err = conn.Write([]byte("namespace-one,proxy-one,key-one"))
+	if err != nil {
+		assert.Fail("there was an error: ", err.Error())
+	}
+
+	time.Sleep(time.Millisecond * 100)
+
+	assert.False(spec.TrafficStore.IsEmpty())
+
+}

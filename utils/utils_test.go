@@ -56,14 +56,6 @@ func TestAbsPath(t *testing.T) {
 	assert.Equal(t, "", p)
 }
 
-func TestIsValidHTTPMethod(t *testing.T) {
-	assert.False(t, IsValidHTTPMethod("foo"))
-	assert.True(t, IsValidHTTPMethod("GET"))
-	assert.True(t, IsValidHTTPMethod("get"))
-	assert.True(t, IsValidHTTPMethod("POST"))
-	assert.True(t, IsValidHTTPMethod("post"))
-}
-
 func TestCompareObjectMeta(t *testing.T) {
 	c1 := api.ObjectMeta{
 		Name:      "foo",
