@@ -131,7 +131,7 @@ var startCmd = &cobra.Command{
 			}()
 		}
 
-		server.Start(ctlr, influxCtlr)
+		server.Start(influxCtlr)
 
 	},
 }

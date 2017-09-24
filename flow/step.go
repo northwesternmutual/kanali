@@ -24,13 +24,13 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
-	"github.com/opentracing/opentracing-go"
+	"github.com/northwesternmutual/kanali/spec"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Step is an interface that represents a step to be used in a flow
 type Step interface {
 	GetName() string
-	Do(ctx context.Context, metrics *metrics.Metrics, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error
+	Do(ctx context.Context, proxy *spec.APIProxy, metrics *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error
 }

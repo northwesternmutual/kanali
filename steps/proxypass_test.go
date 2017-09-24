@@ -21,225 +21,141 @@
 package steps
 
 import (
+	"bytes"
+	"errors"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 
 	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
-	"github.com/northwesternmutual/kanali/utils"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
+type mockHTTPClient struct{}
+
+func (cli *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	responseRecorder := &httptest.ResponseRecorder{}
+	mockTracer := mocktracer.New()
+
+	_, err := mockTracer.Extract(
+		opentracing.TextMap,
+		opentracing.HTTPHeadersCarrier(req.Header),
+	)
+	if err != nil {
+		return nil, errors.New("error extracting headers")
+	}
+
+	if req.URL.Path == "/error" {
+		return nil, errors.New("expected error")
+	}
+
+	responseRecorder.Code = http.StatusOK
+	responseRecorder.Body = bytes.NewBuffer([]byte("response body"))
+	return responseRecorder.Result(), nil
+}
+
 func TestProxyPassGetName(t *testing.T) {
-	assert := assert.New(t)
 	step := ProxyPassStep{}
-	assert.Equal(step.GetName(), "Proxy Pass", "step name is incorrect")
+	assert.Equal(t, step.GetName(), "Proxy Pass", "step name is incorrect")
 }
 
-func TestCreate(t *testing.T) {
-	assert := assert.New(t)
+func TestPreformTargetProxy(t *testing.T) {
+	testMetrics := &metrics.Metrics{}
+	mockTracer := mocktracer.New()
+	testReqOne, _ := http.NewRequest("GET", "https://foo.bar.com/?foo=bar", bytes.NewReader([]byte("test data")))
+	testReqTwo, _ := http.NewRequest("GET", "https://foo.bar.com/error", bytes.NewReader([]byte("test data")))
 
-	assert.Equal(create(getTestInternalProxies()[0]), &upstream{
-		Request: getTestInternalProxies()[0].Source,
-		Client:  &http.Client{},
-		Error:   utils.StatusError{},
-	}, "object not what expected")
+	testSpanOne := mockTracer.StartSpan("test span one")
+	resp, err := preformTargetProxy(&mockHTTPClient{}, testReqOne, testMetrics, testSpanOne)
+	testSpanOne.Finish()
+	assert.Nil(t, err)
+	assert.Equal(t, resp.StatusCode, 200)
+	assert.Equal(t, (*testMetrics)[0].Name, "total_target_time")
+	assert.False(t, (*testMetrics)[0].Index)
 
+	testSpanTwo := mockTracer.StartSpan("test span two")
+	_, err = preformTargetProxy(&mockHTTPClient{}, testReqTwo, testMetrics, testSpanTwo)
+	testSpanTwo.Finish()
+	assert.Equal(t, err.Error(), "expected error")
 }
 
-func TestSetUpstreamURL(t *testing.T) {
-	spec.ServiceStore.Set(spec.Service{
-		Name:      "my-service",
-		Namespace: "foo",
-		ClusterIP: "1.2.3.4",
-		Port:      8080,
-	})
-
-	p := getTestInternalProxies()[3]
-	result := create(p).setUpstreamURL(p)
-	assert.Equal(t, result.Request.URL.Path, "/foo/bar/https://foo.bar.com")
-	assert.Equal(t, result.Request.URL.EscapedPath(), "/foo/bar/https%3A%2F%2Ffoo.bar.com")
-}
-
-func TestSetK8sDiscoveredURI(t *testing.T) {
-	assert := assert.New(t)
-
+func TestGetTargetHost(t *testing.T) {
 	spec.ServiceStore.Set(spec.Service{
 		Name:      "bar",
 		Namespace: "foo",
 		ClusterIP: "1.2.3.4",
 		Port:      8080,
 	})
+	req, _ := http.NewRequest("GET", "http://foo.bar.com", nil)
 
-	proxies := getTestInternalProxies()
+	proxyOne := &spec.APIProxy{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "exampleAPIProxyOne",
+			Namespace: "foo",
+		},
+		Spec: spec.APIProxySpec{
+			Path: "/api/v1/accounts",
+			Service: spec.Service{
+				Name:      "bar",
+				Namespace: "foo",
+				Port:      8080,
+			},
+		},
+	}
 
-	urlOne, _ := proxies[0].setK8sDiscoveredURI()
-	assert.Equal(*urlOne, url.URL{
+	proxyTwo := &spec.APIProxy{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "exampleAPIProxyOne",
+			Namespace: "foo",
+		},
+		Spec: spec.APIProxySpec{
+			Path:   "/api/v1/accounts",
+			Target: "/foo/bar",
+			Service: spec.Service{
+				Name:      "bar",
+				Namespace: "foo",
+				Port:      8080,
+			},
+			SSL: spec.SSL{
+				SecretName: "mysecretname",
+			},
+		},
+	}
+
+	urlOne, _ := getTargetHost(proxyOne, req)
+	assert.Equal(t, *urlOne, url.URL{
 		Scheme: "http",
 		Host:   "bar.foo.svc.cluster.local:8080",
 	})
 
 	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), true)
 
-	urlOne, _ = proxies[0].setK8sDiscoveredURI()
-	assert.Equal(*urlOne, url.URL{
+	urlOne, _ = getTargetHost(proxyOne, req)
+	assert.Equal(t, *urlOne, url.URL{
 		Scheme: "http",
 		Host:   "1.2.3.4:8080",
 	})
 
 	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), false)
 
-	urlTwo, _ := proxies[1].setK8sDiscoveredURI()
-	assert.Equal(*urlTwo, url.URL{
+	urlTwo, _ := getTargetHost(proxyTwo, req)
+	assert.Equal(t, *urlTwo, url.URL{
 		Scheme: "https",
 		Host:   "bar.foo.svc.cluster.local:8080",
 	})
 
 	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), true)
 
-	urlTwo, _ = proxies[1].setK8sDiscoveredURI()
-	assert.Equal(*urlTwo, url.URL{
+	urlTwo, _ = getTargetHost(proxyTwo, req)
+	assert.Equal(t, *urlTwo, url.URL{
 		Scheme: "https",
 		Host:   "1.2.3.4:8080",
 	})
-}
-
-func getTestInternalProxies() []*proxy {
-
-	one, _ := url.Parse("http://www.foo.bar.com/api/v1/accounts")
-	two, _ := url.Parse("http://www.foo.bar.com/api/v1/accounts/one/two")
-	three, _ := url.Parse("http://www.foo.bar.com/api/v1/accounts/https%3A%2F%2Ffoo.bar.com")
-
-	return []*proxy{
-		{
-			Source: &http.Request{
-				URL: one,
-			},
-			Target: spec.APIProxy{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
-					Name:      "exampleAPIProxyOne",
-					Namespace: "foo",
-				},
-				Spec: spec.APIProxySpec{
-					Path: "/api/v1/accounts",
-					Hosts: []spec.Host{
-						{
-							Name: "https://www.google.com",
-						},
-						{
-							Name: "http://kubernetes.default.svc.cluster.local",
-						},
-					},
-					Service: spec.Service{
-						Name:      "bar",
-						Namespace: "foo",
-						Port:      8080,
-					},
-					Plugins: []spec.Plugin{
-						{
-							Name: "apikey",
-						},
-					},
-				},
-			},
-		},
-		{
-			Source: &http.Request{
-				URL: one,
-			},
-			Target: spec.APIProxy{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
-					Name:      "exampleAPIProxyOne",
-					Namespace: "foo",
-				},
-				Spec: spec.APIProxySpec{
-					Path:   "/api/v1/accounts",
-					Target: "/foo/bar",
-					Hosts: []spec.Host{
-						{
-							Name: "https://www.google.com",
-						},
-						{
-							Name: "http://kubernetes.default.svc.cluster.local",
-						},
-					},
-					Service: spec.Service{
-						Name:      "bar",
-						Namespace: "foo",
-						Port:      8080,
-					},
-					Plugins: []spec.Plugin{
-						{
-							Name: "apikey",
-						},
-					},
-					SSL: spec.SSL{
-						SecretName: "mysecretname",
-					},
-				},
-			},
-		},
-		{
-			Source: &http.Request{
-				URL: two,
-			},
-			Target: spec.APIProxy{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
-					Name:      "exampleAPIProxyOne",
-					Namespace: "foo",
-				},
-				Spec: spec.APIProxySpec{
-					Path:   "/api/v1/accounts",
-					Target: "/foo/bar",
-					Hosts: []spec.Host{
-						{
-							Name: "https://www.google.com",
-						},
-						{
-							Name: "http://kubernetes.default.svc.cluster.local",
-						},
-					},
-					Service: spec.Service{
-						Name:      "my-service",
-						Namespace: "foo",
-						Port:      8080,
-					},
-					Plugins: []spec.Plugin{
-						{
-							Name: "apikey",
-						},
-					},
-				},
-			},
-		},
-		{
-			Source: &http.Request{
-				URL: three,
-			},
-			Target: spec.APIProxy{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
-					Name:      "exampleAPIProxyOne",
-					Namespace: "foo",
-				},
-				Spec: spec.APIProxySpec{
-					Path:   "/api/v1/accounts",
-					Target: "/foo/bar",
-					Service: spec.Service{
-						Name:      "my-service",
-						Namespace: "foo",
-						Port:      8080,
-					},
-				},
-			},
-		},
-	}
-
 }

@@ -44,22 +44,7 @@ func TestMockServiceDo(t *testing.T) {
   cms := getTestConfigMaps()
   spec.MockResponseStore.Clear()
   spec.MockResponseStore.Set(cms[0])
-  spec.ProxyStore.Set(spec.APIProxy{
-    TypeMeta: unversioned.TypeMeta{},
-    ObjectMeta: api.ObjectMeta{
-      Name:      "proxy-one",
-      Namespace: "foo",
-    },
-    Spec: spec.APIProxySpec{
-      Path: "api/v1/accounts",
-      Target: "/foo",
-      Mock: &spec.Mock{
-        ConfigMapName: "cm-one",
-      },
-    },
-  })
-  spec.ProxyStore.Set(spec.APIProxy{
-    TypeMeta: unversioned.TypeMeta{},
+  balanceProxy := &spec.APIProxy{
     ObjectMeta: api.ObjectMeta{
       Name:      "proxy-one",
       Namespace: "foo",
@@ -71,9 +56,8 @@ func TestMockServiceDo(t *testing.T) {
         ConfigMapName: "cm-one",
       },
     },
-  })
-  spec.ProxyStore.Set(spec.APIProxy{
-    TypeMeta: unversioned.TypeMeta{},
+  }
+  addressProxy := &spec.APIProxy{
     ObjectMeta: api.ObjectMeta{
       Name:      "proxy-one",
       Namespace: "foo",
@@ -85,27 +69,38 @@ func TestMockServiceDo(t *testing.T) {
         ConfigMapName: "cm-two",
       },
     },
-  })
+  }
+  accountsProxy := &spec.APIProxy{
+    ObjectMeta: api.ObjectMeta{
+      Name:      "proxy-one",
+      Namespace: "foo",
+    },
+    Spec: spec.APIProxySpec{
+      Path: "api/v1/accounts",
+      Target: "/foo",
+      Mock: &spec.Mock{
+        ConfigMapName: "cm-one",
+      },
+    },
+  }
   step := MockServiceStep{}
 
   m := &metrics.Metrics{}
   req, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
   res := &http.Response{}
   span := opentracing.StartSpan("test span")
-  err := step.Do(context.Background(), m, nil, nil, req, res, span)
+  err := step.Do(context.Background(), accountsProxy, m, nil, req, res, span)
   assert.Nil(t, err)
   assert.Equal(t, m.Get("http_response_code").Value, "200")
   assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
   body, _ := ioutil.ReadAll(res.Body)
   assert.Equal(t, string(body), `{"foo":"bar"}`)
-  req, _ = http.NewRequest("GET", "http://foo.bar.com/", nil)
-  assert.Equal(t, step.Do(context.Background(), m, nil, nil, req, res, span).Error(), "proxy not found")
   req, _ = http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts/bar", nil)
-  assert.Nil(t, step.Do(context.Background(), m, nil, nil, req, res, span))
+  assert.Nil(t, step.Do(context.Background(), accountsProxy, m, nil, req, res, span))
   req, _ = http.NewRequest("GET", "http://foo.bar.com/api/v1/balance", nil)
-  assert.Equal(t, step.Do(context.Background(), m, nil, nil, req, res, span).Error(), "no mock response found")
+  assert.Equal(t, step.Do(context.Background(), balanceProxy, m, nil, req, res, span).Error(), "no mock response found")
   req, _ = http.NewRequest("GET", "http://foo.bar.com/api/v1/address", nil)
-  assert.Equal(t, step.Do(context.Background(), m, nil, nil, req, res, span).Error(), "no mock response found")
+  assert.Equal(t, step.Do(context.Background(), addressProxy, m, nil, req, res, span).Error(), "no mock response found")
 }
 
 func getTestConfigMaps() []api.ConfigMap {

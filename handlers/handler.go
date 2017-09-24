@@ -30,9 +30,9 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/monitor"
+	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
@@ -40,9 +40,8 @@ import (
 
 // Handler is used to provide additional parameters to an HTTP handler
 type Handler struct {
-	*controller.Controller
 	*monitor.InfluxController
-	H func(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error
+	H func(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error
 }
 
 func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +75,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 	tracer.HydrateSpanFromRequest(r, sp)
 
-	err := h.H(context.Background(), m, h.Controller, w, r, sp)
+	err := h.H(context.Background(), nil, m, w, r, sp)
 	if err == nil {
 		return
 	}
