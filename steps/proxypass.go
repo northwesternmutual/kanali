@@ -83,16 +83,10 @@ func createTargetRequest(proxy *spec.APIProxy, originalRequest *http.Request) (*
 	*targetRequest = *originalRequest
 	targetRequest.RequestURI = ""
 
-	u, err := getTargetHost(proxy, originalRequest)
+	u, err := getTargetURL(proxy, originalRequest)
 	if err != nil {
 		return nil, err
 	}
-
-	u.Path = utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.Path)
-	u.RawPath = utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.EscapedPath())
-	u.ForceQuery = originalRequest.URL.ForceQuery
-	u.RawQuery = originalRequest.URL.RawQuery
-	u.Fragment = originalRequest.URL.Fragment
 
 	targetRequest.URL = u
 
@@ -112,7 +106,9 @@ func createTargetClient(proxy *spec.APIProxy, originalRequest *http.Request) (*h
 		return nil, err
 	}
 
-	client.Transport = transport
+	if transport != nil {
+		client.Transport = transport
+	}
 
 	return client, nil
 }
@@ -211,7 +207,7 @@ func preformTargetProxy(client httpClient, request *http.Request, m *metrics.Met
 	return resp, nil
 }
 
-func getTargetHost(proxy *spec.APIProxy, originalRequest *http.Request) (*url.URL, error) {
+func getTargetURL(proxy *spec.APIProxy, originalRequest *http.Request) (*url.URL, error) {
 
 	scheme := "http"
 
@@ -242,6 +238,11 @@ func getTargetHost(proxy *spec.APIProxy, originalRequest *http.Request) (*url.UR
 			uri,
 			proxy.Spec.Service.Port,
 		),
+		Path:       utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.Path),
+		RawPath:    utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.EscapedPath()),
+		ForceQuery: originalRequest.URL.ForceQuery,
+		RawQuery:   originalRequest.URL.RawQuery,
+		Fragment:   originalRequest.URL.Fragment,
 	}, nil
 
 }

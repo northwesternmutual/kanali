@@ -86,14 +86,8 @@ func TestPreformTargetProxy(t *testing.T) {
 	assert.Equal(t, err.Error(), "expected error")
 }
 
-func TestGetTargetHost(t *testing.T) {
-	spec.ServiceStore.Set(spec.Service{
-		Name:      "bar",
-		Namespace: "foo",
-		ClusterIP: "1.2.3.4",
-		Port:      8080,
-	})
-	req, _ := http.NewRequest("GET", "http://foo.bar.com", nil)
+func TestCreateTargetRequest(t *testing.T) {
+	originalReq, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
 
 	proxyOne := &spec.APIProxy{
 		ObjectMeta: api.ObjectMeta{
@@ -101,7 +95,8 @@ func TestGetTargetHost(t *testing.T) {
 			Namespace: "foo",
 		},
 		Spec: spec.APIProxySpec{
-			Path: "/api/v1/accounts",
+			Path:   "/api/v1/accounts",
+			Target: "/",
 			Service: spec.Service{
 				Name:      "bar",
 				Namespace: "foo",
@@ -110,52 +105,93 @@ func TestGetTargetHost(t *testing.T) {
 		},
 	}
 
-	proxyTwo := &spec.APIProxy{
+	_, err := createTargetRequest(proxyOne, originalReq)
+	assert.Equal(t, err.Error(), "no matching services")
+
+	spec.ServiceStore.Set(spec.Service{
+		Name:      "bar",
+		Namespace: "foo",
+		ClusterIP: "1.2.3.4",
+		Port:      8080,
+	})
+
+	targetReq, _ := createTargetRequest(proxyOne, originalReq)
+	assert.Equal(t, targetReq.URL, &url.URL{
+		Scheme:     "http",
+		Host:       "bar.foo.svc.cluster.local:8080",
+		Path:       "/",
+		RawPath:    "/",
+		ForceQuery: false,
+	})
+}
+
+func TestGetTargetURL(t *testing.T) {
+	spec.ServiceStore.Set(spec.Service{
+		Name:      "bar",
+		Namespace: "foo",
+		ClusterIP: "1.2.3.4",
+		Port:      8080,
+	})
+	req, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
+
+	proxyOne := &spec.APIProxy{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "exampleAPIProxyOne",
 			Namespace: "foo",
 		},
 		Spec: spec.APIProxySpec{
 			Path:   "/api/v1/accounts",
-			Target: "/foo/bar",
+			Target: "/",
 			Service: spec.Service{
 				Name:      "bar",
 				Namespace: "foo",
 				Port:      8080,
 			},
-			SSL: spec.SSL{
-				SecretName: "mysecretname",
-			},
 		},
 	}
 
-	urlOne, _ := getTargetHost(proxyOne, req)
+	urlOne, _ := getTargetURL(proxyOne, req)
 	assert.Equal(t, *urlOne, url.URL{
-		Scheme: "http",
-		Host:   "bar.foo.svc.cluster.local:8080",
+		Scheme:     "http",
+		Host:       "bar.foo.svc.cluster.local:8080",
+		Path:       "/",
+		RawPath:    "/",
+		ForceQuery: false,
 	})
 
 	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), true)
 
-	urlOne, _ = getTargetHost(proxyOne, req)
+	urlOne, _ = getTargetURL(proxyOne, req)
 	assert.Equal(t, *urlOne, url.URL{
-		Scheme: "http",
-		Host:   "1.2.3.4:8080",
+		Scheme:     "http",
+		Host:       "1.2.3.4:8080",
+		Path:       "/",
+		RawPath:    "/",
+		ForceQuery: false,
 	})
 
 	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), false)
+	proxyOne.Spec.SSL = spec.SSL{
+		SecretName: "mysecretname",
+	}
 
-	urlTwo, _ := getTargetHost(proxyTwo, req)
+	urlTwo, _ := getTargetURL(proxyOne, req)
 	assert.Equal(t, *urlTwo, url.URL{
-		Scheme: "https",
-		Host:   "bar.foo.svc.cluster.local:8080",
+		Scheme:     "https",
+		Host:       "bar.foo.svc.cluster.local:8080",
+		Path:       "/",
+		RawPath:    "/",
+		ForceQuery: false,
 	})
 
 	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), true)
 
-	urlTwo, _ = getTargetHost(proxyTwo, req)
+	urlTwo, _ = getTargetURL(proxyOne, req)
 	assert.Equal(t, *urlTwo, url.URL{
-		Scheme: "https",
-		Host:   "1.2.3.4:8080",
+		Scheme:     "https",
+		Host:       "1.2.3.4:8080",
+		Path:       "/",
+		RawPath:    "/",
+		ForceQuery: false,
 	})
 }

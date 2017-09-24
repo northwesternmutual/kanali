@@ -65,7 +65,7 @@ func (step ValidateProxyStep) Do(ctx context.Context, proxy *spec.APIProxy, m *m
 
 	typedProxy, _ := untypedProxy.(spec.APIProxy)
 
-	proxy = &typedProxy
+	*proxy = typedProxy
 
 	trace.SetTag(tracer.KanaliProxyName, proxy.ObjectMeta.Name)
 	trace.SetTag(tracer.KanaliProxyNamespace, proxy.ObjectMeta.Namespace)

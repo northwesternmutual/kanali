@@ -45,7 +45,7 @@ func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
 		requestPath = requestPath[:len(requestPath)-1]
 	}
 
-	if strings.Compare(proxyTarget, "/") == 0 {
+	if proxyTarget == "/" {
 
 		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
 			target = "/"
@@ -63,10 +63,8 @@ func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
 
 	}
 
-	if strings.Compare(target, "") == 0 {
-
+	if target == "" {
 		return "/"
-
 	}
 
 	return target

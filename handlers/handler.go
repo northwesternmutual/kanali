@@ -75,7 +75,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 	tracer.HydrateSpanFromRequest(r, sp)
 
-	err := h.H(context.Background(), nil, m, w, r, sp)
+	err := h.H(context.Background(), &spec.APIProxy{}, m, w, r, sp)
 	if err == nil {
 		return
 	}

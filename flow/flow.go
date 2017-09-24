@@ -46,7 +46,7 @@ func (f *Flow) Play(ctx context.Context, proxy *spec.APIProxy, metrics *metrics.
 	logrus.Debugf("flow with %d step about to play", len(*f))
 	for _, step := range *f {
 		logrus.Debugf("playing step %s", step.GetName())
-		if err := step.Do(ctx, nil, metrics, w, r, resp, trace); err != nil {
+		if err := step.Do(ctx, proxy, metrics, w, r, resp, trace); err != nil {
 			trace.SetTag(tracer.Error, true)
 			trace.LogKV(
 				"event", "error",
