@@ -28,23 +28,19 @@ import (
 )
 
 func TestComputeTargetPath(t *testing.T) {
-
-	assert := assert.New(t)
-
-	assert.Equal("/", ComputeTargetPath("/foo/bar", "", "/foo/bar"), "path not what expected")
-	assert.Equal("/", ComputeTargetPath("/foo/bar", "/", "/foo/bar"), "path not what expected")
-	assert.Equal("/foo", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar"), "path not what expected")
-	assert.Equal("/foo/bar", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar"), "path not what expected")
-	assert.Equal("/bar", ComputeTargetPath("/foo/bar", "", "/foo/bar/bar"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/"), "path not what expected")
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts"), "path not what expected")
-	assert.Equal("/", ComputeTargetPath("/", "", "/"), "path not what expected")
-	assert.Equal("/", ComputeTargetPath("/", "/", "/"), "path not what expected")
-
+	assert.Equal(t, "/", ComputeTargetPath("/foo/bar", "", "/foo/bar"))
+	assert.Equal(t, "/", ComputeTargetPath("/foo/bar", "/", "/foo/bar"))
+	assert.Equal(t, "/foo", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar"))
+	assert.Equal(t, "/foo/bar", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar"))
+	assert.Equal(t, "/bar", ComputeTargetPath("/foo/bar", "", "/foo/bar/bar"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts"))
+	assert.Equal(t, "/", ComputeTargetPath("/", "", "/"), "path not what expected")
+	assert.Equal(t, "/", ComputeTargetPath("/", "/", "/"), "path not what expected")
 }
 
 func TestAbsPath(t *testing.T) {

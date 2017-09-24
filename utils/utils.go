@@ -33,41 +33,40 @@ import (
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
 // desired target path prefix and the assicated proxy
 func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
+	var buffer bytes.Buffer
 
-	target := ""
-
-	// normalize paths
-	if proxyPath[len(proxyPath)-1] == '/' {
-		proxyPath = proxyPath[:len(proxyPath)-1]
-	}
-	if requestPath[len(requestPath)-1] == '/' {
-		requestPath = requestPath[:len(requestPath)-1]
-	}
+	normalizePath(&proxyPath)
+	normalizePath(&requestPath)
+	normalizePath(&proxyTarget)
 
 	if proxyTarget == "/" {
-
 		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-			target = "/"
+			buffer.WriteString("/")
 		} else {
-			target = strings.SplitAfter(requestPath, proxyPath)[1]
+			buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
 		}
-
 	} else {
-
 		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-			target = "/"
+			buffer.WriteString("/")
 		} else {
-			target = proxyTarget + strings.SplitAfter(requestPath, proxyPath)[1]
+			buffer.WriteString(proxyTarget)
+			buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
 		}
-
 	}
 
-	if target == "" {
+	if len(buffer.Bytes()) == 0 {
 		return "/"
 	}
 
-	return target
+	return buffer.String()
+}
 
+func normalizePath(path *string) {
+	if len((*path)) == 0 {
+		*path = "/"
+	} else if (*path)[len((*path))-1] == '/' {
+		*path = (*path)[:len((*path))-1]
+	}
 }
 
 // GetAbsPath returns the absolute path given any path
