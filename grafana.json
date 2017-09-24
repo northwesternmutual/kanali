@@ -1721,8 +1721,8 @@
     ]
   },
   "time": {
-    "from": "2017-09-24T14:35:33.580Z",
-    "to": "2017-09-24T14:52:13.721Z"
+    "from": "now-30m",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [

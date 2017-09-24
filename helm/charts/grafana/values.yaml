@@ -424,7 +424,7 @@ serverDashboardFiles:
               "lines": false,
               "linewidth": 1,
               "links": [],
-              "minSpan": 6,
+              "minSpan": 12,
               "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
@@ -442,7 +442,7 @@ serverDashboardFiles:
                 }
               ],
               "spaceLength": 10,
-              "span": 6,
+              "span": 12,
               "stack": false,
               "steppedLine": false,
               "targets": [
@@ -591,14 +591,26 @@ serverDashboardFiles:
                   "show": true
                 }
               ]
-            },
+            }
+          ],
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "Snapshot",
+          "titleSize": "h6"
+        },
+        {
+          "collapse": false,
+          "height": 250,
+          "panels": [
             {
               "aliasColors": {},
               "bars": false,
               "dashLength": 10,
               "dashes": false,
               "datasource": "kanali",
-              "description": "aggregated response time metrics matching filters",
+              "description": "aggregated proxy response time metrics",
               "fill": 3,
               "id": 2,
               "legend": {
@@ -687,7 +699,135 @@ serverDashboardFiles:
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Avg Response Time",
+              "title": "Average Proxy Response Time",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "ms",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": "0",
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": "kanali",
+              "description": "aggregated target response time",
+              "fill": 3,
+              "id": 11,
+              "legend": {
+                "alignAsTable": false,
+                "avg": false,
+                "current": false,
+                "hideZero": false,
+                "max": false,
+                "min": false,
+                "rightSide": false,
+                "show": false,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 6,
+              "nullPointMode": "null",
+              "percentage": true,
+              "pointradius": 3,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [
+                {
+                  "alias": "/average response time for */",
+                  "color": "rgb(190, 127, 173)"
+                }
+              ],
+              "spaceLength": 10,
+              "span": 6,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "alias": "average response time for $proxyName",
+                  "dsType": "influxdb",
+                  "groupBy": [
+                    {
+                      "params": [
+                        "1m"
+                      ],
+                      "type": "time"
+                    },
+                    {
+                      "params": [
+                        "0"
+                      ],
+                      "type": "fill"
+                    }
+                  ],
+                  "measurement": "request_details",
+                  "orderByTime": "ASC",
+                  "policy": "default",
+                  "refId": "A",
+                  "resultFormat": "time_series",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "total_target_time"
+                        ],
+                        "type": "field"
+                      },
+                      {
+                        "params": [],
+                        "type": "mean"
+                      }
+                    ]
+                  ],
+                  "tags": [
+                    {
+                      "key": "proxy_name",
+                      "operator": "=~",
+                      "value": "/^$proxyName$/"
+                    },
+                    {
+                      "condition": "AND",
+                      "key": "proxy_namespace",
+                      "operator": "=~",
+                      "value": "/^$proxyNamespace$/"
+                    }
+                  ]
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Average Target Response Time",
               "tooltip": {
                 "shared": true,
                 "sort": 0,
@@ -725,7 +865,7 @@ serverDashboardFiles:
           "repeatIteration": null,
           "repeatRowId": null,
           "showTitle": false,
-          "title": "Snapshot",
+          "title": "Dashboard Row",
           "titleSize": "h6"
         },
         {
@@ -1831,7 +1971,10 @@ serverDashboardFiles:
         "list": [
           {
             "allValue": null,
-            "current": {},
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": "kanali",
             "hide": 0,
             "includeAll": true,
@@ -1851,7 +1994,10 @@ serverDashboardFiles:
           },
           {
             "allValue": null,
-            "current": {},
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": "kanali",
             "hide": 0,
             "includeAll": true,
@@ -1871,7 +2017,10 @@ serverDashboardFiles:
           },
           {
             "allValue": null,
-            "current": {},
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": "kanali",
             "hide": 2,
             "includeAll": true,
@@ -1891,7 +2040,10 @@ serverDashboardFiles:
           },
           {
             "allValue": null,
-            "current": {},
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": "kanali",
             "hide": 2,
             "includeAll": true,
@@ -1942,5 +2094,5 @@ serverDashboardFiles:
       },
       "timezone": "browser",
       "title": "Kanali",
-      "version": 5
+      "version": 0
     }
