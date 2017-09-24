@@ -46,7 +46,7 @@ func IncomingRequest(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metri
 		steps.ValidateProxyStep{},
 		steps.PluginsOnRequestStep{},
 	)
-	if viper.GetBool(config.FlagProxyEnableMockResponses.GetLong()) && mockIsDefined(r.URL.Path) {
+	if viper.GetBool(config.FlagProxyEnableMockResponses.GetLong()) && proxy.Spec.Mock != nil && proxy.Spec.Mock.ConfigMapName != "" {
 		f.Add(steps.MockServiceStep{})
 	} else {
 		f.Add(steps.ProxyPassStep{})
@@ -60,25 +60,5 @@ func IncomingRequest(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metri
 	err := f.Play(ctx, proxy, m, w, r, futureResponse, trace)
 
 	return err
-
-}
-
-func mockIsDefined(path string) bool {
-
-	untypedProxy, err := spec.ProxyStore.Get(path)
-	if err != nil || untypedProxy == nil {
-		return false
-	}
-
-	proxy, ok := untypedProxy.(spec.APIProxy)
-	if !ok {
-		return false
-	}
-
-	if proxy.Spec.Mock != nil {
-		return proxy.Spec.Mock.ConfigMapName != ""
-	}
-
-	return false
 
 }
