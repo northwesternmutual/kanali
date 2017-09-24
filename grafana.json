@@ -49,7 +49,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "hideControls": false,
-  "id": null,
+  "id": 1,
   "links": [],
   "refresh": "1m",
   "rows": [
@@ -64,7 +64,7 @@
           "bars": true,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_KANALI}",
+          "datasource": "kanali",
           "description": "request count matching filters",
           "fill": 1,
           "id": 1,
@@ -81,7 +81,7 @@
           "lines": false,
           "linewidth": 1,
           "links": [],
-          "minSpan": 6,
+          "minSpan": 12,
           "nullPointMode": "null",
           "percentage": false,
           "pointradius": 5,
@@ -99,7 +99,7 @@
             }
           ],
           "spaceLength": 10,
-          "span": 6,
+          "span": 12,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -248,14 +248,26 @@
               "show": true
             }
           ]
-        },
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "Snapshot",
+      "titleSize": "h6"
+    },
+    {
+      "collapse": false,
+      "height": 250,
+      "panels": [
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_KANALI}",
-          "description": "aggregated response time metrics matching filters",
+          "datasource": "kanali",
+          "description": "aggregated proxy response time metrics",
           "fill": 3,
           "id": 2,
           "legend": {
@@ -344,7 +356,135 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Avg Response Time",
+          "title": "Average Proxy Response Time",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "ms",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "kanali",
+          "description": "aggregated target response time",
+          "fill": 3,
+          "id": 11,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "hideZero": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": false,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "minSpan": 6,
+          "nullPointMode": "null",
+          "percentage": true,
+          "pointradius": 3,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "/average response time for */",
+              "color": "rgb(190, 127, 173)"
+            }
+          ],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "average response time for $proxyName",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "1m"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "0"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "request_details",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "total_target_time"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "proxy_name",
+                  "operator": "=~",
+                  "value": "/^$proxyName$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "proxy_namespace",
+                  "operator": "=~",
+                  "value": "/^$proxyNamespace$/"
+                }
+              ]
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Average Target Response Time",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -382,7 +522,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Snapshot",
+      "title": "Dashboard Row",
       "titleSize": "h6"
     },
     {
@@ -398,7 +538,7 @@
             "rgb(190, 127, 173)",
             "rgba(214,203,211,1)"
           ],
-          "datasource": "${DS_KANALI}",
+          "datasource": "kanali",
           "decimals": 0,
           "description": "total requests matching filters",
           "format": "none",
@@ -518,7 +658,7 @@
             "rgb(80, 177, 132)",
             "rgba(150,206,180,1)"
           ],
-          "datasource": "${DS_KANALI}",
+          "datasource": "kanali",
           "decimals": 0,
           "description": "total request success matching filters",
           "format": "none",
@@ -644,7 +784,7 @@
             "rgb(222, 107, 115)",
             "rgba(236,161,166,1)"
           ],
-          "datasource": "${DS_KANALI}",
+          "datasource": "kanali",
           "decimals": 0,
           "description": "total request errors matching filters",
           "format": "none",
@@ -780,7 +920,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_KANALI}",
+          "datasource": "kanali",
           "description": "response time percentiles",
           "fill": 3,
           "id": 10,
@@ -1066,8 +1206,8 @@
       "panels": [
         {
           "columns": [],
-          "datasource": "${DS_KANALI}",
-          "description": "average response time per proxy",
+          "datasource": "kanali",
+          "description": "average proxy response time per proxy",
           "fontSize": "100%",
           "id": 3,
           "links": [],
@@ -1156,17 +1296,229 @@
               "tags": []
             }
           ],
-          "title": "Avg Response Time by API Proxy",
+          "title": "Average Proxy Response Time by API Proxy",
           "transform": "table",
           "transparent": false,
           "type": "table"
         },
         {
           "columns": [],
-          "datasource": "${DS_KANALI}",
-          "description": "total requests by api key",
+          "datasource": "kanali",
+          "description": "average target response time per proxy",
+          "fontSize": "100%",
+          "id": 12,
+          "links": [],
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 2,
+            "desc": false
+          },
+          "span": 6,
+          "styles": [
+            {
+              "alias": "Proxy Name",
+              "colorMode": null,
+              "colors": [],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "pattern": "proxy_name",
+              "preserveFormat": false,
+              "sanitize": false,
+              "thresholds": [],
+              "type": "string",
+              "unit": "short"
+            },
+            {
+              "alias": "Avg Response Time",
+              "colorMode": "value",
+              "colors": [
+                "rgb(80, 177, 132)",
+                "rgb(255, 204, 102)",
+                "rgb(222, 107, 115)"
+              ],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 0,
+              "pattern": "mean",
+              "thresholds": [
+                "500",
+                "1000"
+              ],
+              "type": "number",
+              "unit": "ms"
+            },
+            {
+              "alias": "remove",
+              "colorMode": null,
+              "colors": [],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "pattern": "Time",
+              "thresholds": [],
+              "type": "hidden",
+              "unit": "short"
+            }
+          ],
+          "targets": [
+            {
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "proxy_name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "measurement": "request_details",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "table",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "total_target_time"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Average Target Response Time by API Proxy",
+          "transform": "table",
+          "transparent": false,
+          "type": "table"
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "By Proxy",
+      "titleSize": "h6"
+    },
+    {
+      "collapse": false,
+      "height": 250,
+      "panels": [
+        {
+          "columns": [],
+          "datasource": "kanali",
+          "description": "total requests by api proxy",
           "fontSize": "100%",
           "id": 4,
+          "links": [],
+          "pageSize": null,
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 2,
+            "desc": true
+          },
+          "span": 6,
+          "styles": [
+            {
+              "alias": "API Key Name",
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 0,
+              "pattern": "api_key_name",
+              "thresholds": [
+                ""
+              ],
+              "type": "string",
+              "unit": "none"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "pattern": "Time",
+              "thresholds": [],
+              "type": "hidden",
+              "unit": "short"
+            },
+            {
+              "alias": "Request Count",
+              "colorMode": null,
+              "colors": [],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 0,
+              "pattern": "count",
+              "thresholds": [],
+              "type": "number",
+              "unit": "none"
+            },
+            {
+              "alias": "",
+              "colorMode": null,
+              "colors": [],
+              "decimals": 2,
+              "pattern": "/.*/",
+              "thresholds": [],
+              "type": "number",
+              "unit": "short"
+            }
+          ],
+          "targets": [
+            {
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "proxy_name"
+                  ],
+                  "type": "tag"
+                }
+              ],
+              "measurement": "request_details",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "table",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "client_ip"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "count"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "proxy_name",
+                  "operator": "!=",
+                  "value": "none"
+                }
+              ]
+            }
+          ],
+          "title": "Total Requests by API Proxy",
+          "transform": "table",
+          "type": "table"
+        },
+        {
+          "columns": [],
+          "datasource": "kanali",
+          "description": "total requests by api key",
+          "fontSize": "100%",
+          "id": 13,
           "links": [],
           "pageSize": null,
           "scroll": true,
@@ -1254,19 +1606,37 @@
               "tags": [
                 {
                   "key": "api_key_name",
+                  "operator": "!~",
+                  "value": "/^$definedAPIKey$/"
+                },
+                {
+                  "condition": "AND",
+                  "key": "api_key_name",
                   "operator": "!=",
-                  "value": "none"
+                  "value": "unknown"
                 }
               ]
             }
           ],
-          "title": "Requests by API Key",
+          "title": "Total Requests by API Key",
           "transform": "table",
           "type": "table"
-        },
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "Dashboard Row",
+      "titleSize": "h6"
+    },
+    {
+      "collapse": false,
+      "height": 250,
+      "panels": [
         {
           "columns": [],
-          "datasource": "${DS_KANALI}",
+          "datasource": "kanali",
           "description": "total error count by api proxy",
           "fontSize": "100%",
           "id": 8,
@@ -1370,7 +1740,7 @@
         },
         {
           "columns": [],
-          "datasource": "${DS_KANALI}",
+          "datasource": "kanali",
           "description": "total error count by api key",
           "fontSize": "100%",
           "id": 9,
@@ -1463,7 +1833,13 @@
                   "condition": "AND",
                   "key": "api_key_name",
                   "operator": "!=",
-                  "value": "none"
+                  "value": "unknown"
+                },
+                {
+                  "condition": "AND",
+                  "key": "api_key_name",
+                  "operator": "!~",
+                  "value": "/^$definedAPIKey$/"
                 }
               ]
             }
@@ -1477,7 +1853,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "By Proxy",
+      "title": "Dashboard Row",
       "titleSize": "h6"
     }
   ],
@@ -1488,8 +1864,11 @@
     "list": [
       {
         "allValue": null,
-        "current": {},
-        "datasource": "${DS_KANALI}",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "kanali",
         "hide": 0,
         "includeAll": true,
         "label": "Proxy Name",
@@ -1508,8 +1887,11 @@
       },
       {
         "allValue": null,
-        "current": {},
-        "datasource": "${DS_KANALI}",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "kanali",
         "hide": 0,
         "includeAll": true,
         "label": "Proxy Namespace",
@@ -1528,8 +1910,11 @@
       },
       {
         "allValue": null,
-        "current": {},
-        "datasource": "${DS_KANALI}",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "kanali",
         "hide": 2,
         "includeAll": true,
         "label": null,
@@ -1548,8 +1933,11 @@
       },
       {
         "allValue": null,
-        "current": {},
-        "datasource": "${DS_KANALI}",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "kanali",
         "hide": 2,
         "includeAll": true,
         "label": "",
@@ -1559,6 +1947,29 @@
         "query": "SHOW TAG VALUES WITH KEY = \"http_response_code\"",
         "refresh": 2,
         "regex": "/[123][0-9][0-9]/",
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "kanali",
+        "hide": 2,
+        "includeAll": true,
+        "label": "",
+        "multi": false,
+        "name": "definedAPIKey",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"api_key_name\"",
+        "refresh": 2,
+        "regex": "/^[A-Za-z0-9]+$/",
         "sort": 1,
         "tagValuesQuery": "",
         "tags": [],
@@ -1599,5 +2010,5 @@
   },
   "timezone": "browser",
   "title": "Kanali",
-  "version": 5
+  "version": 1
 }

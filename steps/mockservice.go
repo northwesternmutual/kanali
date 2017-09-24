@@ -30,7 +30,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/northwesternmutual/kanali/controller"
   "github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
@@ -47,36 +46,25 @@ func (step MockServiceStep) GetName() string {
 }
 
 // Do executes the logic of the MockServiceStep step
-func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-
-	// incoming proxy
-	untypedProxy, err := spec.ProxyStore.Get(r.URL.EscapedPath())
-	if err != nil || untypedProxy == nil {
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
-	}
-
-	proxy, ok := untypedProxy.(spec.APIProxy)
-	if !ok {
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
-	}
+func (step MockServiceStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
   targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.EscapedPath())
 
   untypedMr, err := spec.MockResponseStore.Get(proxy.ObjectMeta.Namespace, proxy.Spec.Mock.ConfigMapName, targetPath, r.Method)
   if err != nil {
-    return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving mock response: %s", err.Error())}
+    return &utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving mock response: %s", err.Error())}
   }
   if untypedMr == nil {
-    return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no mock response found")}
+    return &utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no mock response found")}
   }
   mr, ok := untypedMr.(spec.Route)
 	if !ok {
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no mock response found")}
+		return &utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no mock response found")}
 	}
 
 	mockBodyData, err := json.Marshal(mr.Body)
 	if err != nil {
-		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. while data was found for the incoming route, it was not valid json",
+		return &utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. while data was found for the incoming route, it was not valid json",
 			proxy.Spec.Mock.ConfigMapName,
 			proxy.ObjectMeta.Namespace,
 		)}

@@ -44,7 +44,7 @@ var (
 	FlagProxyHeaderMaskValue = Flag{
 		Long:  "proxy.header_mask_Value",
 		Short: "",
-		Value: "ommitted",
+		Value: "omitted",
 		Usage: "Sets the Value to be used when omitting header Values.",
 	}
 	// FlagProxyEnableMockResponses enables Kanali's mock responses feature. Read the documentation for more information

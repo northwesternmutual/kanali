@@ -33,7 +33,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/armon/go-proxyproto"
 	"github.com/northwesternmutual/kanali/config"
-	"github.com/northwesternmutual/kanali/controller"
 	h "github.com/northwesternmutual/kanali/handlers"
 	"github.com/northwesternmutual/kanali/monitor"
 	"github.com/spf13/viper"
@@ -41,13 +40,13 @@ import (
 
 // Start will start the HTTP server for the Kanali gateway
 // It could either be an HTTP or HTTPS server depending on the configuration
-func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
+func Start(influxCtlr *monitor.InfluxController) {
 
 	var listener net.Listener
 	var lerr error
 	var scheme string
 
-	router := h.Logger(h.Handler{Controller: c, InfluxController: influxCtlr, H: h.IncomingRequest})
+	router := h.Logger(h.Handler{InfluxController: influxCtlr, H: h.IncomingRequest})
 
 	address := fmt.Sprintf("%s:%d",
 		viper.GetString(config.FlagServerBindAddress.GetLong()),

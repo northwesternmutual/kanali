@@ -39,6 +39,14 @@ func TestGetMockResponseStore(t *testing.T) {
 	assert.True(t, ok)
 }
 
+func TestIsValidHTTPMethod(t *testing.T) {
+	assert.False(t, isValidHTTPMethod("foo"))
+	assert.True(t, isValidHTTPMethod("GET"))
+	assert.True(t, isValidHTTPMethod("get"))
+	assert.True(t, isValidHTTPMethod("POST"))
+	assert.True(t, isValidHTTPMethod("post"))
+}
+
 func TestMockResponseSet(t *testing.T) {
 	cm := getTestConfigMaps()
 

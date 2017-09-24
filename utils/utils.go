@@ -22,10 +22,6 @@ package utils
 
 import (
 	"bytes"
-	"errors"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -37,59 +33,40 @@ import (
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
 // desired target path prefix and the assicated proxy
 func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
+	var buffer bytes.Buffer
 
-	target := ""
+	normalizePath(&proxyPath)
+	normalizePath(&requestPath)
+	normalizePath(&proxyTarget)
 
-	// normalize paths
-	if proxyPath[len(proxyPath)-1] == '/' {
-		proxyPath = proxyPath[:len(proxyPath)-1]
-	}
-	if requestPath[len(requestPath)-1] == '/' {
-		requestPath = requestPath[:len(requestPath)-1]
-	}
-
-	if strings.Compare(proxyTarget, "/") == 0 {
-
+	if proxyTarget == "/" {
 		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-			target = "/"
+			buffer.WriteString("/")
 		} else {
-			target = strings.SplitAfter(requestPath, proxyPath)[1]
+			buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
 		}
-
 	} else {
-
 		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-			target = "/"
+			buffer.WriteString("/")
 		} else {
-			target = proxyTarget + strings.SplitAfter(requestPath, proxyPath)[1]
+			buffer.WriteString(proxyTarget)
+			buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
 		}
-
 	}
 
-	if strings.Compare(target, "") == 0 {
-
+	if len(buffer.Bytes()) == 0 {
 		return "/"
-
 	}
 
-	return target
-
+	return buffer.String()
 }
 
-// IsValidHTTPMethod validates whether a given string is a valid
-// HTTP method or not
-func IsValidHTTPMethod(m string) bool {
-	m = strings.ToUpper(m)
-
-	return m == http.MethodGet ||
-		m == http.MethodHead ||
-		m == http.MethodPost ||
-		m == http.MethodPut ||
-		m == http.MethodPatch ||
-		m == http.MethodDelete ||
-		m == http.MethodConnect ||
-		m == http.MethodOptions ||
-		m == http.MethodTrace
+func normalizePath(path *string) {
+	if len((*path)) == 0 {
+		*path = "/"
+	} else if (*path)[len((*path))-1] == '/' {
+		*path = (*path)[:len((*path))-1]
+	}
 }
 
 // GetAbsPath returns the absolute path given any path
@@ -110,52 +87,6 @@ func GetAbsPath(path string) (string, error) {
 
 	return p, nil
 
-}
-
-// DupReaderAndString takes reader, copies it, drains it and returns a copy
-// of the original reader as well as the contents of the reader as a string
-func DupReaderAndString(closer io.ReadCloser) (io.ReadCloser, string, error) {
-
-	buf, _ := ioutil.ReadAll(closer)
-	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
-	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-
-	requestData, err := ioutil.ReadAll(rdr1)
-	if err != nil {
-		return nil, "", errors.New("could not read from io stream - tracing tags my not reflect actual request")
-	}
-
-	return rdr2, string(requestData), nil
-
-}
-
-// OmitHeaderValues masks specified values with the provided "mask" message
-func OmitHeaderValues(h http.Header, msg string, keys ...string) http.Header {
-	if h == nil {
-		return nil
-	}
-	copy := http.Header{}
-	for k, v := range h {
-		copy[strings.Title(k)] = v
-	}
-	for _, key := range keys {
-		if copy.Get(key) != "" {
-			copy.Set(key, msg)
-		}
-	}
-	return copy
-}
-
-// FlattenHTTPHeaders turns HTTP headers into key/value instead of key/array
-func FlattenHTTPHeaders(h http.Header) map[string]string {
-	if h == nil {
-		return nil
-	}
-	headers := map[string]string{}
-	for k := range h {
-		headers[k] = h.Get(k)
-	}
-	return headers
 }
 
 // CompareObjectMeta will loosly determine whether two ObjectMeta objects are equal.

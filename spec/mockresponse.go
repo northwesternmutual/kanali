@@ -23,11 +23,11 @@ package spec
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/northwesternmutual/kanali/utils"
 	"k8s.io/kubernetes/pkg/api"
 )
 
@@ -108,7 +108,7 @@ func (s *MockResponseFactory) set(cm api.ConfigMap) error {
 	logrus.Debugf("adding mock response %s", cm.ObjectMeta.Name)
 
 	for _, route := range m {
-		if !utils.IsValidHTTPMethod(route.Method) {
+		if !isValidHTTPMethod(route.Method) {
 			logrus.Warnf("route %s in ConfigMap %s contains an invalid HTTP method", route.Route, cm.ObjectMeta.Name)
 			continue
 		}
@@ -231,4 +231,18 @@ func (s *MockResponseFactory) IsEmpty() bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	return len(s.mockRespTree) == 0
+}
+
+func isValidHTTPMethod(m string) bool {
+	m = strings.ToUpper(m)
+
+	return m == http.MethodGet ||
+		m == http.MethodHead ||
+		m == http.MethodPost ||
+		m == http.MethodPut ||
+		m == http.MethodPatch ||
+		m == http.MethodDelete ||
+		m == http.MethodConnect ||
+		m == http.MethodOptions ||
+		m == http.MethodTrace
 }

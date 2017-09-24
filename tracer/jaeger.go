@@ -39,7 +39,7 @@ func (l customLogger) Error(msg string) {
 }
 
 func (l customLogger) Infof(msg string, args ...interface{}) {
-	logrus.Infof(msg, args)
+	logrus.Info(fmt.Sprintf(msg, args...))
 }
 
 // Jaeger creates a new opentracing compatible tracer
