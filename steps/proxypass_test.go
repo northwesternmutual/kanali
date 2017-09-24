@@ -27,6 +27,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/metrics"
@@ -123,6 +124,33 @@ func TestCreateTargetRequest(t *testing.T) {
 		RawPath:    "/",
 		ForceQuery: false,
 	})
+}
+
+func TestCreateTargetClient(t *testing.T) {
+	originalReq, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
+
+	proxyOne := &spec.APIProxy{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "exampleAPIProxyOne",
+			Namespace: "foo",
+		},
+		Spec: spec.APIProxySpec{
+			Path:   "/api/v1/accounts",
+			Target: "/",
+			Service: spec.Service{
+				Name:      "bar",
+				Namespace: "foo",
+				Port:      8080,
+			},
+		},
+	}
+
+	duration, _ := time.ParseDuration("1m0s")
+	viper.SetDefault(config.FlagProxyUpstreamTimeout.GetLong(), duration)
+	cli, err := createTargetClient(proxyOne, originalReq)
+	assert.Equal(t, cli.Timeout, viper.GetDuration(config.FlagProxyUpstreamTimeout.GetLong()))
+	assert.Nil(t, err)
+	assert.Nil(t, cli.Transport)
 }
 
 func TestGetTargetURL(t *testing.T) {

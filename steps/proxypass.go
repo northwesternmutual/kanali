@@ -136,10 +136,7 @@ func configureTargetTLS(proxy *spec.APIProxy, originalRequest *http.Request) (*h
 
 	} else {
 
-		secret, ok := untypedSecret.(api.Secret)
-		if !ok {
-			return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: errors.New("the secret store is corrupted")}
-		}
+		secret, _ := untypedSecret.(api.Secret)
 
 		// server side tls must be configured
 		cert, err := spec.X509KeyPair(secret)
