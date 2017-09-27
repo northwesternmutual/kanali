@@ -25,7 +25,6 @@ import (
 	"net/http"
 
 	"github.com/northwesternmutual/kanali/config"
-	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/flow"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
@@ -35,7 +34,7 @@ import (
 )
 
 // IncomingRequest orchestrates the logic that occurs for every incoming request
-func IncomingRequest(ctx context.Context, m *metrics.Metrics, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error {
+func IncomingRequest(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error {
 
 	// this is a handler to our future proxy pass response
 	// maybe there's a better way to do this... seems misplaced
@@ -47,7 +46,7 @@ func IncomingRequest(ctx context.Context, m *metrics.Metrics, ctlr *controller.C
 		steps.ValidateProxyStep{},
 		steps.PluginsOnRequestStep{},
 	)
-	if viper.GetBool(config.FlagEnableMock.GetLong()) && mockIsDefined(r.URL.Path) {
+	if viper.GetBool(config.FlagProxyEnableMockResponses.GetLong()) && mockIsDefined(r.URL.Path) {
 		f.Add(steps.MockServiceStep{})
 	} else {
 		f.Add(steps.ProxyPassStep{})
@@ -58,7 +57,7 @@ func IncomingRequest(ctx context.Context, m *metrics.Metrics, ctlr *controller.C
 		steps.WriteResponseStep{},
 	)
 
-	err := f.Play(ctx, m, ctlr, w, r, futureResponse, trace)
+	err := f.Play(ctx, proxy, m, w, r, futureResponse, trace)
 
 	return err
 

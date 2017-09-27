@@ -21,32 +21,21 @@
 package steps
 
 import (
+  "fmt"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
   "strconv"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 
-	"github.com/northwesternmutual/kanali/controller"
   "github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
   metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-type mock []route
-
-type route struct {
-	Route  string      `json:"route"`
-	Code   int         `json:"code"`
-	Method string      `json:"method"`
-	Body   interface{} `json:"body"`
-}
 
 // MockServiceStep is factory that defines a step responsible for
 // discovering a mock response for the incoming request
@@ -58,94 +47,25 @@ func (step MockServiceStep) GetName() string {
 }
 
 // Do executes the logic of the MockServiceStep step
-func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (step MockServiceStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
-	// incoming proxy
-	untypedProxy, err := spec.ProxyStore.Get(r.URL.EscapedPath())
-	if err != nil || untypedProxy == nil {
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
-	}
+  targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.EscapedPath())
 
-	proxy, ok := untypedProxy.(spec.APIProxy)
+  untypedMr, err := spec.MockResponseStore.Get(proxy.ObjectMeta.Namespace, proxy.Spec.Mock.ConfigMapName, targetPath, r.Method)
+  if err != nil {
+    return &utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving mock response: %s", err.Error())}
+  }
+  if untypedMr == nil {
+    return &utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no mock response found")}
+  }
+  mr, ok := untypedMr.(spec.Route)
 	if !ok {
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
+		return &utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no mock response found")}
 	}
 
-	// the assumption here is that if you are using a mock,
-	// you don't really care about response time. Hence,
-	// we wont take the same performance enhacing measures
-	// as we do for an actual request. We won't worry about
-	// caching but instead we'll talk to the api server each
-	// and every time for the configmap data
-	cm, err := c.ClientSet.CoreV1Client.ConfigMaps(proxy.Metadata.Namespace).Get(proxy.Spec.Mock.ConfigMapName, metav1.GetOptions{})
+	mockBodyData, err := json.Marshal(mr.Body)
 	if err != nil {
-		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s could not be found in the namespace %s",
-			proxy.Spec.Mock.ConfigMapName,
-			proxy.Metadata.Namespace,
-		)}
-	}
-
-	// we have our config map. Now there's no guarentee that
-	// it is in the format that we require. Using a TPR for this
-	// is unnecessary and so we'll just be have to pay close attention
-	// to what's in the config map and return an error if necessary
-	mockResponse, ok := cm.Data["response"]
-	if !ok {
-
-		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. a data field named 'response' is required",
-			proxy.Spec.Mock.ConfigMapName,
-			proxy.Metadata.Namespace,
-		)}
-
-	}
-
-	// we'll unmarshal the data into this var
-	var mok mock
-
-	// attempt to unmarshal json
-	if err := json.Unmarshal([]byte(mockResponse), &mok); err != nil {
-		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. a json object is required",
-			proxy.Spec.Mock.ConfigMapName,
-			proxy.Metadata.Namespace,
-		)}
-	}
-
-	// alright so have an incoming path and we have a target path, if defined.
-	// figure out with the diff is and search for that in the map.
-	targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.EscapedPath())
-
-	// this variable will hold the index in the array
-	// of the matching mock response, if any
-	mockRespIndex := -1
-
-	// now we need to iterate over every route that we have and attempt
-	// to find a match
-	for i, currRoute := range mok {
-
-		if strings.Compare(currRoute.Route, targetPath) == 0 && strings.Compare(strings.ToUpper(currRoute.Method), r.Method) == 0 {
-			mockRespIndex = i
-			break
-		}
-
-	}
-
-	// no mock response was found for the incoming request
-	if mockRespIndex < 0 {
-
-		return utils.StatusError{Code: http.StatusNotFound, Err: fmt.Errorf("no mock response defined for the incoming path %s and target path %s",
-			r.URL.EscapedPath(),
-			targetPath,
-		)}
-
-	}
-
-	// we have a mock response that could be anything
-	// we're going to require it be JSON however.
-	// we're going to attempt to marshal it into jsonpath
-	// and pass it along
-	mockBodyData, err := json.Marshal(mok[mockRespIndex].Body)
-	if err != nil {
-		return utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. while data was found for the incoming route, it was not valid json",
+		return &utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. while data was found for the incoming route, it was not valid json",
 			proxy.Spec.Mock.ConfigMapName,
 			proxy.Metadata.Namespace,
 		)}
@@ -159,12 +79,12 @@ func (step MockServiceStep) Do(ctx context.Context, m *metrics.Metrics, c *contr
 
 	// create a fake response
 	responseRecorder := &httptest.ResponseRecorder{
-		Code:      mok[mockRespIndex].Code,
+		Code:      mr.Code,
 		Body:      bytes.NewBuffer(mockBodyData),
 		HeaderMap: upstreamHeaders,
 	}
 
-  m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(mok[mockRespIndex].Code), Index: true})
+  m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(mr.Code), Index: true})
 
 	*resp = *responseRecorder.Result()
 

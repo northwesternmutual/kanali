@@ -26,10 +26,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
-	"github.com/northwesternmutual/kanali/utils"
+	"github.com/northwesternmutual/kanali/spec"
+	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -43,7 +42,7 @@ func (step WriteResponseStep) GetName() string {
 }
 
 // Do executes the logic of the WriteResponseStep step
-func (step WriteResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (step WriteResponseStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, span opentracing.Span) error {
 
 	for k, v := range resp.Header {
 		for _, value := range v {
@@ -53,17 +52,11 @@ func (step WriteResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *con
 
 	m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(resp.StatusCode), Index: true})
 
-	closer, str, err := utils.DupReaderAndString(resp.Body)
-	if err != nil {
-		logrus.Errorf("error copying response body: %s", err.Error())
-	}
-
-	trace.SetTag("http.status_code", resp.StatusCode)
-	trace.SetTag("http.response_body", str)
+	tracer.HydrateSpanFromResponse(resp, span)
 
 	w.WriteHeader(resp.StatusCode)
 
-	if _, err := io.Copy(w, closer); err != nil {
+	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
 	}
 

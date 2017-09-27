@@ -21,7 +21,9 @@
 package cmd
 
 import (
-	"context"
+	"crypto/x509"
+	"encoding/pem"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -30,8 +32,8 @@ import (
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/monitor"
 	"github.com/northwesternmutual/kanali/server"
+	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
-	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -57,7 +59,7 @@ func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
 	if err := viper.ReadInConfig(); err != nil {
-		logrus.Warn("config file not found, using env variables and/or cli flags")
+		logrus.Warn("couldn't find any config file, using env variables and/or cli flags")
 	}
 
 	RootCmd.AddCommand(startCmd)
@@ -70,9 +72,9 @@ var startCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// set logging level
-		if level, err := logrus.ParseLevel(viper.GetString("log-level")); err != nil {
-			logrus.Info("could not parse logging level - defaulting to INFO")
+		if level, err := logrus.ParseLevel(viper.GetString(config.FlagProcessLogLevel.GetLong())); err != nil {
 			logrus.SetLevel(logrus.InfoLevel)
+			logrus.Info("could not parse logging level")
 		} else {
 			logrus.SetLevel(level)
 		}
@@ -80,29 +82,23 @@ var startCmd = &cobra.Command{
 		// create new k8s controller
 		ctlr, err := controller.New()
 		if err != nil {
-			logrus.Fatalf("could not create controller %s", err.Error())
+			logrus.Fatalf("could not create controller: %s", err.Error())
 			os.Exit(1)
 		}
 
+		// load decryption key into memory
+		if err := loadDecryptionKey(viper.GetString(config.FlagPluginsAPIKeyDecriptionKeyFile.GetLong())); err != nil {
+			logrus.Fatalf("could not load decryption key: %s", err.Error())
+			os.Exit(1)
+		}
+
+		// create tprs
 		if err := ctlr.CreateTPRs(); err != nil {
 			logrus.Fatalf("could not create TPRs: %s", err.Error())
 			os.Exit(1)
 		}
 
-		// load decryption key into memory
-		if err := utils.LoadDecryptionKey(viper.GetString("decryption-key-file")); err != nil {
-			logrus.Fatalf("could not load decryption key: %s", err.Error())
-			os.Exit(1)
-		}
-
-		ctx, cancelFunc := context.WithCancel(context.Background())
-		defer cancelFunc()
-		go func() {
-			if err := ctlr.Watch(ctx); err != nil {
-				logrus.Fatal(err.Error())
-				os.Exit(1)
-			}
-		}()
+		go ctlr.Watch()
 
 		// start UDP server
 		go func() {
@@ -112,39 +108,51 @@ var startCmd = &cobra.Command{
 			}
 		}()
 
-		// potentially start tracing server
-		if viper.GetBool("enable-tracing") {
-			tracer, closer, err := tracer.Jaeger()
-			if err != nil {
-				logrus.Fatal(err.Error())
-				os.Exit(1)
-			}
-			logrus.Infof("starting global tracer")
+		tracer, closer, err := tracer.Jaeger()
+		if err != nil {
+			logrus.Warnf("error create Jaeger tracer: %s", err.Error())
+		} else {
 			opentracing.SetGlobalTracer(tracer)
 			defer func() {
 				if err := closer.Close(); err != nil {
-					logrus.Warnf("there was a problem closing the tracer: %s", err.Error())
+					logrus.Warnf("error closing Jaeger tracer: %s", err.Error())
 				}
 			}()
 		}
 
-		// attempt to create influxdb client
 		influxCtlr, err := monitor.NewInfluxdbController()
 		if err != nil {
-			logrus.Warnf("there was an error connecting to influxdb - analytics and monitoring will not be available", err.Error())
+			logrus.Warnf("error connecting to InfluxDB: %s", err.Error())
 		} else {
 			defer func() {
 				if err := influxCtlr.Client.Close(); err != nil {
-					logrus.Warnf("there was a problem closing the connection to influxdb: %s", err.Error())
+					logrus.Warnf("error closing the connection to InfluxDB: %s", err.Error())
 				}
 			}()
 		}
 
-		// start kanali readiness server
-		go server.StatusServer(ctlr)
-
-		// start kanali gateway server
-		server.Start(ctlr, influxCtlr)
+		server.Start(influxCtlr)
 
 	},
+}
+
+func loadDecryptionKey(location string) error {
+
+	// read in private key
+	keyBytes, err := ioutil.ReadFile(location)
+	if err != nil {
+		return err
+	}
+	// create a pem block from the private key provided
+	block, _ := pem.Decode(keyBytes)
+	// parse the pem block into a private key
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return err
+	}
+
+	spec.APIKeyDecryptionKey = privateKey
+
+	return nil
+
 }

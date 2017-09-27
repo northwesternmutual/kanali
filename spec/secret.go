@@ -52,6 +52,17 @@ func (s *SecretFactory) Clear() {
 	}
 }
 
+// Update will update a secret
+func (s *SecretFactory) Update(obj interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	secret, ok := obj.(api.Secret)
+	if !ok {
+		return errors.New("grrr - you're only allowed add secrets to the secrets store.... duh")
+	}
+	return s.set(secret)
+}
+
 // Set takes a Secret and either adds it to the store
 // or updates it
 func (s *SecretFactory) Set(obj interface{}) error {
@@ -61,7 +72,11 @@ func (s *SecretFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add secrets to the secrets store.... duh")
 	}
-	logrus.Debugf("adding secret object %s", secret.ObjectMeta.Name)
+	return s.set(secret)
+}
+
+func (s *SecretFactory) set(secret api.Secret) error {
+	logrus.Infof("Adding new Secret named %s", secret.ObjectMeta.Name)
 	if _, ok := s.secretMap[secret.ObjectMeta.Namespace]; ok {
 		s.secretMap[secret.ObjectMeta.Namespace][secret.ObjectMeta.Name] = secret
 	} else {
@@ -118,28 +133,6 @@ func (s *SecretFactory) Delete(obj interface{}) (interface{}, error) {
 		delete(s.secretMap, secret.ObjectMeta.Namespace)
 	}
 	return oldSecret, nil
-}
-
-// Contains reports whether the secrets store contains a particular secret
-func (s *SecretFactory) Contains(params ...interface{}) (bool, error) {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	if len(params) != 2 {
-		return false, errors.New("containers requires 2 params")
-	}
-	name, ok := params[0].(string)
-	if !ok {
-		return false, errors.New("first parameter should be a string")
-	}
-	namespace, ok := params[1].(string)
-	if !ok {
-		return false, errors.New("second parameter should be a string")
-	}
-	if _, ok := s.secretMap[namespace]; !ok {
-		return false, nil
-	}
-	_, ok = s.secretMap[namespace][name]
-	return ok, nil
 }
 
 // IsEmpty reports whether the secret store is empty

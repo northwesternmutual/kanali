@@ -18,35 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package utils
+package tracer
 
 import (
-	"crypto/x509"
-	"encoding/pem"
-	"io/ioutil"
+	"bytes"
+	"testing"
 
-	"github.com/northwesternmutual/kanali/spec"
+	"github.com/Sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
-// LoadDecryptionKey loads an rsa private key located at the provided path
-// and set a global variables with the value.
-func LoadDecryptionKey(location string) error {
+func TestCustomLoggerError(t *testing.T) {
+	logger := customLogger{}
 
-	// read in private key
-	keyBytes, err := ioutil.ReadFile(location)
-	if err != nil {
-		return err
-	}
-	// create a pem block from the private key provided
-	block, _ := pem.Decode(keyBytes)
-	// parse the pem block into a private key
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return err
-	}
+	writerOne := new(bytes.Buffer)
+	writerTwo := new(bytes.Buffer)
+	logrus.SetOutput(writerOne)
+	logger.Error("custom error message")
+	logrus.SetOutput(writerTwo)
+	logrus.Error("custom error message")
+	assert.Equal(t, writerOne.String(), writerTwo.String())
 
-	spec.APIKeyDecryptionKey = privateKey
-
-	return nil
-
+	writerOne = new(bytes.Buffer)
+	writerTwo = new(bytes.Buffer)
+	logrus.SetOutput(writerOne)
+	logger.Infof("custom %s message", "info")
+	logrus.SetOutput(writerTwo)
+	logrus.Infof("custom %s message", "info")
+	assert.Equal(t, writerOne.String(), writerTwo.String())
 }

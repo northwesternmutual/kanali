@@ -49,7 +49,7 @@ func TestWriteResponseDo(t *testing.T) {
 		},
 		Body: bytes.NewBuffer([]byte("this is my mock response body")),
 	}
-	err := step.Do(context.Background(), &metrics.Metrics{}, nil, writer, nil, response.Result(), opentracing.StartSpan("test span"))
+	err := step.Do(context.Background(), nil, &metrics.Metrics{}, writer, nil, response.Result(), opentracing.StartSpan("test span"))
 	defer writer.Result().Body.Close()
 	assert.Nil(t, err)
 	assert.Equal(t, writer.Result().StatusCode, 200)

@@ -27,7 +27,6 @@ import (
 	pluginPkg "plugin"
 
 	"github.com/northwesternmutual/kanali/config"
-	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
@@ -40,8 +39,8 @@ const pluginSymbolName = "Plugin"
 // Plugin is an interface that is used for every Plugin used by Kanali.
 // If external plugins are developed, they also must conform to this interface.
 type Plugin interface {
-	OnRequest(ctx context.Context, m *metrics.Metrics, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, span opentracing.Span) error
-	OnResponse(ctx context.Context, m *metrics.Metrics, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, resp *http.Response, span opentracing.Span) error
+	OnRequest(ctx context.Context, m *metrics.Metrics, proxy spec.APIProxy, req *http.Request, span opentracing.Span) error
+	OnResponse(ctx context.Context, m *metrics.Metrics, proxy spec.APIProxy, req *http.Request, resp *http.Response, span opentracing.Span) error
 }
 
 // GetPlugin will use the Go plugin package and extract
@@ -49,7 +48,7 @@ type Plugin interface {
 func GetPlugin(plugin spec.Plugin) (*Plugin, error) {
 	path, err := utils.GetAbsPath(viper.GetString(config.FlagPluginsLocation.GetLong()))
 	if err != nil {
-		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("file path %s could not be found", viper.GetString("plugins-path"))}
+		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("file path %s could not be found", viper.GetString(config.FlagPluginsLocation.GetLong()))}
 	}
 
 	plug, err := pluginPkg.Open(fmt.Sprintf("%s/%s.so",

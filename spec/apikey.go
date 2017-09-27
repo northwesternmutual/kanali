@@ -26,7 +26,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"reflect"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
@@ -79,6 +78,17 @@ func (s *KeyFactory) Clear() {
 	}
 }
 
+// Update will update an APIKeyBinding
+func (s *KeyFactory) Update(obj interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	key, ok := obj.(APIKey)
+	if !ok {
+		return errors.New("grrr - you're only allowed add api keys to the api key store.... duh")
+	}
+	return s.set(key)
+}
+
 // Set takes a APIKey and either adds it to the store
 // or updates it
 func (s *KeyFactory) Set(obj interface{}) error {
@@ -88,6 +98,10 @@ func (s *KeyFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add api keys to the api key store.... duh")
 	}
+	return s.set(key)
+}
+
+func (s *KeyFactory) set(key APIKey) error {
 	logrus.Infof("Adding new APIKey named %s in namespace %s", key.ObjectMeta.Name, key.ObjectMeta.Namespace)
 	s.keyMap[key.Spec.APIKeyData] = key
 	return nil
@@ -125,48 +139,6 @@ func (s *KeyFactory) Delete(obj interface{}) (interface{}, error) {
 	}
 	delete(s.keyMap, key.Spec.APIKeyData)
 	return actual, nil
-}
-
-// Contains reports whether the key store contains a particular key
-func (s *KeyFactory) Contains(params ...interface{}) (bool, error) {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	switch len(params) {
-	case 1:
-		switch p := params[0].(type) {
-		case string:
-			if _, ok := s.keyMap[p]; !ok {
-				return false, nil
-			}
-			return true, nil
-		case APIKey:
-			for _, v := range s.keyMap {
-				if reflect.DeepEqual(p, v) {
-					return true, nil
-				}
-			}
-			return false, nil
-		default:
-			return false, errors.New("could not recongized type of parameter")
-		}
-	case 2:
-		name, ok := params[0].(string)
-		if !ok {
-			return false, errors.New("first parameter should be a string")
-		}
-		namespace, ok := params[1].(string)
-		if !ok {
-			return false, errors.New("second parameter should be a string")
-		}
-		for _, v := range s.keyMap {
-			if v.ObjectMeta.Name == name && v.ObjectMeta.Namespace == namespace {
-				return true, nil
-			}
-		}
-		return false, nil
-	default:
-		return false, errors.New("too many parameters")
-	}
 }
 
 // IsEmpty reports whether the key store is empty

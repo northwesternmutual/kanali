@@ -18,18 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package utils
+package config
 
-import (
-	"encoding/base64"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestDecodeBase64ByteArray(t *testing.T) {
-	arr1, _ := DecodeBase64ByteArray([]byte(base64.StdEncoding.EncodeToString([]byte("abc123"))))
-	assert.Equal(t, []byte("abc123"), arr1)
-	_, err := DecodeBase64ByteArray([]byte("notbase64"))
-	assert.NotNil(t, err)
+func init() {
+	Flags.Add(
+		FlagProcessLogLevel,
+	)
 }
+
+var (
+	// FlagProcessLogLevel sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'
+	FlagProcessLogLevel = Flag{
+		Long:  "process.log_level",
+		Short: "l",
+		Value: "info",
+		Usage: "Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'.",
+	}
+)

@@ -22,57 +22,51 @@ package utils
 
 import (
 	"bytes"
-	"errors"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"path/filepath"
 	"strings"
 
-	"github.com/northwesternmutual/kanali/config"
-	"github.com/spf13/viper"
+	"github.com/PuerkitoBio/purell"
+	"github.com/Sirupsen/logrus"
+	"k8s.io/kubernetes/pkg/api"
 )
 
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
 // desired target path prefix and the assicated proxy
 func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
+	var buffer bytes.Buffer
 
-	target := ""
+	normalizePath(&proxyPath)
+	normalizePath(&requestPath)
+	normalizePath(&proxyTarget)
 
-	// normalize paths
-	if proxyPath[len(proxyPath)-1] == '/' {
-		proxyPath = proxyPath[:len(proxyPath)-1]
-	}
-	if requestPath[len(requestPath)-1] == '/' {
-		requestPath = requestPath[:len(requestPath)-1]
-	}
-
-	if strings.Compare(proxyTarget, "/") == 0 {
-
+	if proxyTarget == "/" {
 		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-			target = "/"
+			buffer.WriteString("/")
 		} else {
-			target = strings.SplitAfter(requestPath, proxyPath)[1]
+			buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
 		}
-
 	} else {
-
 		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-			target = "/"
+			buffer.WriteString("/")
 		} else {
-			target = proxyTarget + strings.SplitAfter(requestPath, proxyPath)[1]
+			buffer.WriteString(proxyTarget)
+			buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
 		}
-
 	}
 
-	if strings.Compare(target, "") == 0 {
-
+	if len(buffer.Bytes()) == 0 {
 		return "/"
-
 	}
 
-	return target
+	return buffer.String()
+}
 
+func normalizePath(path *string) {
+	if len((*path)) == 0 {
+		*path = "/"
+	} else if (*path)[len((*path))-1] == '/' {
+		*path = (*path)[:len((*path))-1]
+	}
 }
 
 // GetAbsPath returns the absolute path given any path
@@ -95,62 +89,35 @@ func GetAbsPath(path string) (string, error) {
 
 }
 
-// DupReaderAndString takes reader, copies it, drains it and returns a copy
-// of the original reader as well as the contents of the reader as a string
-func DupReaderAndString(closer io.ReadCloser) (io.ReadCloser, string, error) {
+// CompareObjectMeta will loosly determine whether two ObjectMeta objects are equal.
+// It does this by comparing the name and namespace
+func CompareObjectMeta(c1, c2 api.ObjectMeta) bool {
+	return c1.Namespace == c2.Namespace && c1.Name == c2.Name
+}
 
-	buf, _ := ioutil.ReadAll(closer)
-	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
-	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-
-	requestData, err := ioutil.ReadAll(rdr1)
+// NormalizePath will correct a URL path that might be valid but no ideally formatted
+func NormalizePath(path string) string {
+	result, err := purell.NormalizeURLString(path, purell.FlagRemoveDotSegments|purell.FlagRemoveDuplicateSlashes|purell.FlagRemoveTrailingSlash)
 	if err != nil {
-		return nil, "", errors.New("could not read from io stream - tracing tags my not reflect actual request")
+		logrus.Errorf("error normalizing url path - using original url path: %s", err.Error())
+		return removeDupLeadingSlashes(path)
 	}
-
-	return rdr2, string(requestData), nil
-
+	return removeDupLeadingSlashes(result)
 }
 
-// GetKanaliPort sets the correct and usable Kanali port based on the
-// provided configuration values.
-func GetKanaliPort() int {
-	if viper.GetInt(config.FlagKanaliPort.GetLong()) != 0 {
-		return viper.GetInt(config.FlagKanaliPort.GetLong())
+func removeDupLeadingSlashes(path string) string {
+	if len(path) < 1 {
+		return "/"
 	}
-	if viper.GetString(config.FlagTLSCertFile.GetLong()) == "" || viper.GetString(config.FlagTLSPrivateKeyFile.GetLong()) == "" {
-		viper.Set(config.FlagKanaliPort.GetLong(), 80)
-		return 80
-	}
-	viper.Set(config.FlagKanaliPort.GetLong(), 443)
-	return 443
-}
-
-// OmitHeaderValues masks specified values with the provided "mask" message
-func OmitHeaderValues(h http.Header, msg string, keys ...string) http.Header {
-	if h == nil {
-		return nil
-	}
-	copy := http.Header{}
-	for k, v := range h {
-		copy[strings.Title(k)] = v
-	}
-	for _, key := range keys {
-		if copy.Get(key) != "" {
-			copy.Set(key, msg)
+	var buffer bytes.Buffer
+	var i int
+	buffer.WriteString("/")
+	for i = 0; i < len(path); i++ {
+		if path[i] == '/' {
+			continue
 		}
+		break
 	}
-	return copy
-}
-
-// FlattenHTTPHeaders turns HTTP headers into key/value instead of key/array
-func FlattenHTTPHeaders(h http.Header) map[string]string {
-	if h == nil {
-		return nil
-	}
-	headers := map[string]string{}
-	for k := range h {
-		headers[k] = h.Get(k)
-	}
-	return headers
+	buffer.WriteString(path[i:])
+	return buffer.String()
 }

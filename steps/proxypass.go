@@ -28,28 +28,21 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/northwesternmutual/kanali/controller"
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
+	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
-type proxy struct {
-	Source *http.Request
-	Target spec.APIProxy
-}
-
-type upstream struct {
-	Request  *http.Request
-	Response *http.Response
-	Client   *http.Client
-	Error    utils.StatusError
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
 // ProxyPassStep is factory that defines a step responsible for configuring
@@ -62,70 +55,62 @@ func (step ProxyPassStep) GetName() string {
 }
 
 // Do executes the logic of the ProxyPassStep step
-func (step ProxyPassStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (step ProxyPassStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, span opentracing.Span) error {
 
-	untypedProxy, err := spec.ProxyStore.Get(r.URL.Path)
-	if err != nil || untypedProxy == nil {
-		if err != nil {
-			logrus.Error(err.Error())
-		}
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
+	targetRequest, err := createTargetRequest(proxy, r)
+	if err != nil {
+		return err
 	}
 
-	typedProxy, ok := untypedProxy.(spec.APIProxy)
-	if !ok {
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
+	targetClient, err := createTargetClient(proxy, r)
+	if err != nil {
+		return err
 	}
 
-	p := &proxy{
-		Source: r,
-		Target: typedProxy, // shouldn't be nil (unless the proxy is removed within the microseconds it takes to get to this code)
+	targetResponse, err := preformTargetProxy(targetClient, targetRequest, m, span)
+	if err != nil {
+		return err
 	}
 
-	up := create(p).setUpstreamURL(p).configureTLS(p).setUpstreamHeaders(p).performProxy(trace)
-
-	if up.Error != (utils.StatusError{}) {
-		logrus.Errorf("error performing proxypass: %s", up.Error)
-		return up.Error
-	}
-
-	*resp = *(up.Response)
-
+	*resp = *targetResponse
 	return nil
 
 }
 
-func create(p *proxy) *upstream {
-	new := &http.Request{}
-	*new = *(p.Source)
+func createTargetRequest(proxy *spec.APIProxy, originalRequest *http.Request) (*http.Request, error) {
+	targetRequest := &http.Request{}
+	*targetRequest = *originalRequest
+	targetRequest.RequestURI = ""
 
-	up := &upstream{
-		Request: new,
-		Client: &http.Client{
-			Timeout: viper.GetDuration("upstream-timeout"),
-		},
-		Error: utils.StatusError{},
+	u, err := getTargetURL(proxy, originalRequest)
+	if err != nil {
+		return nil, err
 	}
 
-	// it is an error to set this field in an http client request
-	up.Request.RequestURI = ""
+	targetRequest.URL = u
 
-	return up
+	targetRequest.Header.Del("apikey")
+	targetRequest.Header.Add("X-Forwarded-For", originalRequest.RemoteAddr)
+
+	return targetRequest, nil
 }
 
-func (up *upstream) configureTLS(p *proxy) *upstream {
-	// if previous error - continue
-	if up.Error != (utils.StatusError{}) {
-		return up
+func createTargetClient(proxy *spec.APIProxy, originalRequest *http.Request) (*http.Client, error) {
+	client := &http.Client{
+		Timeout: viper.GetDuration(config.FlagProxyUpstreamTimeout.GetLong()),
 	}
 
+<<<<<<< HEAD
 	// get secret for this request - if any
 	untypedSecret, err := spec.SecretStore.Get(p.Target.GetSSLCertificates(p.Source.Host).SecretName, p.Target.Metadata.Namespace)
+=======
+	transport, err := configureTargetTLS(proxy, originalRequest)
+>>>>>>> master
 	if err != nil {
-		up.Error = utils.StatusError{Code: http.StatusInternalServerError, Err: err}
-		return up
+		return nil, err
 	}
 
+<<<<<<< HEAD
 	tlsConfig := &tls.Config{}
 	caCertPool := x509.NewCertPool()
 
@@ -174,114 +159,122 @@ func (up *upstream) configureTLS(p *proxy) *upstream {
 			}
 		}
 
+=======
+	if transport != nil {
+		client.Transport = transport
+>>>>>>> master
+	}
+
+	return client, nil
+}
+
+func configureTargetTLS(proxy *spec.APIProxy, originalRequest *http.Request) (*http.Transport, error) {
+
+	untypedSecret, err := spec.SecretStore.Get(proxy.GetSSLCertificates(originalRequest.Host).SecretName, proxy.ObjectMeta.Namespace)
+	if err != nil {
+		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: err}
+	}
+
+	if untypedSecret == nil {
+		logrus.Debug("TLS not configured for this proxy")
+		return nil, nil
+	}
+
+	tlsConfig := &tls.Config{}
+	caCertPool := x509.NewCertPool()
+
+	secret, _ := untypedSecret.(api.Secret)
+
+	// server side tls must be configured
+	cert, err := spec.X509KeyPair(secret)
+	if err != nil {
+		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: err}
+	}
+	tlsConfig.Certificates = []tls.Certificate{*cert}
+
+	if secret.Data["tls.ca"] != nil {
+		caCertPool.AppendCertsFromPEM(secret.Data["tls.ca"])
+	}
+
+	if !viper.GetBool(config.FlagProxyTLSCommonNameValidation.GetLong()) {
+		tlsConfig.InsecureSkipVerify = true
+		tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+			opts := x509.VerifyOptions{
+				Roots: caCertPool,
+			}
+			cert, err := x509.ParseCertificate(rawCerts[0])
+			if err != nil {
+				return err
+			}
+			_, err = cert.Verify(opts)
+			return err
+		}
 	}
 
 	tlsConfig.RootCAs = caCertPool
 	tlsConfig.BuildNameToCertificate()
-	transport := &http.Transport{TLSClientConfig: tlsConfig}
-	up.Client.Transport = transport
-
-	return up
+	return &http.Transport{TLSClientConfig: tlsConfig}, nil
 
 }
 
-func (up *upstream) setUpstreamURL(p *proxy) *upstream {
-
-	if up.Error != (utils.StatusError{}) {
-		return up
-	}
-
-	u, err := p.setK8sDiscoveredURI()
-
-	if err != nil {
-		up.Error = utils.StatusError{
-			Code: http.StatusInternalServerError,
-			Err:  err,
-		}
-	} else {
-		u.Path = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.Path)
-		u.RawPath = utils.ComputeTargetPath(p.Target.Spec.Path, p.Target.Spec.Target, p.Source.URL.EscapedPath())
-		u.ForceQuery = p.Source.URL.ForceQuery
-		u.RawQuery = p.Source.URL.RawQuery
-		u.Fragment = p.Source.URL.Fragment
-
-		up.Request.URL = u
-	}
-
-	return up
-
-}
-
-func (up *upstream) setUpstreamHeaders(p *proxy) *upstream {
-
-	if up.Error != (utils.StatusError{}) {
-		return up
-	}
-
-	// upstream request doesn't need the apikey
-	// remove it.
-	up.Request.Header.Del("apikey")
-
-	up.Request.Header.Add("X-Forwarded-For", p.Source.RemoteAddr)
-
-	return up
-
-}
-
-func (up *upstream) performProxy(trace opentracing.Span) *upstream {
-
-	if up.Error != (utils.StatusError{}) {
-		return up
-	}
-
-	logrus.Infof("upstream url: %s", up.Request.URL.String())
-
-	err := trace.Tracer().Inject(trace.Context(),
+func preformTargetProxy(client httpClient, request *http.Request, m *metrics.Metrics, span opentracing.Span) (*http.Response, error) {
+	if err := span.Tracer().Inject(
+		span.Context(),
 		opentracing.TextMap,
-		opentracing.HTTPHeadersCarrier(up.Request.Header))
-
-	if err != nil {
-		logrus.Error("could not inject headers")
+		opentracing.HTTPHeadersCarrier(request.Header),
+	); err != nil {
+		logrus.Error("error injecting headers")
 	}
 
-	resp, err := up.Client.Do(up.Request)
+	sp := opentracing.StartSpan(fmt.Sprintf("%s %s",
+		request.Method,
+		request.URL.EscapedPath(),
+	), opentracing.ChildOf(span.Context()))
+	defer sp.Finish()
+
+	tracer.HydrateSpanFromRequest(request, sp)
+
+	t0 := time.Now()
+	resp, err := client.Do(request)
 	if err != nil {
-		up.Error = utils.StatusError{
-			Code: http.StatusInternalServerError,
-			Err:  err,
-		}
-	} else {
-		up.Response = resp
+		return nil, utils.StatusError{Code: http.StatusInternalServerError, Err: err}
 	}
 
-	return up
+	m.Add(
+		metrics.Metric{Name: "total_target_time", Value: int(time.Now().Sub(t0) / time.Millisecond), Index: false},
+	)
 
+	tracer.HydrateSpanFromResponse(resp, sp)
+
+	return resp, nil
 }
 
-func (p *proxy) setK8sDiscoveredURI() (*url.URL, error) {
+func getTargetURL(proxy *spec.APIProxy, originalRequest *http.Request) (*url.URL, error) {
 
 	scheme := "http"
 
-	if *p.Target.GetSSLCertificates(p.Source.Host) != (spec.SSL{}) {
+	if *proxy.GetSSLCertificates(originalRequest.Host) != (spec.SSL{}) {
 		scheme = "https"
 	}
 
-	untypedSvc, err := spec.ServiceStore.Get(p.Target.Spec.Service, p.Source.Header)
+	untypedSvc, err := spec.ServiceStore.Get(proxy.Spec.Service, originalRequest.Header)
 	if err != nil || untypedSvc == nil {
+		logrus.Debug("service was non of type spec.Service")
 		return nil, utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
 	}
 
-	svc, ok := untypedSvc.(spec.Service)
-	if !ok {
-		return nil, utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
-	}
+	svc, _ := untypedSvc.(spec.Service)
 
 	uri := fmt.Sprintf("%s.%s.svc.cluster.local",
 		svc.Name,
+<<<<<<< HEAD
 		p.Target.Metadata.Namespace,
+=======
+		proxy.ObjectMeta.Namespace,
+>>>>>>> master
 	)
 
-	if viper.GetBool("enable-cluster-ip") {
+	if viper.GetBool(config.FlagProxyEnableClusterIP.GetLong()) {
 		uri = svc.ClusterIP
 	}
 
@@ -289,8 +282,13 @@ func (p *proxy) setK8sDiscoveredURI() (*url.URL, error) {
 		Scheme: scheme,
 		Host: fmt.Sprintf("%s:%d",
 			uri,
-			p.Target.Spec.Service.Port,
+			proxy.Spec.Service.Port,
 		),
+		Path:       utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.Path),
+		RawPath:    utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.EscapedPath()),
+		ForceQuery: originalRequest.URL.ForceQuery,
+		RawQuery:   originalRequest.URL.RawQuery,
+		Fragment:   originalRequest.URL.Fragment,
 	}, nil
 
 }

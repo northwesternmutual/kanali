@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/spf13/viper"
 )
@@ -37,7 +38,7 @@ const (
 )
 
 func init() {
-	if level, err := logrus.ParseLevel(viper.GetString("log-level")); err != nil {
+	if level, err := logrus.ParseLevel(viper.GetString(config.FlagProcessLogLevel.GetLong())); err != nil {
 		logrus.SetLevel(logrus.InfoLevel)
 	} else {
 		logrus.SetLevel(level)
@@ -48,7 +49,7 @@ func init() {
 // all running Kanali instances.
 func StartUDPServer() (e error) {
 
-	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", viper.GetInt("peer-udp-port")))
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", viper.GetInt(config.FlagServerPeerUDPPort.GetLong())))
 	if err != nil {
 		return err
 	}
@@ -57,7 +58,7 @@ func StartUDPServer() (e error) {
 	if err != nil {
 		return err
 	}
-	logrus.Infof("upd server listening on :%s", viper.GetString("peer-udp-port"))
+	logrus.Infof("upd server listening on :%s", viper.GetString(config.FlagServerPeerUDPPort.GetLong()))
 	defer func() {
 		if err := conn.Close(); err != nil {
 			if e != nil {
@@ -95,21 +96,21 @@ func Emit(binding spec.APIKeyBinding, keyName string, currTime time.Time) {
 
 		go func(ip string) {
 
-			serverAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", ip, viper.GetInt("peer-udp-port")))
+			serverAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong())))
 			if err != nil {
-				logrus.Warnf("error resolving UDP address for %s:%d", ip, viper.GetInt("peer-udp-port"))
+				logrus.Warnf("error resolving UDP address for %s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong()))
 				return
 			}
 
 			conn, err := net.DialUDP("udp", nil, serverAddr)
 			if err != nil {
-				logrus.Warnf("error dialing %s:%d", ip, viper.GetInt("peer-udp-port"))
+				logrus.Warnf("error dialing %s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong()))
 				return
 			}
 
 			_, err = conn.Write([]byte(fmt.Sprintf("%s,%s,%s", binding.ObjectMeta.Namespace, binding.Spec.APIProxyName, keyName)))
 			if err != nil {
-				logrus.Warnf("error writing traffic to %s:%d", ip, viper.GetString("peer-udp-port"))
+				logrus.Warnf("error writing traffic to %s:%d", ip, viper.GetString(config.FlagServerPeerUDPPort.GetLong()))
 				return
 			}
 

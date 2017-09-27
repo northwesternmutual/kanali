@@ -21,13 +21,112 @@
 package steps
 
 import (
+  "context"
 	"testing"
+  "net/http"
+  "io/ioutil"
+  "encoding/json"
 
+  "k8s.io/kubernetes/pkg/api"
 	"github.com/stretchr/testify/assert"
+  "k8s.io/kubernetes/pkg/api/unversioned"
+  "github.com/northwesternmutual/kanali/spec"
+  "github.com/northwesternmutual/kanali/metrics"
+  opentracing "github.com/opentracing/opentracing-go"
 )
 
 func TestMockServiceGetName(t *testing.T) {
-	assert := assert.New(t)
 	step := MockServiceStep{}
-	assert.Equal(step.GetName(), "Mock Service", "step name is incorrect")
+	assert.Equal(t, step.GetName(), "Mock Service", "step name is incorrect")
+}
+
+func TestMockServiceDo(t *testing.T) {
+  cms := getTestConfigMaps()
+  spec.MockResponseStore.Clear()
+  spec.MockResponseStore.Set(cms[0])
+  balanceProxy := &spec.APIProxy{
+    ObjectMeta: api.ObjectMeta{
+      Name:      "proxy-one",
+      Namespace: "foo",
+    },
+    Spec: spec.APIProxySpec{
+      Path: "api/v1/balance",
+      Target: "/car",
+      Mock: &spec.Mock{
+        ConfigMapName: "cm-one",
+      },
+    },
+  }
+  addressProxy := &spec.APIProxy{
+    ObjectMeta: api.ObjectMeta{
+      Name:      "proxy-one",
+      Namespace: "foo",
+    },
+    Spec: spec.APIProxySpec{
+      Path: "api/v1/address",
+      Target: "/car",
+      Mock: &spec.Mock{
+        ConfigMapName: "cm-two",
+      },
+    },
+  }
+  accountsProxy := &spec.APIProxy{
+    ObjectMeta: api.ObjectMeta{
+      Name:      "proxy-one",
+      Namespace: "foo",
+    },
+    Spec: spec.APIProxySpec{
+      Path: "api/v1/accounts",
+      Target: "/foo",
+      Mock: &spec.Mock{
+        ConfigMapName: "cm-one",
+      },
+    },
+  }
+  step := MockServiceStep{}
+
+  m := &metrics.Metrics{}
+  req, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
+  res := &http.Response{}
+  span := opentracing.StartSpan("test span")
+  err := step.Do(context.Background(), accountsProxy, m, nil, req, res, span)
+  assert.Nil(t, err)
+  assert.Equal(t, m.Get("http_response_code").Value, "200")
+  assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
+  body, _ := ioutil.ReadAll(res.Body)
+  assert.Equal(t, string(body), `{"foo":"bar"}`)
+  req, _ = http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts/bar", nil)
+  assert.Nil(t, step.Do(context.Background(), accountsProxy, m, nil, req, res, span))
+  req, _ = http.NewRequest("GET", "http://foo.bar.com/api/v1/balance", nil)
+  assert.Equal(t, step.Do(context.Background(), balanceProxy, m, nil, req, res, span).Error(), "no mock response found")
+  req, _ = http.NewRequest("GET", "http://foo.bar.com/api/v1/address", nil)
+  assert.Equal(t, step.Do(context.Background(), addressProxy, m, nil, req, res, span).Error(), "no mock response found")
+}
+
+func getTestConfigMaps() []api.ConfigMap {
+
+	mockOne, _ := json.Marshal([]spec.Route{
+		{
+			Route:  "/foo",
+			Code:   200,
+			Method: "GET",
+			Body:   map[string]interface{}{
+        "foo": "bar",
+      },
+		},
+	})
+
+	return []api.ConfigMap{
+		{
+			TypeMeta: unversioned.TypeMeta{},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "cm-one",
+				Namespace: "foo",
+			},
+			Data: map[string]string{
+				"response": string(mockOne),
+			},
+		},
+	}
+
 }

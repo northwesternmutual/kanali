@@ -23,46 +23,28 @@ package handlers
 import (
 	"net/http"
 	"strings"
-	"time"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/Sirupsen/logrus"
-	"github.com/northwesternmutual/kanali/metrics"
-	"github.com/northwesternmutual/kanali/monitor"
 )
 
 // Logger creates a custom http.Handler that logs details around a request
 // along with creating contextual request metrics. When the request is complete
 // these metrics will be writtin to Influxdb
-func Logger(influxCtlr *monitor.InfluxController, inner Handler) http.Handler {
+func Logger(inner Handler) http.Handler {
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		inner.Metrics = &metrics.Metrics{}
-
-		t0 := time.Now()
 		inner.serveHTTP(w, r)
-		t1 := time.Now()
 
 		logrus.WithFields(logrus.Fields{
 			"client ip": strings.Split(r.RemoteAddr, ":")[0],
 			"method":    r.Method,
 			"uri":       r.URL.EscapedPath(),
-			"totalTime": int(t1.Sub(t0) / time.Millisecond),
 		}).Info("request details")
 
-		inner.Metrics.Add(
-			metrics.Metric{Name: "total_time", Value: int(t1.Sub(t0) / time.Millisecond), Index: false},
-			metrics.Metric{Name: "http_method", Value: r.Method, Index: true},
-			metrics.Metric{Name: "http_uri", Value: r.URL.EscapedPath(), Index: false},
-			metrics.Metric{Name: "client_ip", Value: strings.Split(r.RemoteAddr, ":")[0], Index: false},
-		)
-
-		if err := influxCtlr.WriteRequestData(inner.Metrics); err != nil {
-			logrus.Warnf(err.Error())
-		} else {
-			logrus.Infof("successfully wrote request details to influxdb")
-		}
-
 	})
+
+	return gziphandler.GzipHandler(h)
 
 }

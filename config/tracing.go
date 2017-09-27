@@ -18,22 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package utils
+package config
 
-import (
-	"encoding/base64"
-)
-
-// DecodeBase64ByteArray decodes a base64 encoded byte array
-// resulting in a decoded byte array
-func DecodeBase64ByteArray(arr []byte) ([]byte, error) {
-
-	tmp := make([]byte, base64.StdEncoding.DecodedLen(len(arr)))
-
-	if _, err := base64.StdEncoding.Decode(tmp, arr); err != nil {
-		return nil, err
-	}
-
-	return tmp, nil
-
+func init() {
+	Flags.Add(
+		FlagTracingJaegerServerURL,
+		FlagTracingJaegerAgentURL,
+	)
 }
+
+var (
+	// FlagTracingJaegerServerURL specifies the endpoint to the Jaeger server
+	FlagTracingJaegerServerURL = Flag{
+		Long:  "tracing.jaeger_server_url",
+		Short: "",
+		Value: "jaeger-all-in-one-agent.default.svc.cluster.local",
+		Usage: "Endpoint to the Jaeger server",
+	}
+	// FlagTracingJaegerAgentURL specifies the endpoint to the Jaeger agent
+	FlagTracingJaegerAgentURL = Flag{
+		Long:  "tracing.jaeger_agent_url",
+		Short: "",
+		Value: "jaeger-all-in-one-agent.default.svc.cluster.local",
+		Usage: "Endpoint to the Jaeger agent",
+	}
+)

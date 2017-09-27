@@ -24,7 +24,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/spec"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +36,7 @@ func TestPluginsOnRequestGetName(t *testing.T) {
 }
 
 func TestDoOnRequest(t *testing.T) {
-	assert.Equal(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakePanicPlugin{}).Error(), "OnRequest paniced")
-	assert.Equal(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakeErrorPlugin{}).Error(), "error")
-	assert.Nil(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, controller.Controller{}, nil, opentracing.StartSpan("test span"), fakeSuccessPlugin{}))
+	assert.Equal(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, nil, opentracing.StartSpan("test span"), fakePanicPlugin{}).Error(), "OnRequest paniced")
+	assert.Equal(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, nil, opentracing.StartSpan("test span"), fakeErrorPlugin{}).Error(), "error")
+	assert.Nil(t, doOnRequest(context.Background(), nil, "name", spec.APIProxy{}, nil, opentracing.StartSpan("test span"), fakeSuccessPlugin{}))
 }

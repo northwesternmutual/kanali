@@ -22,6 +22,7 @@ package controller
 
 import (
 	"fmt"
+	"net/http"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -75,4 +76,15 @@ func (c *Controller) doCreateTPRs(tprs ...*tpr) error {
 	}
 
 	return nil
+}
+
+func isKubernetesResourceAlreadyExistError(err error) bool {
+	se, ok := err.(*errors.StatusError)
+	if !ok {
+		return false
+	} else if se.Status().Code == http.StatusConflict && se.Status().Reason == unversioned.StatusReasonAlreadyExists {
+		return true
+	} else {
+		return false
+	}
 }

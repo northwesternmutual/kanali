@@ -179,31 +179,6 @@ func TestTrafficStoreClear(t *testing.T) {
 	assert.Equal(t, 0, len(TrafficStore.trafficMap))
 }
 
-func TestContains(t *testing.T) {
-	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
-	TrafficStore.Clear()
-	_, err := TrafficStore.Contains(getTestAPIKeyBinding())
-	assert.Equal(t, err.Error(), "expecting two parameters")
-	_, err = TrafficStore.Contains("foo", "bar")
-	assert.Equal(t, err.Error(), "expected the first parameter to be of type spec.APIKeyBinding")
-	_, err = TrafficStore.Contains(getTestAPIKeyBinding(), 5)
-	assert.Equal(t, err.Error(), "expected the second parameter to be of type string")
-	result, _ := TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
-	assert.False(t, result)
-	TrafficStore.doSet("namespace-one,proxy-two,key-two", currTime)
-	result, _ = TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
-	assert.False(t, result)
-	TrafficStore.doSet("namespace-one,proxy-one,key-two", currTime)
-	result, _ = TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
-	assert.False(t, result)
-	TrafficStore.doSet("namespace-one,proxy-one,key-one", currTime)
-	result, _ = TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
-	assert.True(t, result)
-	TrafficStore.doSet("namespace-one,proxy-two,key-one", currTime)
-	result, _ = TrafficStore.Contains(getTestAPIKeyBinding(), "key-one")
-	assert.True(t, result)
-}
-
 func TestIsQuotaViolated(t *testing.T) {
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
 	TrafficStore.Clear()

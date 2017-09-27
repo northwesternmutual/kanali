@@ -61,6 +61,7 @@ spec:
     name: example-eight
   plugins:
   - name: apiKey
+    version: v1.2.0
 
 ---
 

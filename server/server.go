@@ -33,31 +33,29 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/armon/go-proxyproto"
 	"github.com/northwesternmutual/kanali/config"
-	"github.com/northwesternmutual/kanali/controller"
 	h "github.com/northwesternmutual/kanali/handlers"
 	"github.com/northwesternmutual/kanali/monitor"
-	"github.com/northwesternmutual/kanali/utils"
 	"github.com/spf13/viper"
 )
 
 // Start will start the HTTP server for the Kanali gateway
 // It could either be an HTTP or HTTPS server depending on the configuration
-func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
+func Start(influxCtlr *monitor.InfluxController) {
 
 	var listener net.Listener
 	var lerr error
 	var scheme string
 
-	router := h.Logger(influxCtlr, h.Handler{Controller: c, H: h.IncomingRequest})
+	router := h.Logger(h.Handler{InfluxController: influxCtlr, H: h.IncomingRequest})
 
 	address := fmt.Sprintf("%s:%d",
-		viper.GetString(config.FlagBindAddress.GetLong()),
-		utils.GetKanaliPort(),
+		viper.GetString(config.FlagServerBindAddress.GetLong()),
+		getKanaliPort(),
 	)
 
 	server := &http.Server{Addr: address, Handler: router}
 
-	if viper.GetString(config.FlagTLSCertFile.GetLong()) == "" || viper.GetString(config.FlagTLSPrivateKeyFile.GetLong()) == "" {
+	if viper.GetString(config.FlagTLSCertFile.GetLong()) == "" || viper.GetString(config.FlagTLSKeyFile.GetLong()) == "" {
 		scheme = "http"
 		listener, lerr = net.Listen("tcp4", address)
 		if lerr != nil {
@@ -66,7 +64,7 @@ func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
 		}
 	} else {
 		scheme = "https"
-		cert, err := tls.LoadX509KeyPair(viper.GetString(config.FlagTLSCertFile.GetLong()), viper.GetString(config.FlagTLSPrivateKeyFile.GetLong()))
+		cert, err := tls.LoadX509KeyPair(viper.GetString(config.FlagTLSCertFile.GetLong()), viper.GetString(config.FlagTLSKeyFile.GetLong()))
 		if err != nil {
 			logrus.Fatal("could not load server cert/key pair")
 			os.Exit(1)
@@ -95,7 +93,7 @@ func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
 		}
 	}
 
-	if viper.GetBool(config.FlagEnableProxyProtocol.GetLong()) {
+	if viper.GetBool(config.FlagServerProxyProtocol.GetLong()) {
 		listener = &proxyproto.Listener{Listener: listener}
 	}
 
@@ -106,4 +104,16 @@ func Start(c *controller.Controller, influxCtlr *monitor.InfluxController) {
 		os.Exit(1)
 	}
 
+}
+
+func getKanaliPort() int {
+	if viper.GetInt(config.FlagServerPort.GetLong()) > 0 {
+		return viper.GetInt(config.FlagServerPort.GetLong())
+	}
+	if viper.GetString(config.FlagTLSCertFile.GetLong()) == "" || viper.GetString(config.FlagTLSKeyFile.GetLong()) == "" {
+		viper.Set(config.FlagServerPort.GetLong(), 80)
+		return 80
+	}
+	viper.Set(config.FlagServerPort.GetLong(), 443)
+	return 443
 }

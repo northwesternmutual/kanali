@@ -1,6 +1,7 @@
 # Kanali
 
-[![Travis](https://img.shields.io/travis/northwesternmutual/kanali/master.svg?style=flat-square)](https://travis-ci.org/northwesternmutual/kanali) [![Coveralls](https://img.shields.io/coveralls/northwesternmutual/kanali/master.svg?style=flat-square)](https://coveralls.io/github/northwesternmutual/kanali) [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat-square)](https://github.com/northwesternmutual/kanali/tree/master/docs/docs.md) [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg?style=flat-square)](http://opentracing.io) [![Tutorial](https://img.shields.io/badge/tutorial-postman-orange.svg?style=flat-square)](http://tutorial.kanali.io) [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/northwesternmutual/kanali)
+[![Travis](https://img.shields.io/travis/northwesternmutual/kanali/master.svg)](https://travis-ci.org/northwesternmutual/kanali) [![Coveralls](https://img.shields.io/coveralls/northwesternmutual/kanali/master.svg)](https://coveralls.io/github/northwesternmutual/kanali) [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://github.com/northwesternmutual/kanali/tree/master/docs/docs.md) [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io) [![Tutorial](https://img.shields.io/badge/tutorial-postman-orange.svg)](http://tutorial.kanali.io) [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/northwesternmutual/kanali)
+[![Go Report Card](https://goreportcard.com/badge/github.com/northwesternmutual/kanali)](https://goreportcard.com/report/github.com/northwesternmutual/kanali)
 
 Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress controller with robust API management capabilities. Built using native Kubernetes constructs, Kanali gives you all the capabilities you need when exposing services in production without the need for multiple tools to accomplish them. Here are some notable features:
 
@@ -12,7 +13,7 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 * **Analytics & Monitoring:** Kanali uses [Grafana](https://grafana.com/) and [InfluxDB](https://www.influxdata.com/) to provide a customizable and visually appealing experience so that you can get real time alerting and visualization around Kanali's metrics. Find out more [here](#analytics-and-monitoring)!
 * **Production Ready:** [Northwestern Mutual](https://www.northwesternmutual.com/) uses Kanali in Production to proxy, manage, and secure all Kubernetes hosted services.
 * **Easy Installation:** Kanali does not rely on an external database, infrastructure agents or workers, dedicated servers, etc. Kanali is deployed in the same manner as any other service in Kubernetes. Find installation instructions [here](#installation)
-* **Open Tracing Integration:** Kanali integrates with [Open Tracing](http://opentracing.io/), endorsed by the [Cloud Native Foundation](https://www.cncf.io/), which provides consistent, expressive, vendor-neutral APIs allowing you to trace the entire lifecycle of a request. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system open sourced by Uber Technologies, is supported out of the box providing a visual representation for your traces.
+* **Open Tracing Integration:** Kanali integrates with [Open Tracing](http://opentracing.io/), hosted by the [Cloud Native Foundation](https://www.cncf.io/), which provides consistent, expressive, vendor-neutral APIs allowing you to trace the entire lifecycle of a request. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system open sourced by Uber Technologies and recently accepted into the Cloud Native Foundation, is supported out of the box to provide a visual representation for your traces.
 
 # Table of Contents
 
@@ -20,10 +21,7 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 * [Tutorial](#tutorial)
 * [Documentation](#documentation)
 * [Plugins](#plugins)
-* [Alternatives](#alternatives)
-  * [Native Kubernetes Ingress](#native-kubernetes-ingress)
-  * [Apigee](#apigee)
-  * [Traefik](#traefik)
+* [Security](#security)
 * [Analytics, Monitoring, and Tracing](#analytics-monitoring-and-tracing)
 * [Installation](#installation)
   * [Helm](#helm)
@@ -58,28 +56,9 @@ Looking for documentation for the custom Kubernetes resources that Kanali create
 
 While Kanali has its own built in plugins, it boasts a decoupled plugin framework that makes it easy for anyone to write and integrate their own custom and version controlled plugin! The guided tutorial can be found [here](./PLUGIN_GUIDE.md).
 
-# Alternatives
+# Security
 
-Kanali describes itself as *an extremely efficient Kubernetes ingress controller with robust API management capabilities*. There are no doubt both open source and vendor products that accomplish similar things.... so why use Kanali? Let's compare some obvious alternatives:
-
-#### Native Kubernetes Ingress
-
-Kubernetes provides a native [`Ingress`](https://kubernetes.io/docs/concepts/services-networking/ingress/) resource spec. The implementation of this resource, along with other Kubernetes resources such as the  `NetworkPolicy` resource, are left as an exercise.
-
-The [NGINX](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#limitations) ingress controller for Kubernetes is a popular implementation for this native resource. However, it has no concept of features Kanali provides such as dynamic service discovery, mutual TLS for upstream services, API management, or a version controlled plugin system. In addition, every time an ingress is create or updated, the NGINX process is required to restart which could affect performance.
-
-#### Apigee
-
-[Apigee](https://apigee.com/api-management/#/homepage) provides a complete API management appliance. They provide multiple solutions including both self and cloud hosted solutions. While their solution is extremely robust, it is heavyweight, expensive, decoupled from Kubernetes, and requires a complex infrastructure setup when using their self hosted solution. In addition, given its *appliance* nature, it is next to impossible to develop with it locally, a feature that is a non-negotiable amongst developers.
-
-#### Traefik
-
-[Traefik](https://docs.traefik.io/user-guide/kubernetes/) is a modern HTTP reverse proxy and load balancer made to deploy microservices with ease. One of the projects it provides is an open source implementation for native Kubernetes ingress resources.
-
-Traefik was not built to be as focused and native to Kubernetes as Kanali strives to be. Because of this, it has a lot of shortcomings with regards to Ingress definitions.
-
-While Traefik does provide a few API management features, Kanali offers so much more such as a robust API key management ecosystem, decoupled and extensible plugin system, Opentracing compatibility, and more.
-
+Kanali is lightweight and does not require the deployment of a sidecar container in each application pod. Because of this, there is the potential for internal service to service traffic to occur unauthenticated. Hence, this must be mitigated. Kubernetes provides a resource for this called a [`NetworkPolicy`](https://kubernetes.io/docs/concepts/services-networking/network-policies/). This allows you to require the source of any ingress traffic to a pod be from Kanali. In order to use a `NetworkPolicy`, your Kubernetes cluster must use an overlay network that implements the controller for this resource. Such overlay networks include [Calico](https://docs.projectcalico.org/v2.0/getting-started/kubernetes/) and [WeaveNet](https://www.weave.works/blog/weave-net-kubernetes-integration/).
 
 # Analytics, Monitoring, and Tracing
 
@@ -139,37 +118,36 @@ $ ./kanali --help
 
 # Usage and Configuration
 
+Kanali can be configured in three different ways. These are highlighted below. Each item takes precedence over the item below it. All possible configuration items are shown in the first example with the later examples demonstrating the conversion factor from the first.
+
+## CLI Flags
+
 ```sh
 $ kanali [command] [flags]
 ```
 
 ```sh
 start
-    -y, --apikey-header-key string           Name of the HTTP header holding the apikey. (default "apikey")
-    -b, --bind-address string                Network address that Kanali will listen on for incoming requests. (default "0.0.0.0")
-    -d, --decryption-key-file string         Path to valid PEM-encoded private key that matches the public key used to encrypt API keys.
-    -v, --disable-tls-cn-validation          Disable common name validate as part of an SSL handshake.
-    -u, --enable-cluster-ip                  Enables to use of cluster ip as opposed to Kubernetes DNS for upstream routing.
-    -m, --enable-mock                        Enables Kanali's mock responses feature. Read the documentation for more information.
-    -t, --enable-proxy-protocol              Maintain the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header.
-    -e, --enable-tracing                     Enables end to end tracing powered by opentracing.
-    -f, --header-mask-value string           Sets the value to be used when omitting header values. (default "ommitted")
-    -h, --help                               help for start
-    -i, --influxdb-addr string               Influxdb address. Addr should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port' (default "monitoring-influxdb.kube-system.svc.cluster.local")
-    -s, --influxdb-database string           Influxdb database (default "k8s")
-    -r, --influxdb-password string           Influxdb password
-    -q, --influxdb-username string           Influxdb username
-    -n, --jaeger-agent-url string            Endpoint to the Jaeger agent (default "jaeger-all-in-one-agent.default.svc.cluster.local")
-    -j, --jaeger-sampler-server-url string   Endpoint to the Jaeger sampler server (default "jaeger-all-in-one-agent.default.svc.cluster.local")
-    -p, --kanali-port int                    Sets the port that Kanali will listen on for incoming requests.
-    -l, --log-level string                   Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'. (default "info")
-    -o, --peer-udp-port int                  Sets the port that all Kanali instances will communicate to each other over. (default 10001)
-    -g, --plugins-location string            Location of custom plugins shared object (.so) files. (default "/")
-    -x, --status-port int                    Sets the HTTP port that Kanali status server. (default 8080)
-    -a, --tls-ca-file string                 Path to x509 certificate authority bundle for mutual TLS.
-    -c, --tls-cert-file string               Path to x509 certificate for HTTPS servers.
-    -k, --tls-private-key-file string        Path to x509 private key matching --tls-cert-file.
-    -w, --upstream-timeout string            Set length of upstream timeout. Defaults to none (default "0h0m0s")
+    --analytics.influx_addr string                InfluxDB address. Address should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port'. (default "http://monitoring-influxdb.kube-system.svc.cluster.local:8086")
+    --analytics.influx_db string                  InfluxDB database name (default "k8s")
+    --plugins.apiKey.decryption_key_file string   Path to valid PEM-encoded private key that matches the public key used to encrypt API keys.
+    --plugins.location string                     Location of custom plugins shared object (.so) files. (default "/")
+    --process.log_level string                    Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'. (default "info")
+    --proxy.enable_cluster_ip                     Enables to use of cluster ip as opposed to Kubernetes DNS for upstream routing.
+    --proxy.enable_mock_responses                 Enables Kanali's mock responses feature. Read the documentation for more information.
+    --proxy.header_mask_Value string              Sets the Value to be used when omitting header Values. (default "ommitted")
+    --proxy.mask_header_keys stringSlice          Specify which headers to mask
+    --proxy.tls_common_name_validation            Should common name validate as part of an SSL handshake. (default true)
+    --proxy.upstream_timeout string               Set length of upstream timeout. Defaults to none (default "0h0m10s")
+    --server.bind_address string                  Network address that Kanali will listen on for incoming requests. (default "0.0.0.0")
+    --server.peer_udp_port int                    Sets the port that all Kanali instances will communicate to each other over. (default 10001)
+    --server.port int                             Sets the port that Kanali will listen on for incoming requests.
+    --server.proxy_protocol                       Maintain the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header.
+    --tls.ca_file string                          Path to x509 certificate authority bundle for mutual TLS.
+    --tls.cert_file string                        Path to x509 certificate for HTTPS servers.
+    --tls.key_file string                         Path to x509 private key matching --tls-cert-file.
+    --tracing.jaeger_agent_url string             Endpoint to the Jaeger agent (default "jaeger-all-in-one-agent.default.svc.cluster.local")
+    --tracing.jaeger_server_url string            Endpoint to the Jaeger server (default "jaeger-all-in-one-agent.default.svc.cluster.local")
 
 version
     no flags
@@ -178,34 +156,16 @@ help
     no flags
 ```
 
-## CLI Flags
-
-See above for all the cli flags available.
-
 ## Environment Variables
 
-For each flag above, there is a corresponding environment variables. This variable name mirrors the cli flag name with the following modifications:
-* Every character is upper case,
-* The `-` character is replaced by the `_` character
-* Everything is prefixed with `KANALI_`
-
-As an example, if I wanted to overwrite the `--bind-address` flag, I would set the `KANALI_BIND_ADDRESS` environment variable.
+For each flag above, transform to upper case and append the result to `KANALI_`. As an example, the cli flag `--analytics.influx_addr` would be overwritten with the `KANALI_ANALYTICS.INFLUX_ADDR` environment variable.
 
 ## Configuration Files
 
-A flag can also be overwritten via configuration files. Kanali accepts configuration files in `JSON`, `YAML`, `TOML`, or `HCL` formats.
+Kanali accepts configuration files in `JSON`, `YAML`, `TOML`, or `HCL` formats. Each location below takes precedence over the one below it:
 
-Kanali will look for files in the following locations (in order of precedence):
 * `/etc/kanali/config.ext`
 * `$HOME/conifig.ext`
 * `./conifig.ext`
 
-*NOTE*: For nested objects in configuration files, the corresponding cli flag or environment variable includes a `.` in between every level. For example, a cli flag of `--foo.bar=car` would correspond to the following JSON:
-
-```json
-{
-  "foo": {
-    "bar": "car"
-  }
-}
-```
+Reference [config.toml](./config.toml) for a complete example.

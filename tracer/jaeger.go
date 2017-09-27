@@ -26,9 +26,10 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
-	"github.com/uber/jaeger-client-go/config"
+	jaegerConfig "github.com/uber/jaeger-client-go/config"
 )
 
 type customLogger struct{}
@@ -38,25 +39,25 @@ func (l customLogger) Error(msg string) {
 }
 
 func (l customLogger) Infof(msg string, args ...interface{}) {
-	logrus.Infof(msg, args)
+	logrus.Info(fmt.Sprintf(msg, args...))
 }
 
 // Jaeger creates a new opentracing compatible tracer
 func Jaeger() (opentracing.Tracer, io.Closer, error) {
 
-	cfg := config.Configuration{
-		Sampler: &config.SamplerConfig{
+	cfg := jaegerConfig.Configuration{
+		Sampler: &jaegerConfig.SamplerConfig{
 			Type:              "const",
-			SamplingServerURL: viper.GetString("jaeger-sampler-server-url"),
+			SamplingServerURL: viper.GetString(config.FlagTracingJaegerServerURL.GetLong()),
 			Param:             1,
 		},
-		Reporter: &config.ReporterConfig{
+		Reporter: &jaegerConfig.ReporterConfig{
 			LogSpans:            true,
 			BufferFlushInterval: 1 * time.Second,
-			LocalAgentHostPort:  fmt.Sprintf("%s:5775", viper.GetString("jaeger-agent-url")),
+			LocalAgentHostPort:  fmt.Sprintf("%s:5775", viper.GetString(config.FlagTracingJaegerAgentURL.GetLong())),
 		},
 	}
 
-	return cfg.New("kanali", config.Logger(customLogger{}))
+	return cfg.New("kanali", jaegerConfig.Logger(customLogger{}))
 
 }

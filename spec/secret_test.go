@@ -57,6 +57,22 @@ func TestSecretSet(t *testing.T) {
 	assert.Equal(secretList[1], store.secretMap["foo"]["secret-two"], "secret should exist")
 }
 
+func TestSecretUpdate(t *testing.T) {
+	assert := assert.New(t)
+	store := SecretStore
+	secretList := getTestSecretList()
+
+	store.Clear()
+	store.Update(secretList[0])
+	store.Update(secretList[1])
+	err := store.Update(APIProxy{})
+	assert.Equal(err.Error(), "grrr - you're only allowed add secrets to the secrets store.... duh", "error not what expected")
+	assert.Equal(1, len(store.secretMap), "there should be one namespace in the secret store")
+	assert.Equal(2, len(store.secretMap["foo"]), "there should be two secrets in the secret store")
+	assert.Equal(secretList[0], store.secretMap["foo"]["secret-one"], "secret should exist")
+	assert.Equal(secretList[1], store.secretMap["foo"]["secret-two"], "secret should exist")
+}
+
 func TestSecretClear(t *testing.T) {
 	assert := assert.New(t)
 	store := SecretStore
@@ -102,27 +118,6 @@ func TestSecretGet(t *testing.T) {
 	assert.Equal(secretList[0], result, "secret should exist")
 	result, _ = store.Get("secret-two", "foo")
 	assert.Equal(secretList[1], result, "secret should exist")
-}
-
-func TestSecretContains(t *testing.T) {
-	assert := assert.New(t)
-	store := SecretStore
-	secretList := getTestSecretList()
-
-	store.Clear()
-	store.Set(secretList[0])
-	result, _ := store.Contains("secret-one", "foo")
-	assert.True(result)
-	result, _ = store.Contains("secret-two", "bar")
-	assert.False(result)
-	result, _ = store.Contains("secret-two", "foo")
-	assert.False(result)
-	_, err := store.Contains("secret-two")
-	assert.Equal(err.Error(), "containers requires 2 params", "wrong error")
-	_, err = store.Contains("secret-two", 5)
-	assert.Equal(err.Error(), "second parameter should be a string", "wrong error")
-	_, err = store.Contains(5, "")
-	assert.Equal(err.Error(), "first parameter should be a string", "wrong error")
 }
 
 func TestSecretDelete(t *testing.T) {

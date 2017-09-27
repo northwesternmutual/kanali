@@ -26,8 +26,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
+	"github.com/northwesternmutual/kanali/spec"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,7 +38,7 @@ func (s mockStep) GetName() string {
 	return "mock step"
 }
 
-func (s mockStep) Do(ctx context.Context, m *metrics.Metrics, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (s mockStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 	return nil
 }
 
@@ -48,7 +48,7 @@ func (s mockErrorStep) GetName() string {
 	return "mock error step"
 }
 
-func (s mockErrorStep) Do(ctx context.Context, m *metrics.Metrics, ctlr *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
+func (s mockErrorStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 	return errors.New("forced error")
 }
 

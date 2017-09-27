@@ -56,67 +56,42 @@ spec:
       containers:
       - name: kanali
         imagePullPolicy: IfNotPresent
-        image: northwesternmutual/kanali:latest
-        args:
+        image: northwesternmutual/kanali:v1.1.5
+        command:
+        - /kanali
         - start
-        - --kanali-port=8443
-        - --status-port=8080
-        - --bind-address=0.0.0.0
-        - --log-level=info
-        - --enable-mock
-        - --enable-cluster-ip
-        - --tls-cert-file=/etc/pki/tls.crt
-        - --tls-private-key-file=/etc/pki/tls.key
-        - --decryption-key-file=/etc/pki/key.pem
-        - --plugins-location=/
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 8080
-          initialDelaySeconds: 3
-          periodSeconds: 3
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 8080
-          initialDelaySeconds: 5
-          timeoutSeconds: 1
-          periodSeconds: 15
         env:
         - name: POD_IP
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
-        resources:
-          requests:
-            cpu: "50m"
         ports:
-        - containerPort: 8443
-        - containerPort: 8080
+        - containerPort: 443
         volumeMounts:
-        - name: pki
-          mountPath: /etc/pki
-        - name: config
+        - name: kanali
           mountPath: /etc/kanali
       volumes:
-      - name: pki
+      - name: kanali
         projected:
           sources:
+          - configMap:
+              name: kanali-config
+              items:
+              - key: config.toml
+                mode: 0644
+                path: config.toml
           - secret:
               name: kanali
               items:
               - key: tls.crt
-                path: tls.crt
+                path: pki/tls.crt
               - key: tls.key
-                path: tls.key
+                path: pki/tls.key
           - secret:
-              name: decrypt-key
+              name: kanali-key-decription
               items:
               - key: key.pem
-                path: key.pem
-      - name: config
-        configMap:
-          name: kanali-config
+                path: rsa/key.pem
 
 ---
 
@@ -126,12 +101,50 @@ metadata:
   name: kanali-config
   namespace: default
 data:
-  config.json: |-
-    {
-      "headers": {
-          "x-nm-deployment": "stable"
-      }
-    }
+  config.toml: |-
+    [tracing]
+    jaeger_server_url = "jaeger-agent.kube-system.svc.cluster.local"
+    jaeger_agent_url = "jaeger-agent.kube-system.svc.cluster.local"
+
+    [analytics]
+    influx_addr = "http://kanali-influxdb.default.svc.cluster.local:8086"
+    influx_db = "kanali"
+    influx_username = ""
+    influx_password = ""
+
+    [plugins]
+    location = "/"
+
+    [plugins.apiKey]
+    decryption_key_file = "/etc/kanali/rsa/key.pem"
+    header_key = "apikey"
+
+    [tls]
+    cert_file = "/etc/kanali/pki/tls.crt"
+    key_file = "/etc/kanali/pki/tls.key"
+    ca_file = ""
+
+    [server]
+    port = 8443
+    bind_address = "0.0.0.0"
+    peer_udp_port = 10001
+    proxy_protocol = false
+
+    [process]
+    log_level = "info"
+
+    [proxy]
+    enable_cluster_ip = true
+    enable_mock_responses = true
+    upstream_timeout = "0h0m10s"
+    header_mask_value = "ommitted"
+    tls_common_name_validation = false
+    mask_header_keys = [
+      "apikey"
+    ]
+
+    [proxy.default_header_values]
+    x-canary-deployment = "stable"
 
 ---
 
@@ -173,11 +186,8 @@ rules:
     resources: ["thirdpartyresources"]
     verbs: ["create"]
   - apiGroups: [""]
-    resources: ["services", "secrets", "endpoints"]
+    resources: ["services", "secrets", "endpoints", "configmaps"]
     verbs: ["watch"]
-  - apiGroups: [""]
-    resources: ["endpoints"]
-    verbs: ["list"]
 
 ---
 

@@ -21,79 +21,66 @@
 package utils
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"k8s.io/kubernetes/pkg/api"
 )
 
 func TestComputeTargetPath(t *testing.T) {
-
-	assert := assert.New(t)
-
-	assert.Equal("/", ComputeTargetPath("/foo/bar", "", "/foo/bar"))
-	assert.Equal("/", ComputeTargetPath("/foo/bar", "/", "/foo/bar"))
-	assert.Equal("/foo", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar"))
-	assert.Equal("/foo/bar", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar"))
-	assert.Equal("/bar", ComputeTargetPath("/foo/bar", "", "/foo/bar/bar"))
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts"))
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/"))
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/"))
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/"))
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/"))
-	assert.Equal("/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts"))
-	assert.Equal("/", ComputeTargetPath("/", "", "/"), "path not what expected")
-	assert.Equal("/", ComputeTargetPath("/", "/", "/"), "path not what expected")
-
+	assert.Equal(t, "/", ComputeTargetPath("/foo/bar", "", "/foo/bar"))
+	assert.Equal(t, "/", ComputeTargetPath("/foo/bar", "/", "/foo/bar"))
+	assert.Equal(t, "/foo", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar"))
+	assert.Equal(t, "/foo/bar", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar"))
+	assert.Equal(t, "/bar", ComputeTargetPath("/foo/bar", "", "/foo/bar/bar"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/"))
+	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts"))
+	assert.Equal(t, "/", ComputeTargetPath("/", "", "/"), "path not what expected")
+	assert.Equal(t, "/", ComputeTargetPath("/", "/", "/"), "path not what expected")
 }
 
 func TestAbsPath(t *testing.T) {
-
-	assert := assert.New(t)
-
 	p, _ := GetAbsPath("/")
-	assert.Equal("", p)
-
+	assert.Equal(t, "", p)
 	p, _ = GetAbsPath("/foo/")
-	assert.Equal("/foo", p)
-
+	assert.Equal(t, "/foo", p)
 	p, _ = GetAbsPath("//")
-	assert.Equal("", p)
-
+	assert.Equal(t, "", p)
 }
 
-func TestOmitHeaderValues(t *testing.T) {
-
-	assert := assert.New(t)
-
-	h := http.Header{
-		"One":   []string{"two"},
-		"Three": []string{"four"},
+func TestCompareObjectMeta(t *testing.T) {
+	c1 := api.ObjectMeta{
+		Name:      "foo",
+		Namespace: "bar",
+	}
+	c2 := api.ObjectMeta{
+		Name:      "bar",
+		Namespace: "foo",
+	}
+	c3 := api.ObjectMeta{
+		Name:      "foo",
+		Namespace: "car",
+	}
+	c4 := api.ObjectMeta{
+		Name:      "bar",
+		Namespace: "car",
 	}
 
-	copy := OmitHeaderValues(h, "omitted", "one")
-	assert.Equal(h, http.Header{
-		"One":   []string{"two"},
-		"Three": []string{"four"},
-	}, "original map should not change")
-	assert.Equal(copy, http.Header{
-		"One":   []string{"omitted"},
-		"Three": []string{"four"},
-	}, "map should be equal")
+	assert.True(t, CompareObjectMeta(c1, c1))
+	assert.False(t, CompareObjectMeta(c1, c2))
+	assert.False(t, CompareObjectMeta(c1, c3))
+	assert.False(t, CompareObjectMeta(c3, c4))
+}
 
-	copy = OmitHeaderValues(h, "omitted", "one", "foo", "bar")
-	assert.Equal(copy, http.Header{
-		"One":   []string{"omitted"},
-		"Three": []string{"four"},
-	}, "map should be equal")
-
-	copy = OmitHeaderValues(h, "omitted")
-	assert.Equal(copy, http.Header{
-		"One":   []string{"two"},
-		"Three": []string{"four"},
-	}, "original map should not change")
-
-	copy = OmitHeaderValues(nil, "omitted")
-	assert.Nil(copy, "map should be equal")
-
+func TestNormalizePath(t *testing.T) {
+	assert.Equal(t, "/foo/bar", NormalizePath("foo////bar"))
+	assert.Equal(t, "/foo", NormalizePath("foo"))
+	assert.Equal(t, "/foo", NormalizePath("foo////"))
+	assert.Equal(t, "/foo/bar", NormalizePath("///foo////bar//"))
+	assert.Equal(t, "/", NormalizePath(""))
+	assert.Equal(t, "/", NormalizePath("////"))
 }

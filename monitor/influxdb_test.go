@@ -72,10 +72,10 @@ func TestWriteRequestData(t *testing.T) {
 		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
 	}
 	assert.Equal(t, ctlr.WriteRequestData(m).Error(), "no database name")
-	viper.SetDefault(config.FlagInfluxdbDatabase.GetLong(), "mydb")
+	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "mydb")
 	assert.Nil(t, ctlr.WriteRequestData(m))
 	assert.Nil(t, ctlr.WriteRequestData(m))
-	viper.SetDefault(config.FlagInfluxdbDatabase.GetLong(), "")
+	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "")
 	ctlr = &InfluxController{Client: nil}
 	assert.Equal(t, ctlr.WriteRequestData(m).Error(), "influxdb paniced while attempting to write")
 }
@@ -83,7 +83,7 @@ func TestWriteRequestData(t *testing.T) {
 func TestNewInfluxdbController(t *testing.T) {
 	_, err := NewInfluxdbController()
 	assert.NotNil(t, err)
-	viper.SetDefault(config.FlagInfluxdbAddr.GetLong(), "http://foo.bar.com")
+	viper.SetDefault(config.FlagAnalyticsInfluxAddr.GetLong(), "http://foo.bar.com")
 	_, err = NewInfluxdbController()
 	assert.Nil(t, err)
 }
@@ -91,9 +91,9 @@ func TestNewInfluxdbController(t *testing.T) {
 func TestCreateDatabase(t *testing.T) {
 	err := createDatabase(&mockClient{})
 	assert.Equal(t, err.Error(), "no database name")
-	viper.SetDefault(config.FlagInfluxdbDatabase.GetLong(), "mydb")
+	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "mydb")
 	assert.Nil(t, createDatabase(&mockClient{}))
-	viper.SetDefault(config.FlagInfluxdbDatabase.GetLong(), "")
+	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "")
 }
 
 func TestGetFields(t *testing.T) {

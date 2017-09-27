@@ -40,9 +40,9 @@ type InfluxController struct {
 // connection to Influxdb
 func NewInfluxdbController() (*InfluxController, error) {
 	influxClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr:     viper.GetString(config.FlagInfluxdbAddr.GetLong()),
-		Username: viper.GetString(config.FlagInfluxdbUsername.GetLong()),
-		Password: viper.GetString(config.FlagInfluxdbPassword.GetLong()),
+		Addr:     viper.GetString(config.FlagAnalyticsInfluxAddr.GetLong()),
+		Username: viper.GetString(config.FlagAnalyticsInfluxUsername.GetLong()),
+		Password: viper.GetString(config.FlagAnalyticsInfluxPassword.GetLong()),
 	})
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (c *InfluxController) WriteRequestData(m *metrics.Metrics) (err error) {
 		}
 	}()
 	bp, err := influx.NewBatchPoints(influx.BatchPointsConfig{
-		Database: viper.GetString(config.FlagInfluxdbDatabase.GetLong()),
+		Database: viper.GetString(config.FlagAnalyticsInfluxDb.GetLong()),
 	})
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (c *InfluxController) WriteRequestData(m *metrics.Metrics) (err error) {
 }
 
 func createDatabase(c influx.Client) error {
-	q := influx.NewQuery(fmt.Sprintf("CREATE DATABASE %s", viper.GetString(config.FlagInfluxdbDatabase.GetLong())), "", "")
+	q := influx.NewQuery(fmt.Sprintf("CREATE DATABASE %s", viper.GetString(config.FlagAnalyticsInfluxDb.GetLong())), "", "")
 	response, err := c.Query(q)
 	if err != nil {
 		return err

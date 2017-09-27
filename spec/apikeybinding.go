@@ -121,12 +121,6 @@ func (s *BindingFactory) IsEmpty() bool {
 	return len(s.bindingMap) == 0
 }
 
-// Contains reports whether the binding store contains a particular binding
-// TODO
-func (s *BindingFactory) Contains(params ...interface{}) (bool, error) {
-	return false, errors.New("method not yet implemented")
-}
-
 func (b *APIKeyBinding) hydrateSubpathTree() {
 
 	// we need to create a subpath tree for each apikey per binding
@@ -150,21 +144,28 @@ func (b *APIKeyBinding) hydrateSubpathTree() {
 }
 
 func (n *subpathNode) doSetSubpath(pathSegments []string, subpath *Path) {
-
 	if n.Children == nil {
 		n.Children = map[string]*subpathNode{}
 	}
-
 	if n.Children[pathSegments[0]] == nil {
 		n.Children[pathSegments[0]] = &subpathNode{}
 	}
-
 	if len(pathSegments) < 2 {
 		n.Children[pathSegments[0]].Value = subpath
 	} else {
 		n.Children[pathSegments[0]].doSetSubpath(pathSegments[1:], subpath)
 	}
+}
 
+// Update will update an APIKeyBinding
+func (s *BindingFactory) Update(obj interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	binding, ok := obj.(APIKeyBinding)
+	if !ok {
+		return errors.New("grrr - you're only allowed add api key bindings to the api key binding store.... duh")
+	}
+	return s.set(binding)
 }
 
 // Set takes a APIKeyBinding and either adds it to the store
@@ -176,6 +177,10 @@ func (s *BindingFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add api key bindings to the api key binding store.... duh")
 	}
+	return s.set(binding)
+}
+
+func (s *BindingFactory) set(binding APIKeyBinding) error {
 	logrus.Infof("Adding new APIKeyBinding named %s in namespace %s", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace)
 	binding.hydrateSubpathTree()
 	if s.bindingMap[binding.ObjectMeta.Namespace] == nil {
@@ -223,14 +228,14 @@ func (s *BindingFactory) Delete(obj interface{}) (interface{}, error) {
 	if !ok {
 		return nil, errors.New("there's no way this api key binding could've gotten in here")
 	}
-	if _, ok := s.bindingMap[binding.ObjectMeta.Namespace]; !ok {
-		return nil, nil
-	}
 	val, ok := s.bindingMap[binding.ObjectMeta.Namespace][binding.Spec.APIProxyName]
 	if !ok {
 		return nil, nil
 	}
 	delete(s.bindingMap[binding.ObjectMeta.Namespace], binding.Spec.APIProxyName)
+	if len(s.bindingMap[binding.ObjectMeta.Namespace]) == 0 {
+		delete(s.bindingMap, binding.ObjectMeta.Namespace)
+	}
 	return val, nil
 }
 

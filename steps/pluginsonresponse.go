@@ -27,11 +27,9 @@ import (
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/plugins"
 	"github.com/northwesternmutual/kanali/spec"
-	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -45,23 +43,14 @@ func (step PluginsOnResponseStep) GetName() string {
 }
 
 // Do executes the logic of the PluginsOnResponseStep step
-func (step PluginsOnResponseStep) Do(ctx context.Context, m *metrics.Metrics, c *controller.Controller, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-	untypedProxy, err := spec.ProxyStore.Get(r.URL.EscapedPath())
-	if err != nil || untypedProxy == nil {
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
-	}
-
-	proxy, ok := untypedProxy.(spec.APIProxy)
-	if !ok {
-		return utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
-	}
+func (step PluginsOnResponseStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
 	for _, plugin := range proxy.Spec.Plugins {
 		p, err := plugins.GetPlugin(plugin)
 		if err != nil {
 			return err
 		}
-		if err := doOnResponse(ctx, m, plugin.Name, proxy, *c, r, resp, trace, *p); err != nil {
+		if err := doOnResponse(ctx, m, plugin.Name, *proxy, r, resp, trace, *p); err != nil {
 			return err
 		}
 	}
@@ -69,7 +58,7 @@ func (step PluginsOnResponseStep) Do(ctx context.Context, m *metrics.Metrics, c 
 	return nil
 }
 
-func doOnResponse(ctx context.Context, m *metrics.Metrics, name string, proxy spec.APIProxy, ctlr controller.Controller, req *http.Request, resp *http.Response, span opentracing.Span, p plugins.Plugin) (e error) {
+func doOnResponse(ctx context.Context, m *metrics.Metrics, name string, proxy spec.APIProxy, req *http.Request, resp *http.Response, span opentracing.Span, p plugins.Plugin) (e error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.Errorf("OnResponse paniced: %v", r)
@@ -80,8 +69,5 @@ func doOnResponse(ctx context.Context, m *metrics.Metrics, name string, proxy sp
 	sp := opentracing.StartSpan(fmt.Sprintf("PLUGIN: ON_RESPONSE: %s", name), opentracing.ChildOf(span.Context()))
 	defer sp.Finish()
 
-	if err := p.OnResponse(ctx, m, proxy, ctlr, req, resp, sp); err != nil {
-		return err
-	}
-	return nil
+	return p.OnResponse(ctx, m, proxy, req, resp, sp)
 }

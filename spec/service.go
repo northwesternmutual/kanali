@@ -22,12 +22,12 @@ package spec
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/config"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -78,6 +78,17 @@ func (s *ServiceFactory) Clear() {
 	}
 }
 
+// Update will update a service
+func (s *ServiceFactory) Update(obj interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	service, ok := obj.(Service)
+	if !ok {
+		return errors.New("grrr - you're only allowed add services to the services store.... duh")
+	}
+	return s.set(service)
+}
+
 // Set takes a Service and either adds it to the store
 // or updates it
 func (s *ServiceFactory) Set(obj interface{}) error {
@@ -87,7 +98,11 @@ func (s *ServiceFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add services to the services store.... duh")
 	}
-	logrus.Debugf("adding service object %s", service.Name)
+	return s.set(service)
+}
+
+func (s *ServiceFactory) set(service Service) error {
+	logrus.Infof("Adding new Service named %s", service.Name)
 	if s.serviceMap[service.Namespace] == nil {
 		s.serviceMap[service.Namespace] = []Service{service}
 		return nil
@@ -141,14 +156,6 @@ func (s *ServiceFactory) Get(params ...interface{}) (interface{}, error) {
 		}
 	}
 	return nil, nil
-}
-
-// Contains reports whether the service store contains a particular service
-// TODO
-func (s *ServiceFactory) Contains(params ...interface{}) (bool, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return false, errors.New("method not yet implemented")
 }
 
 // Delete will remove a particular service from the store
@@ -209,23 +216,17 @@ func (one Labels) contains(other Label, headers http.Header) bool {
 }
 
 func (one Label) equals(other Label, headers http.Header) bool {
-	// is the name of the label the same
-	if strings.Compare(strings.ToLower(one.Name), strings.ToLower(other.Name)) == 0 {
-		// is header specified - only on 'one'
-		if len(one.Header) > 0 {
-			if len(headers.Get(one.Header)) > 0 {
-				return strings.Compare(strings.ToLower(headers.Get(one.Header)), strings.ToLower(other.Value)) == 0
-			}
-			// the header that we are looking for was not part of the request headers
-			// so now we need to check the default values and match against those
-			if len(viper.GetString(fmt.Sprintf("headers.%s", one.Header))) > 0 {
-				return strings.Compare(strings.ToLower(viper.GetString(fmt.Sprintf("headers.%s", one.Header))), strings.ToLower(other.Value)) == 0
-			}
-			return false
-		}
-		return strings.Compare(other.Value, one.Value) == 0
+	if strings.ToLower(one.Name) != strings.ToLower(other.Name) {
+		return false
 	}
-	return false
+	if len(one.Header) < 1 {
+		return other.Value == one.Value
+	}
+	if len(headers.Get(one.Header)) > 0 {
+		return strings.ToLower(headers.Get(one.Header)) == strings.ToLower(other.Value)
+	}
+	defaultHeaderValue, ok := viper.GetStringMapString(config.FlagProxyDefaultHeaderValues.GetLong())[one.Header]
+	return ok && len(defaultHeaderValue) > 0 && strings.ToLower(defaultHeaderValue) == strings.ToLower(other.Value)
 }
 
 func (a services) indexOf(s Service) (int, *Service) {

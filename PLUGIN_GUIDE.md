@@ -44,6 +44,21 @@ type StatusError struct {
 }
 ```
 
+A plugin has the ability to define any configuration items it might require. This allows a plugin to be configured via a cli flag, environment variable, or a configuration file. Reference the configuration [documentation](https://github.com/northwesternmutual/kanali#usage-and-configuration) for details. Below is an example of how the [API key plugin](https://github.com/northwesternmutual/kanali-plugin-apikey) uses this feature:
+
+```go
+var flagPluginsAPIKeyHeaderKey = config.Flag{
+	Long:  "plugins.apiKey.header_key", // please use the convention of plugins.<plugin name>.<configuration name>
+	Short: "",
+	Value: "apikey",
+	Usage: "Name of the HTTP header holding the apikey.",
+}
+
+func init() {
+	config.Flags.Add(flagPluginsAPIKeyHeaderKey)
+}
+```
+
 A series of method parameters are provided for optional usage inside of your plugin logic. Here is a table providing detailing their purpose:
 
 name        | type             | methods              |mutability |description
@@ -51,7 +66,6 @@ name        | type             | methods              |mutability |description
 `ctx`        | [`context.Context`](https://golang.org/pkg/context/) | `OnRequest` `OnResponse` | Mutable | Request context.
 `m`        | [`*metrics.Metrics`](https://github.com/northwesternmutual/kanali/blob/master/metrics/metrics.go) | `OnRequest` `OnResponse` | Mutable | Holds various requests metrics for analytics.
 `proxy`      | [`spec.ApiProxy`](https://github.com/northwesternmutual/kanali/blob/master/spec/apiproxy.go#L20) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the `ApiProxy` struct that matched the incoming request.
-`ctlr`       | [`controller.Controller`](https://github.com/northwesternmutual/kanali/blob/master/controller/controller.go#L17) | `OnRequest` `OnResponse` | Immutable | This parameter provides a client by which the Kubernetes api may be accessed.
 `req`        | [`http.Request`](https://golang.org/pkg/net/http/#Request) | `OnRequest` `OnResponse` | Mutable | This parameter gives you access to the original HTTP request struct.
 `resp`       | [`*http.Response`](https://golang.org/pkg/net/http/#Response) | `OnResponse` | Mutable | This parameter will point to the response that was returned from the upstream service. Note that it is mutable allowing for potential changes in a plugin's logic.
 `span`       | [`opentracing-go.Span`](https://godoc.org/github.com/opentracing/opentracing-go#Span) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the parent tracing span allowing you to add details (tags) to that span and optionally create new spans in the context of this parent span.

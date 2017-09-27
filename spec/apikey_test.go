@@ -60,6 +60,23 @@ func TestAPIKeySet(t *testing.T) {
 	assert.Equal(keyList.Keys[2], store.keyMap["iamencrypted3"], message)
 }
 
+func TestAPIKeyUpdate(t *testing.T) {
+	assert := assert.New(t)
+	store := KeyStore
+	keyList := getTestAPIKeyList()
+	message := "key received is not expected"
+
+	store.Clear()
+	store.Update(keyList.Keys[0])
+	store.Update(keyList.Keys[1])
+	store.Update(keyList.Keys[2])
+	err := store.Update(APIProxy{})
+	assert.Equal("grrr - you're only allowed add api keys to the api key store.... duh", err.Error(), "error expected")
+	assert.Equal(keyList.Keys[0], store.keyMap["iamencrypted1"], message)
+	assert.Equal(keyList.Keys[1], store.keyMap["iamencrypted2"], message)
+	assert.Equal(keyList.Keys[2], store.keyMap["iamencrypted3"], message)
+}
+
 func TestAPIKeyClear(t *testing.T) {
 	assert := assert.New(t)
 	store := KeyStore
@@ -72,39 +89,6 @@ func TestAPIKeyClear(t *testing.T) {
 	assert.Equal(0, len(store.keyMap), "empty store should have no keys")
 }
 
-func TestAPIKeyContains(t *testing.T) {
-	assert := assert.New(t)
-	store := KeyStore
-	keyList := getTestAPIKeyList()
-
-	store.Clear()
-	store.Set(keyList.Keys[0])
-	result, _ := store.Contains("iamencrypted1")
-	assert.True(result)
-	result, _ = store.Contains("iamencrypted2")
-	assert.False(result)
-	result, _ = store.Contains(keyList.Keys[0])
-	assert.True(result)
-	result, _ = store.Contains(APIKey{})
-	assert.False(result)
-	result, _ = store.Contains("abc123", "foo")
-	assert.True(result)
-	result, _ = store.Contains("abc123", "bar")
-	assert.False(result)
-	result, err := store.Contains(5, "bar")
-	assert.False(result)
-	assert.Equal("first parameter should be a string", err.Error(), "wrong error string")
-	result, err = store.Contains("", 5)
-	assert.False(result)
-	assert.Equal("second parameter should be a string", err.Error(), "wrong error string")
-	result, err = store.Contains("abc123", "foo", "frank")
-	assert.False(result)
-	assert.Equal("too many parameters", err.Error(), "wrong error string")
-	result, err = store.Contains(APIProxy{})
-	assert.False(result)
-	assert.Equal("could not recongized type of parameter", err.Error(), "wrong error string")
-}
-
 func TestAPIKeyIsEmpty(t *testing.T) {
 	assert := assert.New(t)
 	store := KeyStore
@@ -115,6 +99,11 @@ func TestAPIKeyIsEmpty(t *testing.T) {
 	store.Set(keyList.Keys[0])
 	assert.False(store.IsEmpty())
 	store.Clear()
+	assert.True(store.IsEmpty())
+
+	store.Set(keyList.Keys[0])
+	assert.False(store.IsEmpty())
+	store.Delete(keyList.Keys[0])
 	assert.True(store.IsEmpty())
 }
 

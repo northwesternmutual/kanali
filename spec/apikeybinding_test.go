@@ -60,6 +60,26 @@ func TestAPIKeyBindingSet(t *testing.T) {
 	assert.Equal(keyBindingList.Bindings[3], store.bindingMap["foo"]["api-proxy-four"], "bidning should exist")
 }
 
+func TestAPIKeyBindingUpdate(t *testing.T) {
+	assert := assert.New(t)
+	store := BindingStore
+	keyBindingList := getTestAPIKeyBindingList()
+
+	store.Clear()
+	store.Update(keyBindingList.Bindings[0])
+	err := store.Update(5)
+	assert.Equal(err.Error(), "grrr - you're only allowed add api key bindings to the api key binding store.... duh", "wrong error")
+	assert.Equal(keyBindingList.Bindings[0], store.bindingMap["foo"]["api-proxy-one"], "binding should exist")
+	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children), "subpath incorrect")
+	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children["foo"].Children), "subpath incorrect")
+	store.Update(keyBindingList.Bindings[1])
+	store.Update(keyBindingList.Bindings[2])
+	assert.Equal(keyBindingList.Bindings[1], store.bindingMap["foo"]["api-proxy-two"], "binding should exist")
+	assert.Equal(keyBindingList.Bindings[2], store.bindingMap["bar"]["api-proxy-three"], "binding should exist")
+	store.Update(keyBindingList.Bindings[3])
+	assert.Equal(keyBindingList.Bindings[3], store.bindingMap["foo"]["api-proxy-four"], "bidning should exist")
+}
+
 func TestAPIKeyBindingIsEmpty(t *testing.T) {
 	assert := assert.New(t)
 	store := BindingStore
@@ -70,6 +90,11 @@ func TestAPIKeyBindingIsEmpty(t *testing.T) {
 	store.Set(keyBindingList.Bindings[0])
 	assert.False(store.IsEmpty())
 	store.Clear()
+	assert.True(store.IsEmpty())
+
+	store.Set(keyBindingList.Bindings[0])
+	assert.False(store.IsEmpty())
+	store.Delete(keyBindingList.Bindings[0])
 	assert.True(store.IsEmpty())
 }
 
