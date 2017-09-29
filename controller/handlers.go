@@ -21,7 +21,7 @@
 package controller
 
 import (
-  "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/spec"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/tools/cache"
@@ -40,11 +40,11 @@ var apiProxyHandlerFuncs = cache.ResourceEventHandlerFuncs{
 	},
 	UpdateFunc: func(old, new interface{}) {
 		oldProxy, ok := old.(*spec.APIProxy)
-    if !ok {
+		if !ok {
 			logrus.Error("received malformed ApiProxy from k8s apiserver")
 			return
 		}
-    newProxy, ok := new.(*spec.APIProxy)
+		newProxy, ok := new.(*spec.APIProxy)
 		if !ok {
 			logrus.Error("received malformed ApiProxy from k8s apiserver")
 			return

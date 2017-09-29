@@ -24,7 +24,7 @@ func init() {
 	Flags.Add(
 		FlagPluginsLocation,
 		FlagPluginsAPIKeyDecriptionKeyFile,
-    FlagPluginsAPIKeyHeaderKey,
+		FlagPluginsAPIKeyHeaderKey,
 	)
 }
 
@@ -43,8 +43,8 @@ var (
 		Value: "",
 		Usage: "Path to valid PEM-encoded private key that matches the public key used to encrypt API keys.",
 	}
-  // FlagPluginsAPIKeyHeaderKey specifies the name of the HTTP header that will be used to extract the API key.
-  FlagPluginsAPIKeyHeaderKey = Flag{
+	// FlagPluginsAPIKeyHeaderKey specifies the name of the HTTP header that will be used to extract the API key.
+	FlagPluginsAPIKeyHeaderKey = Flag{
 		Long:  "plugins.apiKey.header_key",
 		Short: "",
 		Value: "apikey",

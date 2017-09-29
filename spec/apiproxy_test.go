@@ -78,7 +78,7 @@ func TestAPIProxyUpdate(t *testing.T) {
 	store.Update(proxyList.Items[0], proxy)
 	assert.Equal(proxy, *store.proxyTree.Children["modified"].Children["foo"].Children["bar"].Value, "proxy should exist")
 
-  proxyTwo := proxy
+	proxyTwo := proxy
 	proxyTwo.Spec.Target = "/frank/greco/jr"
 	proxyTwo.ObjectMeta = metav1.ObjectMeta{
 		Name:      "frank",

@@ -36,7 +36,7 @@ import (
 type APIKeyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items            []APIKey `json:"items"`
+	Items           []APIKey `json:"items"`
 }
 
 // APIKey represents the TPR for an APIKey
@@ -86,7 +86,7 @@ func (s *KeyFactory) Update(old, new interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add api keys to the api key store.... duh")
 	}
-  logrus.Debugf("updating ApiKey %s", key.ObjectMeta.Name)
+	logrus.Debugf("updating ApiKey %s", key.ObjectMeta.Name)
 	return s.set(key)
 }
 
@@ -138,7 +138,7 @@ func (s *KeyFactory) Delete(obj interface{}) (interface{}, error) {
 	if !ok {
 		return nil, nil
 	}
-  logrus.Debugf("deleting ApiKey %s", key.ObjectMeta.Name)
+	logrus.Debugf("deleting ApiKey %s", key.ObjectMeta.Name)
 	delete(s.keyMap, key.Spec.APIKeyData)
 	return actual, nil
 }

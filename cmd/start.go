@@ -21,11 +21,11 @@
 package cmd
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"io/ioutil"
 	"os"
-  "context"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -99,7 +99,11 @@ var startCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		go ctlr.Watch(context.Background())
+		go func() {
+			if err := ctlr.Watch(context.Background()); err != nil {
+				logrus.Warnf("could not watch kubernetes api server: %s", err.Error())
+			}
+		}()
 
 		// start UDP server
 		go func() {

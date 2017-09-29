@@ -62,7 +62,7 @@ func (f Flag) GetUsage() string {
 }
 
 func (f flags) AddAll(cmd *cobra.Command) error {
-  for _, currFlag := range f {
+	for _, currFlag := range f {
 		switch v := currFlag.Value.(type) {
 		case int:
 			cmd.Flags().IntP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
@@ -74,11 +74,11 @@ func (f flags) AddAll(cmd *cobra.Command) error {
 			cmd.Flags().DurationP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
 		case []string:
 			cmd.Flags().StringSliceP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
-    default:
-      viper.SetDefault(currFlag.Long, currFlag.Value)
-      continue
+		default:
+			viper.SetDefault(currFlag.Long, currFlag.Value)
+			continue
 		}
-    viper.SetDefault(currFlag.Long, currFlag.Value)
+		viper.SetDefault(currFlag.Long, currFlag.Value)
 		if err := viper.BindPFlag(currFlag.Long, cmd.Flags().Lookup(currFlag.Long)); err != nil {
 			return err
 		}

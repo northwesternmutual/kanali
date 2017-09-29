@@ -27,7 +27,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-  "github.com/northwesternmutual/kanali/utils"
+	"github.com/northwesternmutual/kanali/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,14 +35,14 @@ import (
 type APIProxyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items         []APIProxy      `json:"items"`
+	Items           []APIProxy `json:"items"`
 }
 
 // APIProxy represents the TPR for an APIProxy
 type APIProxy struct {
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec            APIProxySpec      `json:"spec"`
+	Spec              APIProxySpec `json:"spec"`
 }
 
 // APIProxySpec represents the data fields for the APIProxy TPR
@@ -112,17 +112,17 @@ func (s *ProxyFactory) Update(old, new interface{}) error {
 	if !ok {
 		return errors.New("first parameter was not of type APIProxy")
 	}
-  newProxy, ok := new.(APIProxy)
-  if !ok {
+	newProxy, ok := new.(APIProxy)
+	if !ok {
 		return errors.New("second parameter was not of type APIProxy")
 	}
 	normalize(&oldProxy)
-  normalize(&newProxy)
+	normalize(&newProxy)
 	return s.update(oldProxy, newProxy)
 }
 
 func (s *ProxyFactory) update(old, new APIProxy) error {
-  untyped := s.get(new.Spec.Path)
+	untyped := s.get(new.Spec.Path)
 	if untyped != nil {
 		typed, ok := untyped.(APIProxy)
 		if !ok {
@@ -133,13 +133,13 @@ func (s *ProxyFactory) update(old, new APIProxy) error {
 		}
 	}
 
-  new.Spec.Service.Namespace = new.ObjectMeta.Namespace
+	new.Spec.Service.Namespace = new.ObjectMeta.Namespace
 	logrus.Debugf("updating ApiProxy %s", new.ObjectMeta.Name)
 	s.proxyTree.doSet(strings.Split(new.Spec.Path[1:], "/"), &new)
-  if old.Spec.Path != new.Spec.Path {
-    s.proxyTree.delete(strings.Split(old.Spec.Path[1:], "/"))
-  }
-  return nil
+	if old.Spec.Path != new.Spec.Path {
+		s.proxyTree.delete(strings.Split(old.Spec.Path[1:], "/"))
+	}
+	return nil
 }
 
 // Set creates or updates an APIProxy
@@ -224,7 +224,7 @@ func (s *ProxyFactory) Delete(obj interface{}) (interface{}, error) {
 		return nil, errors.New("there's no way this api proxy could've gotten in here")
 	}
 	normalize(&p)
-  logrus.Debugf("deleting ApiProxy %s", p.ObjectMeta.Name)
+	logrus.Debugf("deleting ApiProxy %s", p.ObjectMeta.Name)
 	result := s.proxyTree.delete(strings.Split(p.Spec.Path[1:], "/"))
 	if result == nil {
 		return nil, nil

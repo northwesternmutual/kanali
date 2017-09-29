@@ -33,6 +33,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+// Watch will use goroutines and channels to
+// listen to different endpoints on the kubernetes
+// api server and act on events that they emit
 func (c *Controller) Watch(ctx context.Context) error {
 	logrus.Debug("starting watch on k8s resources")
 

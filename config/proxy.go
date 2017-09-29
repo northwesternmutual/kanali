@@ -87,6 +87,6 @@ var (
 )
 
 func getDefaultDuration(d string) time.Duration {
-  defaultDuration, _ := time.ParseDuration(d)
-  return defaultDuration
+	defaultDuration, _ := time.ParseDuration(d)
+	return defaultDuration
 }

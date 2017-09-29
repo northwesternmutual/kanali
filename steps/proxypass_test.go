@@ -30,15 +30,15 @@ import (
 	"testing"
 	"time"
 
-  "k8s.io/client-go/pkg/api/v1"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 type mockHTTPClient struct{}

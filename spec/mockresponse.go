@@ -28,7 +28,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-  "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 type mock []Route
@@ -219,7 +219,7 @@ func (s *MockResponseFactory) Delete(obj interface{}) (interface{}, error) {
 	if _, ok := s.mockRespTree[cm.ObjectMeta.Namespace][cm.ObjectMeta.Name]; !ok {
 		return nil, nil
 	}
-  logrus.Debugf("deleting ConfigMap %s", cm.ObjectMeta.Name)
+	logrus.Debugf("deleting ConfigMap %s", cm.ObjectMeta.Name)
 	delete(s.mockRespTree[cm.ObjectMeta.Namespace], cm.ObjectMeta.Name)
 	if len(s.mockRespTree[cm.ObjectMeta.Namespace]) == 0 {
 		delete(s.mockRespTree, cm.ObjectMeta.Namespace)

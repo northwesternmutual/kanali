@@ -24,9 +24,9 @@ import (
 	"encoding/json"
 	"testing"
 
-  "k8s.io/client-go/pkg/api/v1"
 	"github.com/stretchr/testify/assert"
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 func TestGetMockResponseStore(t *testing.T) {
@@ -131,7 +131,7 @@ func TestMockResponseUpdate(t *testing.T) {
 	MockResponseStore.Clear()
 
 	assert.Equal(t, MockResponseStore.Update("hi", "hi").Error(), "obj was not a ConfigMap")
-  configMapOne := v1.ConfigMap{
+	configMapOne := v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm-one",
 			Namespace: "foo",
@@ -140,7 +140,7 @@ func TestMockResponseUpdate(t *testing.T) {
 			"foo": "bar",
 		},
 	}
-  configMapTwo := v1.ConfigMap{
+	configMapTwo := v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm-one",
 			Namespace: "foo",

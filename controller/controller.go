@@ -24,6 +24,8 @@ import (
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/spf13/viper"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,9 +33,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-  apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-  apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
-
 )
 
 // Controller is an exported struct
@@ -43,9 +42,9 @@ import (
 // this includes a rest client and well
 // a clientset that gives us access to the libs
 type Controller struct {
-	RESTClient *rest.RESTClient
-	ClientSet  *kubernetes.Clientset
-  APIExtensionsV1beta1Interface apiextensionsv1beta1.ApiextensionsV1beta1Interface
+	RESTClient                    *rest.RESTClient
+	ClientSet                     *kubernetes.Clientset
+	APIExtensionsV1beta1Interface apiextensionsv1beta1.ApiextensionsV1beta1Interface
 }
 
 var (
@@ -72,7 +71,7 @@ func New() (*Controller, error) {
 		return nil, err
 	}
 
-  apiextensionsclientset, err := apiextensionsclient.NewForConfig(cfg)
+	apiextensionsclientset, err := apiextensionsclient.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -98,12 +97,12 @@ func buildConfig(kubeconfig string) (*rest.Config, error) {
 }
 
 func addKnownTypes(scheme *runtime.Scheme) error {
-  scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiProxy"), &spec.APIProxy{})
-  scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiProxyList"), &spec.APIProxyList{})
-  scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiKey"), &spec.APIKey{})
-  scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiKeyList"), &spec.APIKeyList{})
-  scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiKeyBinding"), &spec.APIKeyBinding{})
-  scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiKeyBindingList"), &spec.APIKeyBindingList{})
+	scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiProxy"), &spec.APIProxy{})
+	scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiProxyList"), &spec.APIProxyList{})
+	scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiKey"), &spec.APIKey{})
+	scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiKeyList"), &spec.APIKeyList{})
+	scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiKeyBinding"), &spec.APIKeyBinding{})
+	scheme.AddKnownTypeWithName(schemeGroupVersion.WithKind("ApiKeyBindingList"), &spec.APIKeyBindingList{})
 	metav1.AddToGroupVersion(scheme, schemeGroupVersion)
 	return nil
 }
