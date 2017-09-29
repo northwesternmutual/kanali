@@ -18,32 +18,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package crds
+package controller
 
 import (
-	"fmt"
+	"testing"
 
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/northwesternmutual/kanali/crds"
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
-	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("apiproxies.%s", KanaliGroupName),
-	},
-	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-		Group:   KanaliGroupName,
+func TestAddKnownTypes(t *testing.T) {
+	scheme := runtime.NewScheme()
+	err := addKnownTypes(scheme)
+	assert.Nil(t, err)
+
+	types := scheme.AllKnownTypes()
+	_, ok := types[schema.GroupVersionKind{
+		Group:   crds.KanaliGroupName,
 		Version: "v1",
-		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-			Plural:   "apiproxies",
-			Singular: "apiproxy",
-			ShortNames: []string{
-				"ap",
-				"proxies",
-			},
-			Kind:     "ApiProxy",
-			ListKind: "ApiProxyList",
-		},
-		Scope: apiextensionsv1beta1.NamespaceScoped,
-	},
+		Kind:    "ApiProxy",
+	}]
+	assert.True(t, ok)
+
+	_, ok = types[schema.GroupVersionKind{
+		Group:   crds.KanaliGroupName,
+		Version: "v1",
+		Kind:    "ApiKey",
+	}]
+	assert.True(t, ok)
+
+	_, ok = types[schema.GroupVersionKind{
+		Group:   crds.KanaliGroupName,
+		Version: "v1",
+		Kind:    "ApiKeyBinding",
+	}]
+	assert.True(t, ok)
 }

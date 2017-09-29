@@ -22,6 +22,7 @@ package controller
 
 import (
 	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/crds"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/spf13/viper"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -50,7 +51,7 @@ type Controller struct {
 var (
 	schemeBuilder      = runtime.NewSchemeBuilder(addKnownTypes)
 	addToScheme        = schemeBuilder.AddToScheme
-	schemeGroupVersion = schema.GroupVersion{Group: "kanali.io", Version: "v1"}
+	schemeGroupVersion = schema.GroupVersion{Group: crds.KanaliGroupName, Version: "v1"}
 )
 
 // New creates a new kubernetes controller

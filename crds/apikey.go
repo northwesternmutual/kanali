@@ -29,10 +29,10 @@ import (
 
 var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("apikeys.%s", kanaliGroupName),
+		Name: fmt.Sprintf("apikeys.%s", KanaliGroupName),
 	},
 	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-		Group:   kanaliGroupName,
+		Group:   KanaliGroupName,
 		Version: "v1",
 		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 			Plural:   "apikeys",
