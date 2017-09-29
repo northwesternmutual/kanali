@@ -18,32 +18,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package crds
+package handlers
 
 import (
-	"fmt"
+	"net/http"
+	"net/url"
+	"testing"
 
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/stretchr/testify/assert"
 )
 
-var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
-	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("apikeybindings.%s", kanaliGroupName),
-	},
-	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-		Group:   kanaliGroupName,
-		Version: "v1",
-		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-			Plural:   "apikeybindings",
-			Singular: "apikeybinding",
-			ShortNames: []string{
-				"akb",
-				"bindings",
-			},
-			Kind:     "ApiKeyBinding",
-			ListKind: "ApiKeyBindingList",
+func TestNormalize(t *testing.T) {
+	r1 := &http.Request{
+		URL: &url.URL{
+			Path: "///foo//bar/car",
 		},
-		Scope: apiextensionsv1beta1.NamespaceScoped,
-	},
+	}
+	r2 := &http.Request{
+		URL: &url.URL{
+			Path: "foo//bar/car/",
+		},
+	}
+	r3 := &http.Request{
+		URL: &url.URL{
+			Path: "",
+		},
+	}
+	r4 := &http.Request{
+		URL: &url.URL{
+			Path: "////",
+		},
+	}
+	normalize(r1)
+	normalize(r2)
+	normalize(r3)
+	normalize(r4)
+
+	assert.Equal(t, "/foo/bar/car", r1.URL.Path)
+	assert.Equal(t, "/foo/bar/car", r2.URL.Path)
+	assert.Equal(t, "/", r3.URL.Path)
+	assert.Equal(t, "/", r4.URL.Path)
+
 }
