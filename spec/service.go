@@ -79,10 +79,10 @@ func (s *ServiceFactory) Clear() {
 }
 
 // Update will update a service
-func (s *ServiceFactory) Update(obj interface{}) error {
+func (s *ServiceFactory) Update(old, new interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	service, ok := obj.(Service)
+	service, ok := old.(Service)
 	if !ok {
 		return errors.New("grrr - you're only allowed add services to the services store.... duh")
 	}

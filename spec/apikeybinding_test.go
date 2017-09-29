@@ -46,18 +46,18 @@ func TestAPIKeyBindingSet(t *testing.T) {
 	keyBindingList := getTestAPIKeyBindingList()
 
 	store.Clear()
-	store.Set(keyBindingList.Bindings[0])
+	store.Set(keyBindingList.Items[0])
 	err := store.Set(5)
 	assert.Equal(err.Error(), "grrr - you're only allowed add api key bindings to the api key binding store.... duh", "wrong error")
-	assert.Equal(keyBindingList.Bindings[0], store.bindingMap["foo"]["api-proxy-one"], "binding should exist")
+	assert.Equal(keyBindingList.Items[0], store.bindingMap["foo"]["api-proxy-one"], "binding should exist")
 	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children), "subpath incorrect")
 	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children["foo"].Children), "subpath incorrect")
-	store.Set(keyBindingList.Bindings[1])
-	store.Set(keyBindingList.Bindings[2])
-	assert.Equal(keyBindingList.Bindings[1], store.bindingMap["foo"]["api-proxy-two"], "binding should exist")
-	assert.Equal(keyBindingList.Bindings[2], store.bindingMap["bar"]["api-proxy-three"], "binding should exist")
-	store.Set(keyBindingList.Bindings[3])
-	assert.Equal(keyBindingList.Bindings[3], store.bindingMap["foo"]["api-proxy-four"], "bidning should exist")
+	store.Set(keyBindingList.Items[1])
+	store.Set(keyBindingList.Items[2])
+	assert.Equal(keyBindingList.Items[1], store.bindingMap["foo"]["api-proxy-two"], "binding should exist")
+	assert.Equal(keyBindingList.Items[2], store.bindingMap["bar"]["api-proxy-three"], "binding should exist")
+	store.Set(keyBindingList.Items[3])
+	assert.Equal(keyBindingList.Items[3], store.bindingMap["foo"]["api-proxy-four"], "bidning should exist")
 }
 
 func TestAPIKeyBindingUpdate(t *testing.T) {
@@ -66,18 +66,18 @@ func TestAPIKeyBindingUpdate(t *testing.T) {
 	keyBindingList := getTestAPIKeyBindingList()
 
 	store.Clear()
-	store.Update(keyBindingList.Bindings[0])
-	err := store.Update(5)
+	store.Update(keyBindingList.Items[0], keyBindingList.Items[0])
+	err := store.Update(5, 5)
 	assert.Equal(err.Error(), "grrr - you're only allowed add api key bindings to the api key binding store.... duh", "wrong error")
-	assert.Equal(keyBindingList.Bindings[0], store.bindingMap["foo"]["api-proxy-one"], "binding should exist")
+	assert.Equal(keyBindingList.Items[0], store.bindingMap["foo"]["api-proxy-one"], "binding should exist")
 	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children), "subpath incorrect")
 	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children["foo"].Children), "subpath incorrect")
-	store.Update(keyBindingList.Bindings[1])
-	store.Update(keyBindingList.Bindings[2])
-	assert.Equal(keyBindingList.Bindings[1], store.bindingMap["foo"]["api-proxy-two"], "binding should exist")
-	assert.Equal(keyBindingList.Bindings[2], store.bindingMap["bar"]["api-proxy-three"], "binding should exist")
-	store.Update(keyBindingList.Bindings[3])
-	assert.Equal(keyBindingList.Bindings[3], store.bindingMap["foo"]["api-proxy-four"], "bidning should exist")
+	store.Update(keyBindingList.Items[1], keyBindingList.Items[1])
+	store.Update(keyBindingList.Items[2], keyBindingList.Items[2])
+	assert.Equal(keyBindingList.Items[1], store.bindingMap["foo"]["api-proxy-two"], "binding should exist")
+	assert.Equal(keyBindingList.Items[2], store.bindingMap["bar"]["api-proxy-three"], "binding should exist")
+	store.Update(keyBindingList.Items[3], keyBindingList.Items[3])
+	assert.Equal(keyBindingList.Items[3], store.bindingMap["foo"]["api-proxy-four"], "bidning should exist")
 }
 
 func TestAPIKeyBindingIsEmpty(t *testing.T) {
@@ -87,14 +87,14 @@ func TestAPIKeyBindingIsEmpty(t *testing.T) {
 
 	store.Clear()
 	assert.True(store.IsEmpty())
-	store.Set(keyBindingList.Bindings[0])
+	store.Set(keyBindingList.Items[0])
 	assert.False(store.IsEmpty())
 	store.Clear()
 	assert.True(store.IsEmpty())
 
-	store.Set(keyBindingList.Bindings[0])
+	store.Set(keyBindingList.Items[0])
 	assert.False(store.IsEmpty())
-	store.Delete(keyBindingList.Bindings[0])
+	store.Delete(keyBindingList.Items[0])
 	assert.True(store.IsEmpty())
 }
 
@@ -103,7 +103,7 @@ func TestAPIKeyBindingClear(t *testing.T) {
 	store := BindingStore
 	keyBindingList := getTestAPIKeyBindingList()
 
-	store.Set(keyBindingList.Bindings[0])
+	store.Set(keyBindingList.Items[0])
 	store.Clear()
 	assert.Equal(0, len(store.bindingMap), "store should be empty")
 }
@@ -112,11 +112,11 @@ func TestAPIKey(t *testing.T) {
 	assert := assert.New(t)
 	keyBindingList := getTestAPIKeyBindingList()
 
-	assert.Equal(keyBindingList.Bindings[0].Spec.Keys[0], *keyBindingList.Bindings[0].GetAPIKey("franks-api-key"), "api keys should be equal")
-	assert.Nil(keyBindingList.Bindings[0].GetAPIKey("bryans-api-key"), "apikey should be nil")
+	assert.Equal(keyBindingList.Items[0].Spec.Keys[0], *keyBindingList.Items[0].GetAPIKey("franks-api-key"), "api keys should be equal")
+	assert.Nil(keyBindingList.Items[0].GetAPIKey("bryans-api-key"), "apikey should be nil")
 
-	assert.Equal(keyBindingList.Bindings[0].Spec.Keys[0], *keyBindingList.Bindings[0].GetAPIKey("franKs-aPi-Key"), "api keys should be equal")
-	assert.Nil(keyBindingList.Bindings[0].GetAPIKey("bryans-api-key"), "apikey should be nil")
+	assert.Equal(keyBindingList.Items[0].Spec.Keys[0], *keyBindingList.Items[0].GetAPIKey("franKs-aPi-Key"), "api keys should be equal")
+	assert.Nil(keyBindingList.Items[0].GetAPIKey("bryans-api-key"), "apikey should be nil")
 }
 
 func TestGetRule(t *testing.T) {
@@ -126,11 +126,11 @@ func TestGetRule(t *testing.T) {
 	message := "rule note expected"
 
 	store.Clear()
-	store.Set(keyBindingList.Bindings[0])
-	store.Set(keyBindingList.Bindings[1])
-	store.Set(keyBindingList.Bindings[2])
-	store.Set(keyBindingList.Bindings[3])
-	store.Set(keyBindingList.Bindings[4])
+	store.Set(keyBindingList.Items[0])
+	store.Set(keyBindingList.Items[1])
+	store.Set(keyBindingList.Items[2])
+	store.Set(keyBindingList.Items[3])
+	store.Set(keyBindingList.Items[4])
 	untypedResult, _ := store.Get("api-proxy-one", "foo")
 	result, _ := untypedResult.(APIKeyBinding)
 	assert.Equal(Rule{Global: true}, result.Spec.Keys[0].GetRule("/foo"), message)
@@ -203,10 +203,10 @@ func TestAPIKeyBindingGet(t *testing.T) {
 	message := "empty store should have no key bindings"
 
 	store.Clear()
-	store.Set(keyList.Bindings[0])
-	store.Set(keyList.Bindings[1])
-	store.Set(keyList.Bindings[2])
-	_, err := store.Get(keyList.Bindings[2])
+	store.Set(keyList.Items[0])
+	store.Set(keyList.Items[1])
+	store.Set(keyList.Items[2])
+	_, err := store.Get(keyList.Items[2])
 	assert.Equal(err.Error(), "should only pass the proxy name and namespace name", "wrong error")
 	_, err = store.Get(5, "")
 	assert.Equal(err.Error(), "proxy name should be a string", "wrong error")
@@ -219,11 +219,11 @@ func TestAPIKeyBindingGet(t *testing.T) {
 	result, _ = store.Get("api-proxy-six", "foo")
 	assert.Nil(result, message)
 	result, _ = store.Get("api-proxy-one", "foo")
-	assert.Equal(keyList.Bindings[0], result, message)
+	assert.Equal(keyList.Items[0], result, message)
 	result, _ = store.Get("api-proxy-two", "foo")
-	assert.Equal(keyList.Bindings[1], result, message)
+	assert.Equal(keyList.Items[1], result, message)
 	result, _ = store.Get("api-proxy-three", "bar")
-	assert.Equal(keyList.Bindings[2], result, message)
+	assert.Equal(keyList.Items[2], result, message)
 }
 
 func TestAPIKeyBindingDelete(t *testing.T) {
@@ -235,33 +235,33 @@ func TestAPIKeyBindingDelete(t *testing.T) {
 	_, err := store.Delete(5)
 	assert.Equal(err.Error(), "there's no way this api key binding could've gotten in here", "wrong error")
 	store.Clear()
-	store.Set(keyList.Bindings[0])
-	result, _ := store.Delete(keyList.Bindings[2])
+	store.Set(keyList.Items[0])
+	result, _ := store.Delete(keyList.Items[2])
 	assert.Nil(result, message)
-	store.Set(keyList.Bindings[3])
-	store.Set(keyList.Bindings[1])
-	result, _ = store.Delete(keyList.Bindings[3])
-	assert.Equal(keyList.Bindings[3], result, message)
+	store.Set(keyList.Items[3])
+	store.Set(keyList.Items[1])
+	result, _ = store.Delete(keyList.Items[3])
+	assert.Equal(keyList.Items[3], result, message)
 	result, _ = store.Delete(nil)
 	assert.Nil(result, message)
-	result, _ = store.Delete(keyList.Bindings[2])
+	result, _ = store.Delete(keyList.Items[2])
 	assert.Nil(result, message)
-	result, _ = store.Delete(keyList.Bindings[1])
-	assert.Equal(keyList.Bindings[1], result, message)
-	result, _ = store.Delete(keyList.Bindings[1])
+	result, _ = store.Delete(keyList.Items[1])
+	assert.Equal(keyList.Items[1], result, message)
+	result, _ = store.Delete(keyList.Items[1])
 	assert.Nil(result, message)
 	result, _ = store.Get("api-proxy-two", "foo")
 	assert.Nil(result, message)
 	result, _ = store.Get("api-proxy-four", "foo")
 	assert.Nil(result, message)
 	assert.Equal(1, len(store.bindingMap), message)
-	store.Set(keyList.Bindings[1])
+	store.Set(keyList.Items[1])
 	result, _ = store.Get("api-proxy-two", "foo")
-	assert.Equal(keyList.Bindings[1], result, message)
+	assert.Equal(keyList.Items[1], result, message)
 	assert.Equal(1, len(store.bindingMap), message)
-	store.Set(keyList.Bindings[2])
-	result, _ = store.Delete(keyList.Bindings[2])
-	assert.Equal(keyList.Bindings[2], result, message)
+	store.Set(keyList.Items[2])
+	result, _ = store.Delete(keyList.Items[2])
+	assert.Equal(keyList.Items[2], result, message)
 	result, _ = store.Get("api-proxy-two", "foo")
 	assert.NotNil(result, message)
 	result, _ = store.Get("api-proxy-three", "bar")
@@ -271,11 +271,9 @@ func TestAPIKeyBindingDelete(t *testing.T) {
 func getTestAPIKeyBindingList() *APIKeyBindingList {
 
 	return &APIKeyBindingList{
-		TypeMeta: metav1.TypeMeta{},
 		ListMeta: metav1.ListMeta{},
-		Bindings: []APIKeyBinding{
+		Items: []APIKeyBinding{
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
@@ -310,7 +308,6 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
@@ -334,7 +331,6 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "bar",
@@ -371,7 +367,6 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
@@ -389,7 +384,6 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",

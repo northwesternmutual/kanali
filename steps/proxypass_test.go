@@ -30,14 +30,15 @@ import (
 	"testing"
 	"time"
 
+  "k8s.io/client-go/pkg/api/v1"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
+  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
 )
 
 type mockHTTPClient struct{}
@@ -92,7 +93,7 @@ func TestCreateTargetRequest(t *testing.T) {
 	originalReq, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
 
 	proxyOne := &spec.APIProxy{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "exampleAPIProxyOne",
 			Namespace: "foo",
 		},
@@ -131,7 +132,7 @@ func TestCreateTargetClient(t *testing.T) {
 	originalReq, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
 
 	proxyOne := &spec.APIProxy{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "exampleAPIProxyOne",
 			Namespace: "foo",
 		},
@@ -158,7 +159,7 @@ func TestConfigureTargetTLS(t *testing.T) {
 	originalReq, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
 
 	proxyOne := &spec.APIProxy{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "exampleAPIProxyOne",
 			Namespace: "foo",
 		},
@@ -181,8 +182,8 @@ func TestConfigureTargetTLS(t *testing.T) {
 		SecretName: "mysecretname",
 	}
 
-	testSecret := api.Secret{
-		ObjectMeta: api.ObjectMeta{
+	testSecret := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mysecretname",
 			Namespace: "foo",
 		},
@@ -264,7 +265,7 @@ func TestGetTargetURL(t *testing.T) {
 	req, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
 
 	proxyOne := &spec.APIProxy{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "exampleAPIProxyOne",
 			Namespace: "foo",
 		},

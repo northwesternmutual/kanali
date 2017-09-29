@@ -169,6 +169,14 @@ func (s *TrafficFactory) Delete(obj interface{}) (interface{}, error) {
 	return nil, nil
 }
 
+// Update is not implemnted for the TrafficFactory
+// TODO
+func (s *TrafficFactory) Update(old, new interface{}) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return nil
+}
+
 // Get retrieves a set of traffic points for a unique namespace/proxy/key combination
 // TODO
 func (s *TrafficFactory) Get(params ...interface{}) (interface{}, error) {

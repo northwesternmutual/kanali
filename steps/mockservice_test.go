@@ -27,10 +27,10 @@ import (
   "io/ioutil"
   "encoding/json"
 
-  "k8s.io/kubernetes/pkg/api"
+  "k8s.io/client-go/pkg/api/v1"
 	"github.com/stretchr/testify/assert"
-  "k8s.io/kubernetes/pkg/api/unversioned"
   "github.com/northwesternmutual/kanali/spec"
+  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
   "github.com/northwesternmutual/kanali/metrics"
   opentracing "github.com/opentracing/opentracing-go"
 )
@@ -45,7 +45,7 @@ func TestMockServiceDo(t *testing.T) {
   spec.MockResponseStore.Clear()
   spec.MockResponseStore.Set(cms[0])
   balanceProxy := &spec.APIProxy{
-    ObjectMeta: api.ObjectMeta{
+    ObjectMeta: metav1.ObjectMeta{
       Name:      "proxy-one",
       Namespace: "foo",
     },
@@ -58,7 +58,7 @@ func TestMockServiceDo(t *testing.T) {
     },
   }
   addressProxy := &spec.APIProxy{
-    ObjectMeta: api.ObjectMeta{
+    ObjectMeta: metav1.ObjectMeta{
       Name:      "proxy-one",
       Namespace: "foo",
     },
@@ -71,7 +71,7 @@ func TestMockServiceDo(t *testing.T) {
     },
   }
   accountsProxy := &spec.APIProxy{
-    ObjectMeta: api.ObjectMeta{
+    ObjectMeta: metav1.ObjectMeta{
       Name:      "proxy-one",
       Namespace: "foo",
     },
@@ -103,7 +103,7 @@ func TestMockServiceDo(t *testing.T) {
   assert.Equal(t, step.Do(context.Background(), addressProxy, m, nil, req, res, span).Error(), "no mock response found")
 }
 
-func getTestConfigMaps() []api.ConfigMap {
+func getTestConfigMaps() []v1.ConfigMap {
 
 	mockOne, _ := json.Marshal([]spec.Route{
 		{
@@ -116,10 +116,9 @@ func getTestConfigMaps() []api.ConfigMap {
 		},
 	})
 
-	return []api.ConfigMap{
+	return []v1.ConfigMap{
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm-one",
 				Namespace: "foo",
 			},

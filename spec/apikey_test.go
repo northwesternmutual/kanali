@@ -50,14 +50,14 @@ func TestAPIKeySet(t *testing.T) {
 	message := "key received is not expected"
 
 	store.Clear()
-	store.Set(keyList.Keys[0])
-	store.Set(keyList.Keys[1])
-	store.Set(keyList.Keys[2])
+	store.Set(keyList.Items[0])
+	store.Set(keyList.Items[1])
+	store.Set(keyList.Items[2])
 	err := store.Set(APIProxy{})
 	assert.Equal("grrr - you're only allowed add api keys to the api key store.... duh", err.Error(), "error expected")
-	assert.Equal(keyList.Keys[0], store.keyMap["iamencrypted1"], message)
-	assert.Equal(keyList.Keys[1], store.keyMap["iamencrypted2"], message)
-	assert.Equal(keyList.Keys[2], store.keyMap["iamencrypted3"], message)
+	assert.Equal(keyList.Items[0], store.keyMap["iamencrypted1"], message)
+	assert.Equal(keyList.Items[1], store.keyMap["iamencrypted2"], message)
+	assert.Equal(keyList.Items[2], store.keyMap["iamencrypted3"], message)
 }
 
 func TestAPIKeyUpdate(t *testing.T) {
@@ -67,14 +67,14 @@ func TestAPIKeyUpdate(t *testing.T) {
 	message := "key received is not expected"
 
 	store.Clear()
-	store.Update(keyList.Keys[0])
-	store.Update(keyList.Keys[1])
-	store.Update(keyList.Keys[2])
-	err := store.Update(APIProxy{})
+	store.Update(keyList.Items[0], keyList.Items[0])
+	store.Update(keyList.Items[1], keyList.Items[1])
+	store.Update(keyList.Items[2], keyList.Items[2])
+	err := store.Update(APIProxy{}, APIProxy{})
 	assert.Equal("grrr - you're only allowed add api keys to the api key store.... duh", err.Error(), "error expected")
-	assert.Equal(keyList.Keys[0], store.keyMap["iamencrypted1"], message)
-	assert.Equal(keyList.Keys[1], store.keyMap["iamencrypted2"], message)
-	assert.Equal(keyList.Keys[2], store.keyMap["iamencrypted3"], message)
+	assert.Equal(keyList.Items[0], store.keyMap["iamencrypted1"], message)
+	assert.Equal(keyList.Items[1], store.keyMap["iamencrypted2"], message)
+	assert.Equal(keyList.Items[2], store.keyMap["iamencrypted3"], message)
 }
 
 func TestAPIKeyClear(t *testing.T) {
@@ -83,7 +83,7 @@ func TestAPIKeyClear(t *testing.T) {
 	keyList := getTestAPIKeyList()
 
 	store.Clear()
-	store.Set(keyList.Keys[0])
+	store.Set(keyList.Items[0])
 	assert.Equal(1, len(store.keyMap), "store should have one key in it")
 	store.Clear()
 	assert.Equal(0, len(store.keyMap), "empty store should have no keys")
@@ -96,14 +96,14 @@ func TestAPIKeyIsEmpty(t *testing.T) {
 
 	store.Clear()
 	assert.True(store.IsEmpty())
-	store.Set(keyList.Keys[0])
+	store.Set(keyList.Items[0])
 	assert.False(store.IsEmpty())
 	store.Clear()
 	assert.True(store.IsEmpty())
 
-	store.Set(keyList.Keys[0])
+	store.Set(keyList.Items[0])
 	assert.False(store.IsEmpty())
-	store.Delete(keyList.Keys[0])
+	store.Delete(keyList.Items[0])
 	assert.True(store.IsEmpty())
 }
 
@@ -113,9 +113,9 @@ func TestAPIKeyGet(t *testing.T) {
 	keyList := getTestAPIKeyList()
 
 	store.Clear()
-	store.Set(keyList.Keys[0])
-	store.Set(keyList.Keys[1])
-	store.Set(keyList.Keys[2])
+	store.Set(keyList.Items[0])
+	store.Set(keyList.Items[1])
+	store.Set(keyList.Items[2])
 	_, err := store.Get("foo", "bar")
 	assert.Equal("should only pass the name of the api key", err.Error(), "error expected")
 	_, err = store.Get(5)
@@ -125,11 +125,11 @@ func TestAPIKeyGet(t *testing.T) {
 	key, _ = store.Get("jkl012")
 	assert.Nil(key, "key should not exist")
 	key, _ = store.Get("iamencrypted1")
-	assert.Equal(keyList.Keys[0], key, "keys should be equal")
+	assert.Equal(keyList.Items[0], key, "keys should be equal")
 	key, _ = store.Get("iamencrypted2")
-	assert.Equal(keyList.Keys[1], key, "keys should be equal")
+	assert.Equal(keyList.Items[1], key, "keys should be equal")
 	key, _ = store.Get("iamencrypted3")
-	assert.Equal(keyList.Keys[2], key, "keys should be equal")
+	assert.Equal(keyList.Items[2], key, "keys should be equal")
 }
 
 func TestAPIKeyDelete(t *testing.T) {
@@ -138,24 +138,24 @@ func TestAPIKeyDelete(t *testing.T) {
 	keyList := getTestAPIKeyList()
 
 	store.Clear()
-	store.Set(keyList.Keys[0])
-	store.Set(keyList.Keys[1])
+	store.Set(keyList.Items[0])
+	store.Set(keyList.Items[1])
 	result, _ := store.Delete(nil)
 	assert.Nil(result, "should return nil")
-	result, _ = store.Delete(keyList.Keys[2])
+	result, _ = store.Delete(keyList.Items[2])
 	assert.Nil(result, "should return nil")
-	result, _ = store.Delete(keyList.Keys[1])
-	assert.Equal(keyList.Keys[1], result, "deleted key should be returned")
+	result, _ = store.Delete(keyList.Items[1])
+	assert.Equal(keyList.Items[1], result, "deleted key should be returned")
 	key, _ := store.Get("iamencrypted2")
 	assert.Nil(key, "deleted key should no longer be in the store")
 	assert.Equal(1, len(store.keyMap), "store should have a length of 1")
-	store.Set(keyList.Keys[1])
+	store.Set(keyList.Items[1])
 	key, _ = store.Get("iamencrypted2")
-	assert.Equal(keyList.Keys[1], key, "key should have been added back")
+	assert.Equal(keyList.Items[1], key, "key should have been added back")
 	assert.Equal(2, len(store.keyMap), "store should have a length of 2")
-	store.Set(keyList.Keys[2])
-	result, _ = store.Delete(keyList.Keys[2])
-	assert.Equal(keyList.Keys[2], result, "deleted key should be returned")
+	store.Set(keyList.Items[2])
+	result, _ = store.Delete(keyList.Items[2])
+	assert.Equal(keyList.Items[2], result, "deleted key should be returned")
 }
 
 func TestDecrypt(t *testing.T) {
@@ -268,11 +268,9 @@ vV+J+U6XO9amQH/QNUNg/JJObJhQjeGvunZk3FkMXzAh+lUC264d28UYiMTwP/Md
 func getTestAPIKeyList() *APIKeyList {
 
 	return &APIKeyList{
-		TypeMeta: metav1.TypeMeta{},
 		ListMeta: metav1.ListMeta{},
-		Keys: []APIKey{
+		Items: []APIKey{
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "abc123",
 					Namespace: "foo",
@@ -282,7 +280,6 @@ func getTestAPIKeyList() *APIKeyList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "def456",
 					Namespace: "foo",
@@ -292,7 +289,6 @@ func getTestAPIKeyList() *APIKeyList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "ghi789",
 					Namespace: "foo",

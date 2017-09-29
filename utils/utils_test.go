@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
 )
 
 func TestComputeTargetPath(t *testing.T) {
@@ -50,30 +49,6 @@ func TestAbsPath(t *testing.T) {
 	assert.Equal(t, "/foo", p)
 	p, _ = GetAbsPath("//")
 	assert.Equal(t, "", p)
-}
-
-func TestCompareObjectMeta(t *testing.T) {
-	c1 := api.ObjectMeta{
-		Name:      "foo",
-		Namespace: "bar",
-	}
-	c2 := api.ObjectMeta{
-		Name:      "bar",
-		Namespace: "foo",
-	}
-	c3 := api.ObjectMeta{
-		Name:      "foo",
-		Namespace: "car",
-	}
-	c4 := api.ObjectMeta{
-		Name:      "bar",
-		Namespace: "car",
-	}
-
-	assert.True(t, CompareObjectMeta(c1, c1))
-	assert.False(t, CompareObjectMeta(c1, c2))
-	assert.False(t, CompareObjectMeta(c1, c3))
-	assert.False(t, CompareObjectMeta(c3, c4))
 }
 
 func TestNormalizePath(t *testing.T) {

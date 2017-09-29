@@ -158,13 +158,14 @@ func (n *subpathNode) doSetSubpath(pathSegments []string, subpath *Path) {
 }
 
 // Update will update an APIKeyBinding
-func (s *BindingFactory) Update(obj interface{}) error {
+func (s *BindingFactory) Update(old, new interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	binding, ok := obj.(APIKeyBinding)
+	binding, ok := old.(APIKeyBinding)
 	if !ok {
 		return errors.New("grrr - you're only allowed add api key bindings to the api key binding store.... duh")
 	}
+  logrus.Debugf("updating ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace)
 	return s.set(binding)
 }
 
@@ -177,11 +178,11 @@ func (s *BindingFactory) Set(obj interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add api key bindings to the api key binding store.... duh")
 	}
+  logrus.Debugf("adding ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace)
 	return s.set(binding)
 }
 
 func (s *BindingFactory) set(binding APIKeyBinding) error {
-	logrus.Infof("Adding new APIKeyBinding named %s in namespace %s", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace)
 	binding.hydrateSubpathTree()
 	if s.bindingMap[binding.ObjectMeta.Namespace] == nil {
 		s.bindingMap[binding.ObjectMeta.Namespace] = map[string]APIKeyBinding{
@@ -232,6 +233,7 @@ func (s *BindingFactory) Delete(obj interface{}) (interface{}, error) {
 	if !ok {
 		return nil, nil
 	}
+  logrus.Debugf("deleting ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace)
 	delete(s.bindingMap[binding.ObjectMeta.Namespace], binding.Spec.APIProxyName)
 	if len(s.bindingMap[binding.ObjectMeta.Namespace]) == 0 {
 		delete(s.bindingMap, binding.ObjectMeta.Namespace)

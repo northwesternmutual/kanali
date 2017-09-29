@@ -34,7 +34,6 @@ import (
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // MockServiceStep is factory that defines a step responsible for
@@ -67,7 +66,7 @@ func (step MockServiceStep) Do(ctx context.Context, proxy *spec.APIProxy, m *met
 	if err != nil {
 		return &utils.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("the configmap %s in the namespace %s is not formated correctly. while data was found for the incoming route, it was not valid json",
 			proxy.Spec.Mock.ConfigMapName,
-			proxy.Metadata.Namespace,
+			proxy.ObjectMeta.Namespace,
 		)}
 	}
 

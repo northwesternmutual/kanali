@@ -53,10 +53,10 @@ func (s *SecretFactory) Clear() {
 }
 
 // Update will update a secret
-func (s *SecretFactory) Update(obj interface{}) error {
+func (s *SecretFactory) Update(old, new interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	secret, ok := obj.(api.Secret)
+	secret, ok := old.(v1.Secret)
 	if !ok {
 		return errors.New("grrr - you're only allowed add secrets to the secrets store.... duh")
 	}
@@ -75,7 +75,7 @@ func (s *SecretFactory) Set(obj interface{}) error {
 	return s.set(secret)
 }
 
-func (s *SecretFactory) set(secret api.Secret) error {
+func (s *SecretFactory) set(secret v1.Secret) error {
 	logrus.Infof("Adding new Secret named %s", secret.ObjectMeta.Name)
 	if _, ok := s.secretMap[secret.ObjectMeta.Namespace]; ok {
 		s.secretMap[secret.ObjectMeta.Namespace][secret.ObjectMeta.Name] = secret

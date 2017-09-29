@@ -36,9 +36,9 @@ import (
 func (c *Controller) Watch(ctx context.Context) error {
 	logrus.Debug("starting watch on k8s resources")
 
-	doWatchResource(ctx, c.RESTClient, "apiproxies", &spec.ApiProxy{}, fields.Everything(), apiProxyHandlerFuncs)
-	//doWatchResource(ctx, c.RESTClient, "apikeies", &spec.APIKey{}, fields.Everything(), apiKeyHandlerFuncs)
-	//doWatchResource(ctx, c.RESTClient, "apikeybindings", &spec.APIKeyBinding{}, fields.Everything(), apiKeyBindingHandlerFuncs)
+	doWatchResource(ctx, c.RESTClient, "apiproxies", &spec.APIProxy{}, fields.Everything(), apiProxyHandlerFuncs)
+	doWatchResource(ctx, c.RESTClient, "apikeys", &spec.APIKey{}, fields.Everything(), apiKeyHandlerFuncs)
+	doWatchResource(ctx, c.RESTClient, "apikeybindings", &spec.APIKeyBinding{}, fields.Everything(), apiKeyBindingHandlerFuncs)
 	doWatchResource(ctx, c.ClientSet.Core().RESTClient(), "secrets", &v1.Secret{}, fields.OneTermEqualSelector("type", "kubernetes.io/tls"), secretHandlerFuncs)
 	doWatchResource(ctx, c.ClientSet.Core().RESTClient(), "services", &v1.Service{}, fields.Everything(), serviceHandlerFuncs)
 	doWatchResource(ctx, c.ClientSet.Core().RESTClient(), "endpoints", &v1.Endpoints{}, fields.Everything(), endpointsHandlerFuncs)
@@ -48,7 +48,7 @@ func (c *Controller) Watch(ctx context.Context) error {
 }
 
 func doWatchResource(ctx context.Context, restClient rest.Interface, resourcePath string, obj runtime.Object, fieldSelector fields.Selector, handlerFuncs cache.ResourceEventHandlerFuncs) {
-	logrus.Debugf("attempting to watch %s objects", resourcePath)
+	logrus.Debugf("attempting to watch %s", resourcePath)
 
 	source := cache.NewListWatchFromClient(
 		restClient,

@@ -131,9 +131,9 @@ func TestServiceUpdate(t *testing.T) {
 	serviceList := getTestServiceList()
 
 	store.Clear()
-	store.Update(serviceList[0])
-	store.Update(serviceList[1])
-	err := store.Update(APIProxy{})
+	store.Update(serviceList[0], serviceList[0])
+	store.Update(serviceList[1], serviceList[1])
+	err := store.Update(APIProxy{}, APIProxy{})
 	assert.Equal(err.Error(), "grrr - you're only allowed add services to the services store.... duh", "wrong error")
 	assert.Equal(2, len(store.serviceMap), "store should have 2 namespaces represented")
 	assert.Equal(serviceList[0], store.serviceMap["foo"][0], "service should be present")
@@ -142,11 +142,11 @@ func TestServiceUpdate(t *testing.T) {
 	svcTwo := serviceList[1]
 	svcOne.Labels[1].Name = "name-foo"
 	svcTwo.Labels[1].Name = "name-foo"
-	store.Update(serviceList[0])
-	store.Update(serviceList[1])
+	store.Update(serviceList[0], serviceList[0])
+	store.Update(serviceList[1], serviceList[1])
 	assert.Equal(svcOne, store.serviceMap["foo"][0], "service should be present")
 	assert.Equal(svcTwo, store.serviceMap["bar"][0], "service should be present")
-	store.Update(serviceList[2])
+	store.Update(serviceList[2], serviceList[2])
 	assert.Equal(serviceList[2], store.serviceMap["bar"][1], "service should be present")
 }
 

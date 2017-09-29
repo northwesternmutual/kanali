@@ -1,16 +1,29 @@
 package: github.com/northwesternmutual/kanali
 import:
-- package: github.com/stretchr/testify
 - package: github.com/Sirupsen/logrus
-- package: github.com/spf13/pflag
-- package: github.com/fsnotify/fsnotify
+  version: 0.11.5
+- package: github.com/NYTimes/gziphandler
+- package: github.com/PuerkitoBio/purell
 - package: github.com/spf13/cobra
+- package: github.com/spf13/pflag
+  version: 1.0.0
 - package: github.com/spf13/viper
-  version: be5ff3e4840cf692388bde7a057595a474ef379e
+  version: v1.0.0
 - package: github.com/armon/go-proxyproto
-- package: github.com/influxdata/influxdb/client/v2
+- package: github.com/influxdata/influxdb
+  subpackages:
+  - client/v2
 - package: github.com/opentracing/opentracing-go
+  version: 1.0.2
 - package: github.com/uber/jaeger-client-go
+  version: 2.9.0
 - package: k8s.io/apimachinery
 - package: k8s.io/client-go
-  version: v4.0.0
+  version: release-4.0
+- package: k8s.io/apiextensions-apiserver
+  version: release-1.7
+testImport:
+- package: github.com/stretchr/testify
+  version: v1.1.4
+  subpackages:
+  - assert

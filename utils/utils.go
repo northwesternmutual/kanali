@@ -27,7 +27,6 @@ import (
 
 	"github.com/PuerkitoBio/purell"
 	"github.com/Sirupsen/logrus"
-	"k8s.io/kubernetes/pkg/api"
 )
 
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
@@ -87,12 +86,6 @@ func GetAbsPath(path string) (string, error) {
 
 	return p, nil
 
-}
-
-// CompareObjectMeta will loosly determine whether two ObjectMeta objects are equal.
-// It does this by comparing the name and namespace
-func CompareObjectMeta(c1, c2 api.ObjectMeta) bool {
-	return c1.Namespace == c2.Namespace && c1.Name == c2.Name
 }
 
 // NormalizePath will correct a URL path that might be valid but no ideally formatted

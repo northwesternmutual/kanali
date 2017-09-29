@@ -28,7 +28,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"k8s.io/kubernetes/pkg/api"
+  "k8s.io/client-go/pkg/api/v1"
 )
 
 type mock []Route
@@ -70,10 +70,10 @@ func (s *MockResponseFactory) Clear() {
 }
 
 // Update will update an Mock Response
-func (s *MockResponseFactory) Update(obj interface{}) error {
+func (s *MockResponseFactory) Update(old, new interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	cm, ok := obj.(api.ConfigMap)
+	cm, ok := old.(v1.ConfigMap)
 	if !ok {
 		return errors.New("obj was not a ConfigMap")
 	}
@@ -85,14 +85,14 @@ func (s *MockResponseFactory) Update(obj interface{}) error {
 func (s *MockResponseFactory) Set(obj interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	cm, ok := obj.(api.ConfigMap)
+	cm, ok := obj.(v1.ConfigMap)
 	if !ok {
 		return errors.New("obj was not a ConfigMap")
 	}
 	return s.set(cm)
 }
 
-func (s *MockResponseFactory) set(cm api.ConfigMap) error {
+func (s *MockResponseFactory) set(cm v1.ConfigMap) error {
 	mockResponse, ok := cm.Data["response"]
 	if !ok {
 		logrus.Debugf("ConfigMap %s does not contains a response data field", cm.ObjectMeta.Name)
@@ -105,7 +105,7 @@ func (s *MockResponseFactory) set(cm api.ConfigMap) error {
 		return nil
 	}
 
-	logrus.Debugf("adding mock response %s", cm.ObjectMeta.Name)
+	logrus.Debugf("adding ConfigMap %s", cm.ObjectMeta.Name)
 
 	for _, route := range m {
 		if !isValidHTTPMethod(route.Method) {
@@ -212,13 +212,14 @@ func (s *MockResponseFactory) Delete(obj interface{}) (interface{}, error) {
 	if obj == nil {
 		return nil, nil
 	}
-	cm, ok := obj.(api.ConfigMap)
+	cm, ok := obj.(v1.ConfigMap)
 	if !ok {
 		return nil, errors.New("obj was not a ConfigMap")
 	}
 	if _, ok := s.mockRespTree[cm.ObjectMeta.Namespace][cm.ObjectMeta.Name]; !ok {
 		return nil, nil
 	}
+  logrus.Debugf("deleting ConfigMap %s", cm.ObjectMeta.Name)
 	delete(s.mockRespTree[cm.ObjectMeta.Namespace], cm.ObjectMeta.Name)
 	if len(s.mockRespTree[cm.ObjectMeta.Namespace]) == 0 {
 		delete(s.mockRespTree, cm.ObjectMeta.Namespace)

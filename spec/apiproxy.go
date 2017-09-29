@@ -27,56 +27,23 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+  "github.com/northwesternmutual/kanali/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // APIProxyList represents a list of APIProxies
 type APIProxyList struct {
 	metav1.TypeMeta `json:",inline"`
-	Metadata        metav1.ListMeta `json:"metadata,omitempty"`
-	Proxies         []APIProxy      `json:"items"`
-}
-
-type ApiProxyList struct {
-	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Proxies         []APIProxy `json:"items"`
+	Items         []APIProxy      `json:"items"`
 }
 
 // APIProxy represents the TPR for an APIProxy
 type APIProxy struct {
 	metav1.TypeMeta `json:",inline"`
-	Metadata        metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec            APIProxySpec      `json:"spec"`
 }
-
-type ApiProxy struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              APIProxySpec `json:"spec"`
-}
-
-// // Required to satisfy Object interface
-// func (e *ApiProxy) GetObjectKind() schema.ObjectKind {
-// 	return &e.TypeMeta
-// }
-//
-// // Required to satisfy ObjectMetaAccessor interface
-// func (e *ApiProxy) GetObjectMeta() metav1.Object {
-// 	return &e.Metadata
-// }
-//
-// // Required to satisfy Object interface
-// func (el *ApiProxyList) GetObjectKind() schema.ObjectKind {
-// 	return &el.TypeMeta
-// }
-//
-// // Required to satisfy ListMetaAccessor interface
-// func (el *ApiProxyList) GetListMeta() metav1.List {
-// 	return &el.Metadata
-// }
 
 // APIProxySpec represents the data fields for the APIProxy TPR
 type APIProxySpec struct {
@@ -138,45 +105,41 @@ func (s *ProxyFactory) Clear() {
 }
 
 // Update will update an APIProxy and preform necessary clean up of old APIProxy is necessary.
-func (s *ProxyFactory) Update(obj interface{}) error {
+func (s *ProxyFactory) Update(old, new interface{}) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	p, ok := obj.(APIProxy)
+	oldProxy, ok := old.(APIProxy)
 	if !ok {
-		return errors.New("parameter was not of type APIProxy")
+		return errors.New("first parameter was not of type APIProxy")
 	}
-	normalize(&p)
-	return s.update(p)
+  newProxy, ok := new.(APIProxy)
+  if !ok {
+		return errors.New("second parameter was not of type APIProxy")
+	}
+	normalize(&oldProxy)
+  normalize(&newProxy)
+	return s.update(oldProxy, newProxy)
 }
 
-func (s *ProxyFactory) update(p APIProxy) error {
-	untyped := s.get(p.Spec.Path)
+func (s *ProxyFactory) update(old, new APIProxy) error {
+  untyped := s.get(new.Spec.Path)
 	if untyped != nil {
 		typed, ok := untyped.(APIProxy)
 		if !ok {
 			return errors.New("received interface not of type APIProxy")
 		}
-		if !utils.CompareObjectMeta(p.ObjectMeta, typed.ObjectMeta) {
+		if new.ObjectMeta.Name != typed.ObjectMeta.Name && new.ObjectMeta.Namespace != typed.ObjectMeta.Namespace {
 			return errors.New("there exists an APIProxy as the targeted path - APIProxy can not be updated - consider using kanalictl to avoid this error in the future")
 		}
 	}
-	s.proxyTree.deletePreviousProxy(p)
-	p.Spec.Service.Namespace = p.ObjectMeta.Namespace
-	logrus.Debugf("updating APIProxy %s", p.ObjectMeta.Name)
-	s.proxyTree.doSet(strings.Split(p.Spec.Path[1:], "/"), &p)
-	return nil
-}
 
-func (n *proxyNode) deletePreviousProxy(p APIProxy) {
-	for k := range n.Children {
-		n.Children[k].deletePreviousProxy(p)
-		if len(n.Children[k].Children) == 0 && n.Children[k].Value == nil {
-			delete(n.Children, k)
-		}
-	}
-	if n.Value != nil && utils.CompareObjectMeta(p.ObjectMeta, n.Value.ObjectMeta) {
-		n.Value = nil
-	}
+  new.Spec.Service.Namespace = new.ObjectMeta.Namespace
+	logrus.Debugf("updating ApiProxy %s", new.ObjectMeta.Name)
+	s.proxyTree.doSet(strings.Split(new.Spec.Path[1:], "/"), &new)
+  if old.Spec.Path != new.Spec.Path {
+    s.proxyTree.delete(strings.Split(old.Spec.Path[1:], "/"))
+  }
+  return nil
 }
 
 // Set creates or updates an APIProxy
@@ -188,7 +151,7 @@ func (s *ProxyFactory) Set(obj interface{}) error {
 		return errors.New("parameter was not of type APIProxy")
 	}
 	p.Spec.Service.Namespace = p.ObjectMeta.Namespace
-	logrus.Debugf("adding APIProxy %s", p.ObjectMeta.Name)
+	logrus.Debugf("adding ApiProxy %s", p.ObjectMeta.Name)
 	normalize(&p)
 	s.proxyTree.doSet(strings.Split(p.Spec.Path[1:], "/"), &p)
 	return nil
@@ -261,6 +224,7 @@ func (s *ProxyFactory) Delete(obj interface{}) (interface{}, error) {
 		return nil, errors.New("there's no way this api proxy could've gotten in here")
 	}
 	normalize(&p)
+  logrus.Debugf("deleting ApiProxy %s", p.ObjectMeta.Name)
 	result := s.proxyTree.delete(strings.Split(p.Spec.Path[1:], "/"))
 	if result == nil {
 		return nil, nil

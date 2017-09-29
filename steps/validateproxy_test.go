@@ -32,8 +32,7 @@ import (
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestValidateProxyGetName(t *testing.T) {
@@ -49,8 +48,8 @@ func TestValidateProxy(t *testing.T) {
 	proxyStore := spec.ProxyStore
 	proxyList := getTestAPIProxyListForValidateProxy()
 	proxyStore.Clear()
-	proxyStore.Set(proxyList.Proxies[0])
-	proxyStore.Set(proxyList.Proxies[1])
+	proxyStore.Set(proxyList.Items[0])
+	proxyStore.Set(proxyList.Items[1])
 
 	urlOne, _ := url.Parse("https://www.foo.bar.com/api/v1/accounts/one/two")
 	urlTwo, _ := url.Parse("https://www.foo.bar.com/api/v1/field/one/two")
@@ -60,9 +59,9 @@ func TestValidateProxy(t *testing.T) {
 	proxy := &spec.APIProxy{}
 
 	assert.Nil(step.Do(context.Background(), proxy, &metrics.Metrics{}, nil, &http.Request{URL: urlOne}, nil, opentracing.StartSpan("test span")), "expected proxy to be found")
-	assert.Equal(*proxy, proxyList.Proxies[0])
+	assert.Equal(*proxy, proxyList.Items[0])
 	assert.Nil(step.Do(context.Background(), proxy, &metrics.Metrics{}, nil, &http.Request{URL: urlTwo}, nil, opentracing.StartSpan("test span")), "expected proxy to be found")
-	assert.Equal(*proxy, proxyList.Proxies[1])
+	assert.Equal(*proxy, proxyList.Items[1])
 	assert.Equal(utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}, step.Do(context.Background(), nil, &metrics.Metrics{}, nil, &http.Request{URL: urlThree}, nil, opentracing.StartSpan("test span")), "expected proxy to not exist")
 	assert.Equal(utils.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}, step.Do(context.Background(), nil, &metrics.Metrics{}, nil, &http.Request{URL: urlFour}, nil, opentracing.StartSpan("test span")), "expected proxy to not exist")
 }
@@ -70,12 +69,9 @@ func TestValidateProxy(t *testing.T) {
 func getTestAPIProxyListForValidateProxy() *spec.APIProxyList {
 
 	return &spec.APIProxyList{
-		TypeMeta: unversioned.TypeMeta{},
-		ListMeta: unversioned.ListMeta{},
-		Proxies: []spec.APIProxy{
+		Items: []spec.APIProxy{
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyOne",
 					Namespace: "foo",
 				},
@@ -88,8 +84,7 @@ func getTestAPIProxyListForValidateProxy() *spec.APIProxyList {
 				},
 			},
 			{
-				TypeMeta: unversioned.TypeMeta{},
-				ObjectMeta: api.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyTwo",
 					Namespace: "foo",
 				},

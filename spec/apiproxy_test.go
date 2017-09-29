@@ -48,14 +48,14 @@ func TestAPIProxySet(t *testing.T) {
 	proxyList := getTestAPIProxyList()
 
 	store.Clear()
-	store.Set(proxyList.Proxies[0])
-	store.Set(proxyList.Proxies[1])
-	store.Set(proxyList.Proxies[2])
+	store.Set(proxyList.Items[0])
+	store.Set(proxyList.Items[1])
+	store.Set(proxyList.Items[2])
 	err := store.Set(APIKey{})
 	assert.Equal(err.Error(), "parameter was not of type APIProxy")
-	assert.Equal(proxyList.Proxies[0], *store.proxyTree.Children["api"].Children["v1"].Children["accounts"].Value, "proxy should exist")
-	assert.Equal(proxyList.Proxies[1], *store.proxyTree.Children["api"].Children["v1"].Children["field"].Value, "proxy should exist")
-	assert.Equal(proxyList.Proxies[2], *store.proxyTree.Children["api"].Value, "proxy should exist")
+	assert.Equal(proxyList.Items[0], *store.proxyTree.Children["api"].Children["v1"].Children["accounts"].Value, "proxy should exist")
+	assert.Equal(proxyList.Items[1], *store.proxyTree.Children["api"].Children["v1"].Children["field"].Value, "proxy should exist")
+	assert.Equal(proxyList.Items[2], *store.proxyTree.Children["api"].Value, "proxy should exist")
 }
 
 func TestAPIProxyUpdate(t *testing.T) {
@@ -64,26 +64,27 @@ func TestAPIProxyUpdate(t *testing.T) {
 	proxyList := getTestAPIProxyList()
 
 	store.Clear()
-	store.Update(proxyList.Proxies[0])
-	store.Update(proxyList.Proxies[1])
-	store.Update(proxyList.Proxies[2])
-	err := store.Update(APIKey{})
-	assert.Equal(err.Error(), "parameter was not of type APIProxy")
-	assert.Equal(proxyList.Proxies[0], *store.proxyTree.Children["api"].Children["v1"].Children["accounts"].Value, "proxy should exist")
-	assert.Equal(proxyList.Proxies[1], *store.proxyTree.Children["api"].Children["v1"].Children["field"].Value, "proxy should exist")
-	assert.Equal(proxyList.Proxies[2], *store.proxyTree.Children["api"].Value, "proxy should exist")
+	store.Update(proxyList.Items[0], proxyList.Items[0])
+	store.Update(proxyList.Items[1], proxyList.Items[1])
+	store.Update(proxyList.Items[2], proxyList.Items[2])
+	err := store.Update(APIKey{}, APIKey{})
+	assert.Equal(err.Error(), "first parameter was not of type APIProxy")
+	assert.Equal(proxyList.Items[0], *store.proxyTree.Children["api"].Children["v1"].Children["accounts"].Value, "proxy should exist")
+	assert.Equal(proxyList.Items[1], *store.proxyTree.Children["api"].Children["v1"].Children["field"].Value, "proxy should exist")
+	assert.Equal(proxyList.Items[2], *store.proxyTree.Children["api"].Value, "proxy should exist")
 
-	proxy := proxyList.Proxies[0]
+	proxy := proxyList.Items[0]
 	proxy.Spec.Path = "/modified/foo/bar"
-	store.Update(proxy)
+	store.Update(proxyList.Items[0], proxy)
 	assert.Equal(proxy, *store.proxyTree.Children["modified"].Children["foo"].Children["bar"].Value, "proxy should exist")
 
-	proxy.Spec.Target = "/frank/greco/jr"
-	proxy.ObjectMeta = api.ObjectMeta{
+  proxyTwo := proxy
+	proxyTwo.Spec.Target = "/frank/greco/jr"
+	proxyTwo.ObjectMeta = metav1.ObjectMeta{
 		Name:      "frank",
 		Namespace: "greco",
 	}
-	assert.Equal(store.Update(proxy).Error(), "there exists an APIProxy as the targeted path - APIProxy can not be updated - consider using kanalictl to avoid this error in the future")
+	assert.Equal(store.Update(proxyTwo, proxyTwo).Error(), "there exists an APIProxy as the targeted path - APIProxy can not be updated - consider using kanalictl to avoid this error in the future")
 }
 
 func TestAPIProxyClear(t *testing.T) {
@@ -91,48 +92,9 @@ func TestAPIProxyClear(t *testing.T) {
 	store := ProxyStore
 	proxyList := getTestAPIProxyList()
 
-	store.Set(proxyList.Proxies[0])
+	store.Set(proxyList.Items[0])
 	store.Clear()
 	assert.Equal(0, len(store.proxyTree.Children), "store should be empty")
-}
-
-func TestDeletePreviousProxy(t *testing.T) {
-	ProxyStore.Clear()
-	defer ProxyStore.Clear()
-	proxyList := getTestAPIProxyList()
-	ProxyStore.Set(proxyList.Proxies[0])
-	ProxyStore.Set(proxyList.Proxies[1])
-	ProxyStore.Set(proxyList.Proxies[2])
-	ProxyStore.Set(proxyList.Proxies[3])
-
-	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children["v1"].Children), 2)
-	ProxyStore.proxyTree.deletePreviousProxy(proxyList.Proxies[1])
-	assert.False(t, ProxyStore.IsEmpty())
-	assert.Equal(t, len(ProxyStore.proxyTree.Children), 1)
-	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children), 1)
-	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children["v1"].Children), 1)
-	untyped, _ := ProxyStore.Get("/api/v1/field")
-	typed, _ := untyped.(APIProxy)
-	assert.Equal(t, typed.Spec.Path, "/api/v1")
-	untyped, _ = ProxyStore.Get("/api/v1")
-	typed, _ = untyped.(APIProxy)
-	assert.Equal(t, typed.Spec.Path, "/api/v1")
-	ProxyStore.proxyTree.deletePreviousProxy(proxyList.Proxies[3])
-	untyped, _ = ProxyStore.Get("/api/v1")
-	typed, _ = untyped.(APIProxy)
-	untyped, _ = ProxyStore.Get("/api/v1")
-	typed, _ = untyped.(APIProxy)
-	assert.Equal(t, typed.Spec.Path, "/api")
-	assert.Equal(t, len(ProxyStore.proxyTree.Children), 1)
-	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children), 1)
-	assert.Equal(t, len(ProxyStore.proxyTree.Children["api"].Children["v1"].Children), 1)
-	untyped, _ = ProxyStore.Get("/api/v1/accounts")
-	assert.NotNil(t, untyped)
-
-	ProxyStore.proxyTree.deletePreviousProxy(proxyList.Proxies[0])
-	assert.False(t, ProxyStore.IsEmpty())
-	ProxyStore.proxyTree.deletePreviousProxy(proxyList.Proxies[2])
-	assert.True(t, ProxyStore.IsEmpty())
 }
 
 func TestAPIProxyIsEmpty(t *testing.T) {
@@ -142,13 +104,13 @@ func TestAPIProxyIsEmpty(t *testing.T) {
 
 	store.Clear()
 	assert.True(store.IsEmpty())
-	store.Set(proxyList.Proxies[0])
+	store.Set(proxyList.Items[0])
 	assert.False(store.IsEmpty())
 	store.Clear()
 	assert.True(store.IsEmpty())
 
-	store.Set(proxyList.Proxies[0])
-	store.Delete(proxyList.Proxies[0])
+	store.Set(proxyList.Items[0])
+	store.Delete(proxyList.Items[0])
 	assert.True(store.IsEmpty())
 }
 
@@ -158,9 +120,9 @@ func TestAPIProxyGet(t *testing.T) {
 	proxyList := getTestAPIProxyList()
 
 	store.Clear()
-	store.Set(proxyList.Proxies[0])
-	store.Set(proxyList.Proxies[1])
-	store.Set(proxyList.Proxies[2])
+	store.Set(proxyList.Items[0])
+	store.Set(proxyList.Items[1])
+	store.Set(proxyList.Items[2])
 	_, err := store.Get("", "")
 	assert.Equal(err.Error(), "should only pass the path of the proxy", "wrong error")
 	_, err = store.Get(5)
@@ -172,21 +134,21 @@ func TestAPIProxyGet(t *testing.T) {
 	result, _ = store.Get("bar")
 	assert.Nil(result, "proxy should not be returned")
 	result, _ = store.Get("api/v1")
-	assert.Equal(proxyList.Proxies[2], result, "proxy should be returned")
+	assert.Equal(proxyList.Items[2], result, "proxy should be returned")
 	result, _ = store.Get("foo/bar")
 	assert.Nil(result, "proxy should not be returned")
 	result, _ = store.Get("api/v1/accounts")
-	assert.Equal(proxyList.Proxies[0], result, "proxy should be returned")
+	assert.Equal(proxyList.Items[0], result, "proxy should be returned")
 	result, _ = store.Get("api/v1/accounts/foo/bar")
-	assert.Equal(proxyList.Proxies[0], result, "proxy should be returned")
+	assert.Equal(proxyList.Items[0], result, "proxy should be returned")
 	result, _ = store.Get("/api/v1/field")
-	assert.Equal(proxyList.Proxies[1], result, "proxy should be returned")
+	assert.Equal(proxyList.Items[1], result, "proxy should be returned")
 	result, _ = store.Get("api/v1/field/foo/bar")
-	assert.Equal(proxyList.Proxies[1], result, "proxy should be returned")
+	assert.Equal(proxyList.Items[1], result, "proxy should be returned")
 	result, _ = store.Get("api")
-	assert.Equal(proxyList.Proxies[2], result, "proxy should be returned")
+	assert.Equal(proxyList.Items[2], result, "proxy should be returned")
 	result, _ = store.Get("api/foo")
-	assert.Equal(proxyList.Proxies[2], result, "proxy should be returned")
+	assert.Equal(proxyList.Items[2], result, "proxy should be returned")
 }
 
 func TestAPIProxyDelete(t *testing.T) {
@@ -196,20 +158,20 @@ func TestAPIProxyDelete(t *testing.T) {
 	message := "proxy not deleted correctly"
 
 	store.Clear()
-	store.Set(proxyList.Proxies[0])
-	store.Set(proxyList.Proxies[1])
+	store.Set(proxyList.Items[0])
+	store.Set(proxyList.Items[1])
 	_, err := store.Delete(5)
 	assert.Equal(err.Error(), "there's no way this api proxy could've gotten in here", "wrong error")
 	result, _ := store.Delete(nil)
 	assert.Nil(result, message)
-	result, _ = store.Delete(proxyList.Proxies[2])
+	result, _ = store.Delete(proxyList.Items[2])
 	assert.Nil(result, message)
-	result, _ = store.Delete(proxyList.Proxies[3])
+	result, _ = store.Delete(proxyList.Items[3])
 	assert.Nil(result, message)
 	result, _ = store.Get("api/v1/field")
-	assert.Equal(proxyList.Proxies[1], result, message)
-	result, _ = store.Delete(proxyList.Proxies[1])
-	assert.Equal(proxyList.Proxies[1], result, message)
+	assert.Equal(proxyList.Items[1], result, message)
+	result, _ = store.Delete(proxyList.Items[1])
+	assert.Equal(proxyList.Items[1], result, message)
 	result, _ = store.Get("api/v1/field")
 	assert.Nil(result, message)
 	result, _ = store.Get("api/v1/field/foo")
@@ -217,13 +179,13 @@ func TestAPIProxyDelete(t *testing.T) {
 	result, _ = store.Get("api/v1/accounts")
 	assert.NotNil(result, message)
 	assert.Equal(1, len(store.proxyTree.Children["api"].Children["v1"].Children), message)
-	store.Set(proxyList.Proxies[1])
+	store.Set(proxyList.Items[1])
 	result, _ = store.Get("api/v1/field")
-	assert.Equal(proxyList.Proxies[1], result, message)
+	assert.Equal(proxyList.Items[1], result, message)
 	assert.Equal(2, len(store.proxyTree.Children["api"].Children["v1"].Children), message)
-	store.Set(proxyList.Proxies[2])
-	result, _ = store.Delete(proxyList.Proxies[2])
-	assert.Equal(proxyList.Proxies[2], result, message)
+	store.Set(proxyList.Items[2])
+	result, _ = store.Delete(proxyList.Items[2])
+	assert.Equal(proxyList.Items[2], result, message)
 	result, _ = store.Get("api/v1/accounts")
 	assert.NotNil(result, message)
 	result, _ = store.Get("api")
@@ -237,12 +199,12 @@ func TestGetFileName(t *testing.T) {
 	message := "file name not what expected"
 
 	store.Clear()
-	store.Set(proxyList.Proxies[0])
-	store.Set(proxyList.Proxies[1])
-	store.Set(proxyList.Proxies[2])
-	store.Set(proxyList.Proxies[2])
-	assert.Equal("jwt", proxyList.Proxies[0].Spec.Plugins[1].GetFileName(), message)
-	assert.Equal("apikey_1.0.0", proxyList.Proxies[0].Spec.Plugins[0].GetFileName(), message)
+	store.Set(proxyList.Items[0])
+	store.Set(proxyList.Items[1])
+	store.Set(proxyList.Items[2])
+	store.Set(proxyList.Items[2])
+	assert.Equal("jwt", proxyList.Items[0].Spec.Plugins[1].GetFileName(), message)
+	assert.Equal("apikey_1.0.0", proxyList.Items[0].Spec.Plugins[0].GetFileName(), message)
 }
 
 func TestGetSSLCertificates(t *testing.T) {
@@ -252,10 +214,10 @@ func TestGetSSLCertificates(t *testing.T) {
 	message := "ssl object not as expected"
 
 	ProxyFactory.Clear()
-	ProxyFactory.Set(proxyList.Proxies[0])
-	ProxyFactory.Set(proxyList.Proxies[1])
-	ProxyFactory.Set(proxyList.Proxies[2])
-	ProxyFactory.Set(proxyList.Proxies[3])
+	ProxyFactory.Set(proxyList.Items[0])
+	ProxyFactory.Set(proxyList.Items[1])
+	ProxyFactory.Set(proxyList.Items[2])
+	ProxyFactory.Set(proxyList.Items[3])
 
 	untypedResult, _ := ProxyFactory.Get("/api/v1")
 	result, _ := untypedResult.(APIProxy)
@@ -296,11 +258,9 @@ func TestNormalize(t *testing.T) {
 func getTestAPIProxyList() *APIProxyList {
 
 	return &APIProxyList{
-		TypeMeta: metav1.TypeMeta{},
 		ListMeta: metav1.ListMeta{},
-		Proxies: []APIProxy{
+		Items: []APIProxy{
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyOne",
 					Namespace: "foo",
@@ -339,7 +299,6 @@ func getTestAPIProxyList() *APIProxyList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyTwo",
 					Namespace: "foo",
@@ -371,7 +330,6 @@ func getTestAPIProxyList() *APIProxyList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyThree",
 					Namespace: "foo",
@@ -409,7 +367,6 @@ func getTestAPIProxyList() *APIProxyList {
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "exampleAPIProxyFour",
 					Namespace: "foo",

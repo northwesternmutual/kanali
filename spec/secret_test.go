@@ -35,7 +35,7 @@ func TestSecretGetSecretStore(t *testing.T) {
 	store.Clear()
 	assert.Equal(0, len(store.secretMap), "store should be empty")
 
-	v := SecretFactory{}``
+	v := SecretFactory{}
 	var i interface{} = &v
 	_, ok := i.(Store)
 	assert.True(ok, "SecretFactory does not implement the Store interface")
@@ -63,9 +63,9 @@ func TestSecretUpdate(t *testing.T) {
 	secretList := getTestSecretList()
 
 	store.Clear()
-	store.Update(secretList[0])
-	store.Update(secretList[1])
-	err := store.Update(APIProxy{})
+	store.Update(secretList[0], secretList[0])
+	store.Update(secretList[1], secretList[1])
+	err := store.Update(APIProxy{}, APIProxy{})
 	assert.Equal(err.Error(), "grrr - you're only allowed add secrets to the secrets store.... duh", "error not what expected")
 	assert.Equal(1, len(store.secretMap), "there should be one namespace in the secret store")
 	assert.Equal(2, len(store.secretMap["foo"]), "there should be two secrets in the secret store")

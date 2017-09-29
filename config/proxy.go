@@ -20,6 +20,8 @@
 
 package config
 
+import "time"
+
 func init() {
 	Flags.Add(
 		FlagProxyEnableClusterIP,
@@ -58,7 +60,7 @@ var (
 	FlagProxyUpstreamTimeout = Flag{
 		Long:  "proxy.upstream_timeout",
 		Short: "",
-		Value: "0h0m10s",
+		Value: getDefaultDuration("0h0m10s"),
 		Usage: "Set length of upstream timeout. Defaults to none",
 	}
 	// FlagProxyMaskHeaderKeys specifies which headers to mask.
@@ -83,3 +85,8 @@ var (
 		Usage: "Specifies the default values for HTTP headers to be used in dynamic service discovery.",
 	}
 )
+
+func getDefaultDuration(d string) time.Duration {
+  defaultDuration, _ := time.ParseDuration(d)
+  return defaultDuration
+}

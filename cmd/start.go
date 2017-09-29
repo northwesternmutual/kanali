@@ -25,6 +25,7 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 	"os"
+  "context"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -92,13 +93,13 @@ var startCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// create tprs
-		if err := ctlr.CreateTPRs(); err != nil {
-			logrus.Fatalf("could not create TPRs: %s", err.Error())
+		// create crds
+		if err := ctlr.CreateCRDs(); err != nil {
+			logrus.Fatalf("could not create CRDs: %s", err.Error())
 			os.Exit(1)
 		}
 
-		go ctlr.Watch()
+		go ctlr.Watch(context.Background())
 
 		// start UDP server
 		go func() {

@@ -22,32 +22,16 @@ package config
 
 func init() {
 	Flags.Add(
-		FlagPluginsLocation,
-		FlagPluginsAPIKeyDecriptionKeyFile,
-    FlagPluginsAPIKeyHeaderKey,
+		FlagKubernetesKubeConfig,
 	)
 }
 
 var (
-	// FlagPluginsLocation sets the location of custom plugins shared object (.so) files
-	FlagPluginsLocation = Flag{
-		Long:  "plugins.location",
-		Short: "",
-		Value: "/",
-		Usage: "Location of custom plugins shared object (.so) files.",
-	}
-	// FlagPluginsAPIKeyDecriptionKeyFile set the location of the decryption RSA key file to be used to decrypt incoming API keys.
-	FlagPluginsAPIKeyDecriptionKeyFile = Flag{
-		Long:  "plugins.apiKey.decryption_key_file",
+	// FlagKubernetesKubeConfig specifies path to kubeconfig file which is only needed if outside a cluster.
+	FlagKubernetesKubeConfig = Flag{
+		Long:  "kubernetes.kubeconfig",
 		Short: "",
 		Value: "",
-		Usage: "Path to valid PEM-encoded private key that matches the public key used to encrypt API keys.",
-	}
-  // FlagPluginsAPIKeyHeaderKey specifies the name of the HTTP header that will be used to extract the API key.
-  FlagPluginsAPIKeyHeaderKey = Flag{
-		Long:  "plugins.apiKey.header_key",
-		Short: "",
-		Value: "apikey",
-		Usage: "Name of the HTTP header holding the apikey.",
+		Usage: "Path to kubeconfig file if outside of a cluster.",
 	}
 )

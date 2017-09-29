@@ -20,24 +20,24 @@ decryption_key_file = "/etc/kanali/key.pem"
 header_key = "apikey"
 
 [tls]
-cert_file = "/etc/pki/tls.crt"
-key_file = "/etc/pki/tls.key"
+cert_file = ""
+key_file = ""
 ca_file = ""
 
 [server]
-port = 8443
+port = 8080
 bind_address = "0.0.0.0"
 peer_udp_port = 10001
 proxy_protocol = false
 
 [process]
-log_level = "info"
+log_level = "debug"
 
 [proxy]
 enable_cluster_ip = true
 enable_mock_responses = true
 upstream_timeout = "0h0m10s"
-header_mask_value = "ommitted"
+header_mask_value = "omitted"
 tls_common_name_validation = false
 mask_header_keys = [
   "apikey"

@@ -100,69 +100,12 @@ func createTargetClient(proxy *spec.APIProxy, originalRequest *http.Request) (*h
 		Timeout: viper.GetDuration(config.FlagProxyUpstreamTimeout.GetLong()),
 	}
 
-<<<<<<< HEAD
-	// get secret for this request - if any
-	untypedSecret, err := spec.SecretStore.Get(p.Target.GetSSLCertificates(p.Source.Host).SecretName, p.Target.Metadata.Namespace)
-=======
 	transport, err := configureTargetTLS(proxy, originalRequest)
->>>>>>> master
 	if err != nil {
 		return nil, err
 	}
-
-<<<<<<< HEAD
-	tlsConfig := &tls.Config{}
-	caCertPool := x509.NewCertPool()
-
-	// ssl is not configured for this request
-	if untypedSecret == nil {
-
-		// if upstream option is being used, if the scheme
-		// is https we need to add the root ca bundle
-		if strings.Compare(up.Request.URL.Scheme, "https") != 0 {
-			logrus.Debug("TLS not configured for this proxy")
-			return up
-		}
-
-	} else {
-
-		secret, ok := untypedSecret.(v1.Secret)
-		if !ok {
-			up.Error = utils.StatusError{Code: http.StatusInternalServerError, Err: errors.New("the secret store is corrupted")}
-			return up
-		}
-
-		// server side tls must be configured
-		cert, err := spec.X509KeyPair(secret)
-		if err != nil {
-			up.Error = utils.StatusError{Code: http.StatusInternalServerError, Err: err}
-			return up
-		}
-		tlsConfig.Certificates = []tls.Certificate{*cert}
-
-		if secret.Data["tls.ca"] != nil {
-			caCertPool.AppendCertsFromPEM(secret.Data["tls.ca"])
-		}
-
-		if viper.GetBool("disable-tls-cn-validation") {
-			tlsConfig.InsecureSkipVerify = true
-			tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-				opts := x509.VerifyOptions{
-					Roots: caCertPool,
-				}
-				cert, err := x509.ParseCertificate(rawCerts[0])
-				if err != nil {
-					return err
-				}
-				_, err = cert.Verify(opts)
-				return err
-			}
-		}
-
-=======
 	if transport != nil {
 		client.Transport = transport
->>>>>>> master
 	}
 
 	return client, nil
@@ -183,7 +126,7 @@ func configureTargetTLS(proxy *spec.APIProxy, originalRequest *http.Request) (*h
 	tlsConfig := &tls.Config{}
 	caCertPool := x509.NewCertPool()
 
-	secret, _ := untypedSecret.(api.Secret)
+	secret, _ := untypedSecret.(v1.Secret)
 
 	// server side tls must be configured
 	cert, err := spec.X509KeyPair(secret)
@@ -267,11 +210,7 @@ func getTargetURL(proxy *spec.APIProxy, originalRequest *http.Request) (*url.URL
 
 	uri := fmt.Sprintf("%s.%s.svc.cluster.local",
 		svc.Name,
-<<<<<<< HEAD
-		p.Target.Metadata.Namespace,
-=======
 		proxy.ObjectMeta.Namespace,
->>>>>>> master
 	)
 
 	if viper.GetBool(config.FlagProxyEnableClusterIP.GetLong()) {

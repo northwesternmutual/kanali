@@ -24,9 +24,9 @@ import (
 	"encoding/json"
 	"testing"
 
+  "k8s.io/client-go/pkg/api/v1"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
+  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestGetMockResponseStore(t *testing.T) {
@@ -53,9 +53,8 @@ func TestMockResponseSet(t *testing.T) {
 	MockResponseStore.Clear()
 
 	assert.Equal(t, MockResponseStore.Set("hi").Error(), "obj was not a ConfigMap")
-	assert.Nil(t, MockResponseStore.Set(api.ConfigMap{
-		TypeMeta: unversioned.TypeMeta{},
-		ObjectMeta: api.ObjectMeta{
+	assert.Nil(t, MockResponseStore.Set(v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm-one",
 			Namespace: "foo",
 		},
@@ -63,9 +62,8 @@ func TestMockResponseSet(t *testing.T) {
 			"foo": "bar",
 		},
 	}))
-	assert.Nil(t, MockResponseStore.Set(api.ConfigMap{
-		TypeMeta: unversioned.TypeMeta{},
-		ObjectMeta: api.ObjectMeta{
+	assert.Nil(t, MockResponseStore.Set(v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm-one",
 			Namespace: "foo",
 		},
@@ -132,33 +130,33 @@ func TestMockResponseUpdate(t *testing.T) {
 
 	MockResponseStore.Clear()
 
-	assert.Equal(t, MockResponseStore.Update("hi").Error(), "obj was not a ConfigMap")
-	assert.Nil(t, MockResponseStore.Update(api.ConfigMap{
-		TypeMeta: unversioned.TypeMeta{},
-		ObjectMeta: api.ObjectMeta{
+	assert.Equal(t, MockResponseStore.Update("hi", "hi").Error(), "obj was not a ConfigMap")
+  configMapOne := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm-one",
 			Namespace: "foo",
 		},
 		Data: map[string]string{
 			"foo": "bar",
 		},
-	}))
-	assert.Nil(t, MockResponseStore.Update(api.ConfigMap{
-		TypeMeta: unversioned.TypeMeta{},
-		ObjectMeta: api.ObjectMeta{
+	}
+  configMapTwo := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm-one",
 			Namespace: "foo",
 		},
 		Data: map[string]string{
 			"response": "bad",
 		},
-	}))
-	MockResponseStore.Update(cm[0])
+	}
+	assert.Nil(t, MockResponseStore.Update(configMapOne, configMapOne))
+	assert.Nil(t, MockResponseStore.Update(configMapTwo, configMapTwo))
+	MockResponseStore.Update(cm[0], cm[0])
 	assert.Equal(t, len(MockResponseStore.mockRespTree), 1)
 	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]), 1)
 	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]["cm-one"]), 1)
 
-	MockResponseStore.Update(cm[1])
+	MockResponseStore.Update(cm[1], cm[1])
 	assert.Equal(t, len(MockResponseStore.mockRespTree), 1)
 	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]), 2)
 	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]["cm-two"]["GET"].Children), 1)
@@ -175,7 +173,7 @@ func TestMockResponseUpdate(t *testing.T) {
 		Body:   "{\"frank\": \"greco\"}",
 	})
 
-	MockResponseStore.Update(cm[2])
+	MockResponseStore.Update(cm[2], cm[2])
 	assert.Equal(t, len(MockResponseStore.mockRespTree), 1)
 	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]), 3)
 	assert.Equal(t, len(MockResponseStore.mockRespTree["foo"]["cm-three"]["GET"].Children), 1)
@@ -291,9 +289,8 @@ func TestMockResponseDelete(t *testing.T) {
 	assert.Nil(t, result)
 	assert.Equal(t, len(MockResponseStore.mockRespTree), 1)
 	assert.Nil(t, MockResponseStore.mockRespTree["bar"])
-	result, _ = MockResponseStore.Delete(api.ConfigMap{
-		TypeMeta: unversioned.TypeMeta{},
-		ObjectMeta: api.ObjectMeta{
+	result, _ = MockResponseStore.Delete(v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm-six",
 			Namespace: "foo",
 		},
@@ -315,7 +312,7 @@ func TestMockResponseIsEmpty(t *testing.T) {
 	assert.True(t, MockResponseStore.IsEmpty())
 }
 
-func getTestConfigMaps() []api.ConfigMap {
+func getTestConfigMaps() []v1.ConfigMap {
 
 	mockOne, _ := json.Marshal(mock{
 		Route{
@@ -377,10 +374,9 @@ func getTestConfigMaps() []api.ConfigMap {
 		},
 	})
 
-	return []api.ConfigMap{
+	return []v1.ConfigMap{
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm-one",
 				Namespace: "foo",
 			},
@@ -389,8 +385,7 @@ func getTestConfigMaps() []api.ConfigMap {
 			},
 		},
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm-two",
 				Namespace: "foo",
 			},
@@ -399,8 +394,7 @@ func getTestConfigMaps() []api.ConfigMap {
 			},
 		},
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm-three",
 				Namespace: "foo",
 			},
@@ -409,8 +403,7 @@ func getTestConfigMaps() []api.ConfigMap {
 			},
 		},
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm-four",
 				Namespace: "bar",
 			},
@@ -419,8 +412,7 @@ func getTestConfigMaps() []api.ConfigMap {
 			},
 		},
 		{
-			TypeMeta: unversioned.TypeMeta{},
-			ObjectMeta: api.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm-five",
 				Namespace: "foo",
 			},

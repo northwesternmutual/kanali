@@ -71,8 +71,8 @@ func (step ValidateProxyStep) Do(ctx context.Context, proxy *spec.APIProxy, m *m
 	trace.SetTag(tracer.KanaliProxyNamespace, proxy.ObjectMeta.Namespace)
 
 	m.Add(
-		metrics.Metric{Name: "proxy_name", Value: proxy.Metadata.Name, Index: true},
-		metrics.Metric{Name: "proxy_namespace", Value: proxy.Metadata.Namespace, Index: true},
+		metrics.Metric{Name: "proxy_name", Value: proxy.ObjectMeta.Name, Index: true},
+		metrics.Metric{Name: "proxy_namespace", Value: proxy.ObjectMeta.Namespace, Index: true},
 	)
 
 	return nil
