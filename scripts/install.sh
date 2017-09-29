@@ -13,7 +13,7 @@ helm init > /dev/null
 echo -e "${LIGHT_BLUE}Step 3: Patch RBAC for Helm${NC}"
 ./scripts/helm-permissions.sh > /dev/null
 
-echo -e "${LIGHT_BLUE}Step 4: Install Kanali, Grafana, Influxdb, and Jaeger${NC}"
+echo -e "${LIGHT_BLUE}Step 4: Install Kanali, Grafana, InfluxDB, and Jaeger (may take a few minutes)${NC}"
 
 while sleep 1
 do

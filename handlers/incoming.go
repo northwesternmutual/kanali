@@ -70,10 +70,7 @@ func mockIsDefined(path string) bool {
 		return false
 	}
 
-	proxy, ok := untypedProxy.(spec.APIProxy)
-	if !ok {
-		return false
-	}
+	proxy, _ := untypedProxy.(spec.APIProxy)
 
 	if proxy.Spec.Mock != nil {
 		return proxy.Spec.Mock.ConfigMapName != ""
