@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package controller
+package crds
 
 import (
 	"testing"
@@ -29,24 +29,21 @@ import (
 )
 
 func TestCreateTPRs(t *testing.T) {
-	ctlr := Controller{
-		RESTClient:                    nil,
-		ClientSet:                     nil,
-		APIExtensionsV1beta1Interface: fake.NewSimpleClientset().ApiextensionsV1beta1(),
-	}
 
-	err := ctlr.CreateCRDs()
+	i := fake.NewSimpleClientset().ApiextensionsV1beta1()
+
+	err := CreateCRDs(i)
 	assert.Nil(t, err)
 
-	proxyCRD, err := ctlr.APIExtensionsV1beta1Interface.CustomResourceDefinitions().Get("apiproxies.kanali.io", v1.GetOptions{})
+	proxyCRD, err := i.CustomResourceDefinitions().Get("apiproxies.kanali.io", v1.GetOptions{})
 	assert.Nil(t, err)
 	assert.Equal(t, proxyCRD.ObjectMeta.Name, "apiproxies.kanali.io")
 
-	bindingCRD, err := ctlr.APIExtensionsV1beta1Interface.CustomResourceDefinitions().Get("apikeybindings.kanali.io", v1.GetOptions{})
+	bindingCRD, err := i.CustomResourceDefinitions().Get("apikeybindings.kanali.io", v1.GetOptions{})
 	assert.Nil(t, err)
 	assert.Equal(t, bindingCRD.ObjectMeta.Name, "apikeybindings.kanali.io")
 
-	keyCRD, err := ctlr.APIExtensionsV1beta1Interface.CustomResourceDefinitions().Get("apikeys.kanali.io", v1.GetOptions{})
+	keyCRD, err := i.CustomResourceDefinitions().Get("apikeys.kanali.io", v1.GetOptions{})
 	assert.Nil(t, err)
 	assert.Equal(t, keyCRD.ObjectMeta.Name, "apikeys.kanali.io")
 }

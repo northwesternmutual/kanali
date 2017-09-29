@@ -31,6 +31,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/controller"
+	"github.com/northwesternmutual/kanali/crds"
 	"github.com/northwesternmutual/kanali/monitor"
 	"github.com/northwesternmutual/kanali/server"
 	"github.com/northwesternmutual/kanali/spec"
@@ -94,7 +95,7 @@ var startCmd = &cobra.Command{
 		}
 
 		// create crds
-		if err := ctlr.CreateCRDs(); err != nil {
+		if err := crds.CreateCRDs(ctlr.APIExtensionsV1beta1Interface); err != nil {
 			logrus.Fatalf("could not create CRDs: %s", err.Error())
 			os.Exit(1)
 		}
