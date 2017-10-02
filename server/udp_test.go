@@ -26,10 +26,15 @@ import (
 	"time"
 
 	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	logging.Init(nil)
+}
 
 func TestStartUDPServer(t *testing.T) {
 

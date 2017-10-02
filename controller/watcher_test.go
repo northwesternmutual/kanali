@@ -19,3 +19,19 @@
 // THE SOFTWARE.
 
 package controller
+
+// import (
+//   "context"
+//   "testing"
+//
+//   "k8s.io/client-go/rest/fake"
+//   "k8s.io/apimachinery/pkg/fields"
+// 	"github.com/stretchr/testify/assert"
+//   "github.com/northwesternmutual/kanali/spec"
+// )
+//
+// func TestDoWatchResource(t *testing.T) {
+//   restClient := fake.RESTClient{}
+//
+//   doWatchResource(context.Background(), restClient, "apiproxies", &spec.APIProxy{}, fields.Everything(), apiProxyHandlerFuncs)
+// }

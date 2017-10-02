@@ -13,7 +13,6 @@ GOLINT=golint
 GOVET=go vet
 GOBUILD=go build $(RACE)
 GOFMT=gofmt
-ERRCHECK=errcheck -ignoretests
 FMT_LOG=fmt.log
 LINT_LOG=lint.log
 
@@ -51,7 +50,6 @@ test:
 .PHONY: lint
 lint:
 	@$(GOVET) $(PACKAGES)
-	@$(ERRCHECK) $(PACKAGES)
 	@cat /dev/null > $(LINT_LOG)
 	@$(foreach pkg, $(PACKAGES), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
 	@[ ! -s "$(LINT_LOG)" ] || (echo "Lint Failures" | cat - $(LINT_LOG) && false)
@@ -64,7 +62,6 @@ install_ci: install
 	go get github.com/mattn/goveralls
 	go get golang.org/x/tools/cmd/cover
 	go get github.com/golang/lint/golint
-	go get github.com/kisielk/errcheck
 
 .PHONY: test_ci
 test_ci:

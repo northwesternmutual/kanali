@@ -24,10 +24,15 @@ import (
 	"context"
 	"testing"
 
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/spec"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	logging.Init(nil)
+}
 
 func TestPluginsOnRequestGetName(t *testing.T) {
 	assert := assert.New(t)

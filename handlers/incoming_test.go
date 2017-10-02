@@ -29,6 +29,7 @@ import (
 	"testing"
 
 	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
@@ -39,6 +40,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 )
+
+func init() {
+	logging.Init(nil)
+}
 
 func TestIncomingRequest(t *testing.T) {
 	mock, _ := json.Marshal([]spec.Route{

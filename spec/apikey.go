@@ -28,7 +28,6 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -86,7 +85,6 @@ func (s *KeyFactory) Update(old, new interface{}) error {
 	if !ok {
 		return errors.New("grrr - you're only allowed add api keys to the api key store.... duh")
 	}
-	logrus.Debugf("updating ApiKey %s", key.ObjectMeta.Name)
 	return s.set(key)
 }
 
@@ -103,7 +101,6 @@ func (s *KeyFactory) Set(obj interface{}) error {
 }
 
 func (s *KeyFactory) set(key APIKey) error {
-	logrus.Debugf("adding ApiKey %s", key.ObjectMeta.Name)
 	s.keyMap[key.Spec.APIKeyData] = key
 	return nil
 }
@@ -138,7 +135,6 @@ func (s *KeyFactory) Delete(obj interface{}) (interface{}, error) {
 	if !ok {
 		return nil, nil
 	}
-	logrus.Debugf("deleting ApiKey %s", key.ObjectMeta.Name)
 	delete(s.keyMap, key.Spec.APIKeyData)
 	return actual, nil
 }

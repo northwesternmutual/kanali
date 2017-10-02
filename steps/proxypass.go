@@ -30,8 +30,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
@@ -67,7 +67,7 @@ func (step ProxyPassStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metri
 		return err
 	}
 
-	targetResponse, err := preformTargetProxy(targetClient, targetRequest, m, span)
+	targetResponse, err := preformTargetProxy(ctx, targetClient, targetRequest, m, span)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,6 @@ func configureTargetTLS(proxy *spec.APIProxy, originalRequest *http.Request) (*h
 	}
 
 	if untypedSecret == nil {
-		logrus.Debug("TLS not configured for this proxy")
 		return nil, nil
 	}
 
@@ -160,13 +159,15 @@ func configureTargetTLS(proxy *spec.APIProxy, originalRequest *http.Request) (*h
 
 }
 
-func preformTargetProxy(client httpClient, request *http.Request, m *metrics.Metrics, span opentracing.Span) (*http.Response, error) {
+func preformTargetProxy(ctx context.Context, client httpClient, request *http.Request, m *metrics.Metrics, span opentracing.Span) (*http.Response, error) {
+	logger := logging.WithContext(ctx)
+
 	if err := span.Tracer().Inject(
 		span.Context(),
 		opentracing.TextMap,
 		opentracing.HTTPHeadersCarrier(request.Header),
 	); err != nil {
-		logrus.Error("error injecting headers")
+		logger.Error(err.Error())
 	}
 
 	sp := opentracing.StartSpan(fmt.Sprintf("%s %s",
@@ -202,7 +203,6 @@ func getTargetURL(proxy *spec.APIProxy, originalRequest *http.Request) (*url.URL
 
 	untypedSvc, err := spec.ServiceStore.Get(proxy.Spec.Service, originalRequest.Header)
 	if err != nil || untypedSvc == nil {
-		logrus.Debug("service was non of type spec.Service")
 		return nil, utils.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
 	}
 

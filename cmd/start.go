@@ -28,10 +28,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/controller"
 	"github.com/northwesternmutual/kanali/crds"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/monitor"
 	"github.com/northwesternmutual/kanali/server"
 	"github.com/northwesternmutual/kanali/spec"
@@ -42,29 +42,20 @@ import (
 )
 
 func init() {
-
-	if err := config.Flags.AddAll(startCmd); err != nil {
-		logrus.Fatalf("could not add flag to command: %s", err.Error())
-		os.Exit(1)
-	}
-
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(os.Stdout)
-
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("$HOME/.kanali")
 	viper.AddConfigPath("/etc/kanali/")
-
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("kanali")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.ReadInConfig()
 
-	if err := viper.ReadInConfig(); err != nil {
-		logrus.Warn("couldn't find any config file, using env variables and/or cli flags")
+	if err := config.Flags.AddAll(startCmd); err != nil {
+		panic(err)
 	}
-
 	RootCmd.AddCommand(startCmd)
+	logging.Init(nil)
 }
 
 var startCmd = &cobra.Command{
@@ -73,71 +64,65 @@ var startCmd = &cobra.Command{
 	Long:  `start Kanali`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// set logging level
-		if level, err := logrus.ParseLevel(viper.GetString(config.FlagProcessLogLevel.GetLong())); err != nil {
-			logrus.SetLevel(logrus.InfoLevel)
-			logrus.Info("could not parse logging level")
-		} else {
-			logrus.SetLevel(level)
-		}
+		logger := logging.WithContext(nil)
 
-		// create new k8s controller
 		ctlr, err := controller.New()
 		if err != nil {
-			logrus.Fatalf("could not create controller: %s", err.Error())
+			logger.Fatal(err.Error())
 			os.Exit(1)
 		}
 
-		// load decryption key into memory
 		if err := loadDecryptionKey(viper.GetString(config.FlagPluginsAPIKeyDecriptionKeyFile.GetLong())); err != nil {
-			logrus.Fatalf("could not load decryption key: %s", err.Error())
+			logger.Fatal(err.Error())
 			os.Exit(1)
 		}
 
-		// create crds
 		if err := crds.CreateCRDs(ctlr.APIExtensionsV1beta1Interface); err != nil {
-			logrus.Fatalf("could not create CRDs: %s", err.Error())
+			logger.Fatal(err.Error())
 			os.Exit(1)
 		}
 
 		go func() {
 			if err := ctlr.Watch(context.Background()); err != nil {
-				logrus.Warnf("could not watch kubernetes api server: %s", err.Error())
+				logger.Fatal(err.Error())
 			}
 		}()
 
 		// start UDP server
 		go func() {
 			if err := server.StartUDPServer(); err != nil {
-				logrus.Fatal(err.Error())
+				logger.Fatal(err.Error())
 				os.Exit(1)
 			}
 		}()
 
 		tracer, closer, err := tracer.Jaeger()
 		if err != nil {
-			logrus.Warnf("error create Jaeger tracer: %s", err.Error())
+			logger.Warn(err.Error())
 		} else {
 			opentracing.SetGlobalTracer(tracer)
 			defer func() {
 				if err := closer.Close(); err != nil {
-					logrus.Warnf("error closing Jaeger tracer: %s", err.Error())
+					logger.Warn(err.Error())
 				}
 			}()
 		}
 
 		influxCtlr, err := monitor.NewInfluxdbController()
 		if err != nil {
-			logrus.Warnf("error connecting to InfluxDB: %s", err.Error())
+			logger.Warn(err.Error())
 		} else {
 			defer func() {
 				if err := influxCtlr.Client.Close(); err != nil {
-					logrus.Warnf("error closing the connection to InfluxDB: %s", err.Error())
+					logger.Warn(err.Error())
 				}
 			}()
 		}
 
-		server.Start(influxCtlr)
+		if err := server.Start(influxCtlr); err != nil {
+			logger.Fatal(err.Error())
+			os.Exit(1)
+		}
 
 	},
 }

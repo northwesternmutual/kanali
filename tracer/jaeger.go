@@ -25,8 +25,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
 	jaegerConfig "github.com/uber/jaeger-client-go/config"
@@ -35,11 +35,11 @@ import (
 type customLogger struct{}
 
 func (l customLogger) Error(msg string) {
-	logrus.Error(msg)
+	logging.WithContext(nil).Error(msg)
 }
 
 func (l customLogger) Infof(msg string, args ...interface{}) {
-	logrus.Info(fmt.Sprintf(msg, args...))
+	logging.WithContext(nil).Info(fmt.Sprintf(msg, args...))
 }
 
 // Jaeger creates a new opentracing compatible tracer

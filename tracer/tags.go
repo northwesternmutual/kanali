@@ -32,6 +32,8 @@ const (
 	// HTTPRequest is the opentracing tag name that represents the existence on an HTTP request
 	HTTPRequest = "http.request"
 
+	// HTTPRequestRemoteAddress is the ip address of the caller
+	HTTPRequestRemoteAddress = "http.request.remote_address"
 	// HTTPRequestMethod is the opentracing tag name that represents an HTTP request method
 	HTTPRequestMethod = "http.request.method"
 	// HTTPRequestBody is the opentracing tag name that represents an HTTP request body

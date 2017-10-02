@@ -26,11 +26,16 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	logging.Init(nil)
+}
 
 type mockStep struct{}
 

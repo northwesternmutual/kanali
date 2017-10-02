@@ -21,24 +21,14 @@
 package main
 
 import (
-	"os"
 	"runtime"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/cmd"
 )
-
-func init() {
-
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(os.Stdout)
-
-}
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	if err := cmd.RootCmd.Execute(); err != nil {
-		logrus.Fatalf("error executing root cobra command: %s\n", err)
-		os.Exit(1)
+		panic(err)
 	}
 }

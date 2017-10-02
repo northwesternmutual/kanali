@@ -27,8 +27,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/spf13/viper"
 )
@@ -37,17 +37,11 @@ const (
 	k8sNameMaxSize = 253
 )
 
-func init() {
-	if level, err := logrus.ParseLevel(viper.GetString(config.FlagProcessLogLevel.GetLong())); err != nil {
-		logrus.SetLevel(logrus.InfoLevel)
-	} else {
-		logrus.SetLevel(level)
-	}
-}
-
 // StartUDPServer will start the udp server that is used to comminute between
 // all running Kanali instances.
 func StartUDPServer() (e error) {
+
+	logger := logging.WithContext(nil)
 
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", viper.GetInt(config.FlagServerPeerUDPPort.GetLong())))
 	if err != nil {
@@ -58,7 +52,7 @@ func StartUDPServer() (e error) {
 	if err != nil {
 		return err
 	}
-	logrus.Infof("upd server listening on :%s", viper.GetString(config.FlagServerPeerUDPPort.GetLong()))
+	logger.Info(fmt.Sprintf("upd server listening on :%s", viper.GetString(config.FlagServerPeerUDPPort.GetLong())))
 	defer func() {
 		if err := conn.Close(); err != nil {
 			if e != nil {
@@ -76,7 +70,7 @@ func StartUDPServer() (e error) {
 			return err
 		}
 		if err := spec.TrafficStore.Set(string(buf[0:n])); err != nil {
-			logrus.Errorf("could not add traffic point to store: %s", err.Error())
+			logger.Error(err.Error())
 		}
 	}
 
@@ -85,11 +79,13 @@ func StartUDPServer() (e error) {
 // Emit will send a message to all other Kanali instances.
 func Emit(binding spec.APIKeyBinding, keyName string, currTime time.Time) {
 
+	logger := logging.WithContext(nil)
+
 	for _, addr := range spec.KanaliEndpoints.Subsets[0].Addresses {
 
 		if os.Getenv("POD_IP") == addr.IP {
 			if err := spec.TrafficStore.Set(encodeKanaliGram(binding.ObjectMeta.Namespace, binding.Spec.APIProxyName, keyName, ",")); err != nil {
-				logrus.Errorf("could not add traffic point to store: %s", err.Error())
+				logger.Error(err.Error())
 			}
 			continue
 		}
@@ -98,24 +94,24 @@ func Emit(binding spec.APIKeyBinding, keyName string, currTime time.Time) {
 
 			serverAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong())))
 			if err != nil {
-				logrus.Warnf("error resolving UDP address for %s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong()))
+				logger.Warn(fmt.Sprintf("error resolving UDP address for %s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong())))
 				return
 			}
 
 			conn, err := net.DialUDP("udp", nil, serverAddr)
 			if err != nil {
-				logrus.Warnf("error dialing %s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong()))
+				logger.Warn(fmt.Sprintf("error dialing %s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong())))
 				return
 			}
 
 			_, err = conn.Write([]byte(fmt.Sprintf("%s,%s,%s", binding.ObjectMeta.Namespace, binding.Spec.APIProxyName, keyName)))
 			if err != nil {
-				logrus.Warnf("error writing traffic to %s:%d", ip, viper.GetString(config.FlagServerPeerUDPPort.GetLong()))
+				logger.Warn(fmt.Sprintf("error writing traffic to %s:%d", ip, viper.GetInt(config.FlagServerPeerUDPPort.GetLong())))
 				return
 			}
 
 			if err := conn.Close(); err != nil {
-				logrus.Errorf(err.Error())
+				logger.Error(err.Error())
 			}
 
 		}(addr.IP)

@@ -21,7 +21,9 @@
 package controller
 
 import (
-	"github.com/Sirupsen/logrus"
+	"fmt"
+
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/spec"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/tools/cache"
@@ -29,206 +31,290 @@ import (
 
 var apiProxyHandlerFuncs = cache.ResourceEventHandlerFuncs{
 	AddFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
+		defer logger.Sync()
 		proxy, ok := obj.(*spec.APIProxy)
 		if !ok {
-			logrus.Error("received malformed APIProxy from k8s apiserver")
-			return
-		}
-		if err := spec.ProxyStore.Set(*proxy); err != nil {
-			logrus.Errorf("could not add ApiProxy: %s", err.Error())
+			logger.Error("received malformed APIProxy from k8s apiserver")
+		} else {
+			spec.ProxyStore.Set(*proxy)
+			logger.Debug(fmt.Sprintf("added ApiProxy %s in %s namespace", proxy.ObjectMeta.Name, proxy.ObjectMeta.Namespace))
 		}
 	},
 	UpdateFunc: func(old, new interface{}) {
+		logger := logging.WithContext(nil)
+		defer logger.Sync()
 		oldProxy, ok := old.(*spec.APIProxy)
 		if !ok {
-			logrus.Error("received malformed ApiProxy from k8s apiserver")
+			logger.Error("received malformed ApiProxy from k8s apiserver")
 			return
 		}
 		newProxy, ok := new.(*spec.APIProxy)
 		if !ok {
-			logrus.Error("received malformed ApiProxy from k8s apiserver")
+			logger.Error("received malformed ApiProxy from k8s apiserver")
 			return
 		}
 		if err := spec.ProxyStore.Update(*oldProxy, *newProxy); err != nil {
-			logrus.Errorf("could not update ApiProxy: %s", err.Error())
+			logger.Error(err.Error())
+		} else {
+			logger.Debug(fmt.Sprintf("updated ApiProxy %s in %s namespace", newProxy.ObjectMeta.Name, newProxy.ObjectMeta.Namespace))
 		}
 	},
 	DeleteFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
+		defer logger.Sync()
 		proxy, ok := obj.(*spec.APIProxy)
 		if !ok {
-			logrus.Error("received malformed ApiProxy from k8s apiserver")
+			logger.Error("received malformed ApiProxy from k8s apiserver")
 			return
 		}
-		if _, err := spec.ProxyStore.Delete(*proxy); err != nil {
-			logrus.Errorf("could not delete ApiProxy: %s", err.Error())
+		if result, _ := spec.ProxyStore.Delete(*proxy); result != nil {
+			result := result.(spec.APIProxy)
+			logger.Debug(fmt.Sprintf("deleted ApiProxy %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
 		}
 	},
 }
 
 var apiKeyHandlerFuncs = cache.ResourceEventHandlerFuncs{
 	AddFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
 		key, ok := obj.(*spec.APIKey)
 		if !ok {
-			logrus.Error("received malformed ApiKey from k8s apiserver")
+			logger.Error("received malformed ApiKey from k8s apiserver")
 			return
 		}
 		if err := (*key).Decrypt(); err != nil {
-			logrus.Errorf("error decrypting ApiKey %s", key.ObjectMeta.Name)
+			logger.Error(err.Error())
 			return
 		}
-		if err := spec.KeyStore.Set(*key); err != nil {
-			logrus.Errorf("could not add ApiKey: %s", err.Error())
-		}
+		spec.KeyStore.Set(*key)
+		logger.Debug(fmt.Sprintf("added ApiKey %s", key.ObjectMeta.Name))
 	},
 	UpdateFunc: func(old, new interface{}) {
-		key, ok := old.(*spec.APIKey)
+		logger := logging.WithContext(nil)
+		newKey, ok := new.(*spec.APIKey)
 		if !ok {
-			logrus.Error("received malformed ApiKey from k8s apiserver")
+			logger.Error("received malformed ApiKey from k8s apiserver")
 			return
 		}
-		if err := (*key).Decrypt(); err != nil {
-			logrus.Errorf("error decrypting ApiKey %s", key.ObjectMeta.Name)
+		oldKey, ok := old.(*spec.APIKey)
+		if !ok {
+			logger.Error("received malformed ApiKey from k8s apiserver")
 			return
 		}
-		if err := spec.KeyStore.Set(*key); err != nil {
-			logrus.Errorf("could not update ApiKey: %s", err.Error())
+		if err := (*newKey).Decrypt(); err != nil {
+			logger.Error(err.Error())
+			return
 		}
+		spec.KeyStore.Update(*oldKey, *newKey)
+		logger.Debug(fmt.Sprintf("updated ApiKey %s", newKey.ObjectMeta.Name))
 	},
 	DeleteFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
 		key, ok := obj.(*spec.APIKey)
 		if !ok {
-			logrus.Error("received malformed ApiKey from k8s apiserver")
+			logger.Error("received malformed ApiKey from k8s apiserver")
 			return
 		}
 		if err := (*key).Decrypt(); err != nil {
-			logrus.Errorf("error decrypting ApiKey %s", key.ObjectMeta.Name)
+			logger.Error(err.Error())
 			return
 		}
-		if _, err := spec.KeyStore.Delete(*key); err != nil {
-			logrus.Errorf("could not delete ApiKey: %s", err.Error())
+		result, _ := spec.KeyStore.Delete(*key)
+		if result != nil {
+			result := result.(spec.APIKey)
+			logger.Debug(fmt.Sprintf("deleted ApiKey %s", result.ObjectMeta.Name))
 		}
 	},
 }
 
 var apiKeyBindingHandlerFuncs = cache.ResourceEventHandlerFuncs{
 	AddFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
 		binding, ok := obj.(*spec.APIKeyBinding)
 		if !ok {
-			logrus.Error("received malformed ApiKeyBinding from k8s apiserver")
+			logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 			return
 		}
-		if err := spec.BindingStore.Set(*binding); err != nil {
-			logrus.Errorf("could not add ApiKeyBinding: %s", err.Error())
-		}
+		spec.BindingStore.Set(*binding)
+		logger.Debug(fmt.Sprintf("added ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace))
 	},
 	UpdateFunc: func(old, new interface{}) {
-		binding, ok := old.(*spec.APIKeyBinding)
+		logger := logging.WithContext(nil)
+		newBinding, ok := new.(*spec.APIKeyBinding)
 		if !ok {
-			logrus.Error("received malformed ApiKeyBinding from k8s apiserver")
+			logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 			return
 		}
-		if err := spec.BindingStore.Set(*binding); err != nil {
-			logrus.Errorf("could not update ApiKeyBinding: %s", err.Error())
+		oldBinding, ok := old.(*spec.APIKeyBinding)
+		if !ok {
+			logger.Error("received malformed ApiKeyBinding from k8s apiserver")
+			return
 		}
+		spec.BindingStore.Update(*newBinding, *oldBinding)
+		logger.Debug(fmt.Sprintf("updated ApiKeyBinding %s in %s namespace", newBinding.ObjectMeta.Name, newBinding.ObjectMeta.Namespace))
 	},
 	DeleteFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
 		binding, ok := obj.(*spec.APIKeyBinding)
 		if !ok {
-			logrus.Error("received malformed ApiKeyBinding from k8s apiserver")
+			logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 			return
 		}
-		if _, err := spec.BindingStore.Delete(*binding); err != nil {
-			logrus.Errorf("could not delete ApiKeyBinding: %s", err.Error())
+		result, _ := spec.BindingStore.Delete(*binding)
+		if result != nil {
+			result := result.(spec.APIKeyBinding)
+			logger.Debug(fmt.Sprintf("deleted ApiKeyBinding %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
 		}
 	},
 }
 
 var secretHandlerFuncs = cache.ResourceEventHandlerFuncs{
 	AddFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
 		secret, ok := obj.(*v1.Secret)
 		if !ok {
-			logrus.Error("received malformed Secret from k8s apiserver")
+			logger.Error("received malformed Secret from k8s apiserver")
 			return
 		}
-		if err := spec.SecretStore.Set(*secret); err != nil {
-			logrus.Errorf("could not add Secret: %s", err.Error())
-		}
+		spec.SecretStore.Set(*secret)
+		logger.Debug(fmt.Sprintf("added Secret %s in %s namespace", secret.ObjectMeta.Name, secret.ObjectMeta.Namespace))
 	},
 	UpdateFunc: func(old, new interface{}) {
-		secret, ok := old.(*v1.Secret)
+		logger := logging.WithContext(nil)
+		oldSecret, ok := old.(*v1.Secret)
 		if !ok {
-			logrus.Error("received malformed Secret from k8s apiserver")
+			logger.Error("received malformed Secret from k8s apiserver")
 			return
 		}
-		if err := spec.SecretStore.Set(*secret); err != nil {
-			logrus.Errorf("could not update Secret: %s", err.Error())
+		newSecret, ok := new.(*v1.Secret)
+		if !ok {
+			logger.Error("received malformed Secret from k8s apiserver")
+			return
 		}
+		spec.SecretStore.Update(*oldSecret, *newSecret)
+		logger.Debug(fmt.Sprintf("updated Secret %s in %s namespace", newSecret.ObjectMeta.Name, newSecret.ObjectMeta.Namespace))
 	},
 	DeleteFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
 		secret, ok := obj.(*v1.Secret)
 		if !ok {
-			logrus.Error("received malformed Secret from k8s apiserver")
+			logger.Error("received malformed Secret from k8s apiserver")
 			return
 		}
-		if _, err := spec.SecretStore.Delete(*secret); err != nil {
-			logrus.Errorf("could not delete Secret: %s", err.Error())
+		result, _ := spec.SecretStore.Delete(*secret)
+		if result != nil {
+			result := result.(v1.Secret)
+			logger.Debug(fmt.Sprintf("deleted Secret %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
 		}
 	},
 }
 
 var serviceHandlerFuncs = cache.ResourceEventHandlerFuncs{
 	AddFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
 		service, ok := obj.(*v1.Service)
 		if !ok {
-			logrus.Error("received malformed Service from k8s apiserver")
+			logger.Error("received malformed Service from k8s apiserver")
 			return
 		}
-		if err := spec.ServiceStore.Set(spec.CreateService(*service)); err != nil {
-			logrus.Errorf("could not add Service: %s", err.Error())
+		spec.ServiceStore.Set(spec.CreateService(*service))
+		logger.Debug(fmt.Sprintf("added Service %s in %s namespace", service.ObjectMeta.Name, service.ObjectMeta.Namespace))
+	},
+	UpdateFunc: func(old, new interface{}) {
+		logger := logging.WithContext(nil)
+		oldService, ok := old.(*v1.Service)
+		if !ok {
+			logger.Error("received malformed Service from k8s apiserver")
+			return
+		}
+		newService, ok := new.(*v1.Service)
+		if !ok {
+			logger.Error("received malformed Service from k8s apiserver")
+			return
+		}
+		spec.ServiceStore.Update(spec.CreateService(*oldService), spec.CreateService(*newService))
+		logger.Debug(fmt.Sprintf("updated Service %s in %s namespace", newService.ObjectMeta.Name, newService.ObjectMeta.Namespace))
+	},
+	DeleteFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
+		service, ok := obj.(*v1.Service)
+		if !ok {
+			logger.Error("received malformed Service from k8s apiserver")
+			return
+		}
+		result, _ := spec.ServiceStore.Delete(spec.CreateService(*service))
+		if result != nil {
+			result := result.(spec.Service)
+			logger.Debug(fmt.Sprintf("deleted Service %s in %s namespace", result.Name, result.Namespace))
+		}
+	},
+}
+
+var configMapHandlerFuncs = cache.ResourceEventHandlerFuncs{
+	AddFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
+		cm, ok := obj.(*v1.ConfigMap)
+		if !ok {
+			logger.Error("received malformed ConfigMap from k8s apiserver")
+			return
+		}
+		if err := spec.MockResponseStore.Set(*cm); err != nil {
+			logger.Error(err.Error())
+		} else {
+			logger.Debug(fmt.Sprintf("added ConfigMap %s in %s namespace", cm.ObjectMeta.Name, cm.ObjectMeta.Namespace))
 		}
 	},
 	UpdateFunc: func(old, new interface{}) {
-		service, ok := old.(*v1.Service)
+		logger := logging.WithContext(nil)
+		cm, ok := old.(*v1.ConfigMap)
 		if !ok {
-			logrus.Error("received malformed Service from k8s apiserver")
+			logger.Error("received malformed ConfigMap from k8s apiserver")
 			return
 		}
-		if err := spec.ServiceStore.Set(spec.CreateService(*service)); err != nil {
-			logrus.Errorf("could not update Service: %s", err.Error())
+		if err := spec.MockResponseStore.Set(*cm); err != nil {
+			logger.Error(err.Error())
+		} else {
+			logger.Debug(fmt.Sprintf("updated ConfigMap %s in %s namespace", cm.ObjectMeta.Name, cm.ObjectMeta.Namespace))
 		}
 	},
 	DeleteFunc: func(obj interface{}) {
-		service, ok := obj.(*v1.Service)
+		logger := logging.WithContext(nil)
+		cm, ok := obj.(*v1.ConfigMap)
 		if !ok {
-			logrus.Error("received malformed Service from k8s apiserver")
+			logger.Error("received malformed ConfigMap from k8s apiserver")
 			return
 		}
-		if _, err := spec.ServiceStore.Delete(spec.CreateService(*service)); err != nil {
-			logrus.Errorf("could not delete Service: %s", err.Error())
+		if _, err := spec.MockResponseStore.Delete(*cm); err != nil {
+			logger.Error(err.Error())
+		} else {
+			logger.Debug(fmt.Sprintf("deleted ConfigMap %s in %s namespace", cm.ObjectMeta.Name, cm.ObjectMeta.Namespace))
 		}
 	},
 }
 
 var endpointsHandlerFuncs = cache.ResourceEventHandlerFuncs{
 	AddFunc: func(obj interface{}) {
+		logger := logging.WithContext(nil)
 		endpoints, ok := obj.(*v1.Endpoints)
 		if !ok {
-			logrus.Error("received malformed Endpoints from k8s apiserver")
+			logger.Error("received malformed Endpoints from k8s apiserver")
 			return
 		}
 		if endpoints.ObjectMeta.Name == "kanali" {
-			logrus.Debugf("adding Kanali endpoints object")
+			logger.Debug("adding Kanali endpoints object")
 			spec.KanaliEndpoints = endpoints
 		}
 	},
 	UpdateFunc: func(old, new interface{}) {
+		logger := logging.WithContext(nil)
 		endpoints, ok := old.(*v1.Endpoints)
 		if !ok {
-			logrus.Error("received malformed Endpoints from k8s apiserver")
+			logger.Error("received malformed Endpoints from k8s apiserver")
 			return
 		}
 		if endpoints.ObjectMeta.Name == "kanali" {
-			logrus.Debugf("updating Kanali endpoints object")
+			logger.Debug("updating Kanali endpoints object")
 			spec.KanaliEndpoints = endpoints
 		}
 	},

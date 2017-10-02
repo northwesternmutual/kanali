@@ -22,11 +22,12 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
 	"path/filepath"
 	"strings"
 
 	"github.com/PuerkitoBio/purell"
-	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/logging"
 )
 
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
@@ -92,7 +93,7 @@ func GetAbsPath(path string) (string, error) {
 func NormalizePath(path string) string {
 	result, err := purell.NormalizeURLString(path, purell.FlagRemoveDotSegments|purell.FlagRemoveDuplicateSlashes|purell.FlagRemoveTrailingSlash)
 	if err != nil {
-		logrus.Errorf("error normalizing url path - using original url path: %s", err.Error())
+		logging.WithContext(nil).Error(fmt.Sprintf(err.Error()))
 		return removeDupLeadingSlashes(path)
 	}
 	return removeDupLeadingSlashes(result)

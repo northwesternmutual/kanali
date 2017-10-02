@@ -22,9 +22,10 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/spec"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -37,13 +38,14 @@ import (
 // listen to different endpoints on the kubernetes
 // api server and act on events that they emit
 func (c *Controller) Watch(ctx context.Context) error {
-	logrus.Debug("starting watch on k8s resources")
+	logging.WithContext(ctx).Debug("starting watch on Kubernetes resources")
 
 	doWatchResource(ctx, c.RESTClient, "apiproxies", &spec.APIProxy{}, fields.Everything(), apiProxyHandlerFuncs)
 	doWatchResource(ctx, c.RESTClient, "apikeys", &spec.APIKey{}, fields.Everything(), apiKeyHandlerFuncs)
 	doWatchResource(ctx, c.RESTClient, "apikeybindings", &spec.APIKeyBinding{}, fields.Everything(), apiKeyBindingHandlerFuncs)
 	doWatchResource(ctx, c.ClientSet.Core().RESTClient(), "secrets", &v1.Secret{}, fields.OneTermEqualSelector("type", "kubernetes.io/tls"), secretHandlerFuncs)
 	doWatchResource(ctx, c.ClientSet.Core().RESTClient(), "services", &v1.Service{}, fields.Everything(), serviceHandlerFuncs)
+	doWatchResource(ctx, c.ClientSet.Core().RESTClient(), "configmaps", &v1.ConfigMap{}, fields.Everything(), configMapHandlerFuncs)
 	doWatchResource(ctx, c.ClientSet.Core().RESTClient(), "endpoints", &v1.Endpoints{}, fields.Everything(), endpointsHandlerFuncs)
 
 	<-ctx.Done()
@@ -51,7 +53,7 @@ func (c *Controller) Watch(ctx context.Context) error {
 }
 
 func doWatchResource(ctx context.Context, restClient rest.Interface, resourcePath string, obj runtime.Object, fieldSelector fields.Selector, handlerFuncs cache.ResourceEventHandlerFuncs) {
-	logrus.Debugf("attempting to watch %s", resourcePath)
+	logging.WithContext(ctx).Debug(fmt.Sprintf("attempting to watch %s", resourcePath))
 
 	source := cache.NewListWatchFromClient(
 		restClient,

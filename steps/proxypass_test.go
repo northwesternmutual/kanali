@@ -22,6 +22,7 @@ package steps
 
 import (
 	"bytes"
+	"context"
 	"crypto/x509"
 	"errors"
 	"net/http"
@@ -76,7 +77,7 @@ func TestPreformTargetProxy(t *testing.T) {
 	testReqTwo, _ := http.NewRequest("GET", "https://foo.bar.com/error", bytes.NewReader([]byte("test data")))
 
 	testSpanOne := mockTracer.StartSpan("test span one")
-	resp, err := preformTargetProxy(&mockHTTPClient{}, testReqOne, testMetrics, testSpanOne)
+	resp, err := preformTargetProxy(context.Background(), &mockHTTPClient{}, testReqOne, testMetrics, testSpanOne)
 	testSpanOne.Finish()
 	assert.Nil(t, err)
 	assert.Equal(t, resp.StatusCode, 200)
@@ -84,7 +85,7 @@ func TestPreformTargetProxy(t *testing.T) {
 	assert.False(t, (*testMetrics)[0].Index)
 
 	testSpanTwo := mockTracer.StartSpan("test span two")
-	_, err = preformTargetProxy(&mockHTTPClient{}, testReqTwo, testMetrics, testSpanTwo)
+	_, err = preformTargetProxy(context.Background(), &mockHTTPClient{}, testReqTwo, testMetrics, testSpanTwo)
 	testSpanTwo.Finish()
 	assert.Equal(t, err.Error(), "expected error")
 }

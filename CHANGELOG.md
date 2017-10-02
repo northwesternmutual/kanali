@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Adding `ClusterRole` in `scripts/install.sh` so that install works with latest Minikube releases.
+- Adding contextual and performant logging using zap.
 ### Changed
+- Using `client-go@v4.0.0` for Kubernetes client.
+- Using `CRDs` to replace the deprecated `TPRs`.
 - Improved test coverage.
 
 ## [1.2.0] - 2017-09-24

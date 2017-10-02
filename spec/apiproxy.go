@@ -26,7 +26,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -128,13 +127,12 @@ func (s *ProxyFactory) update(old, new APIProxy) error {
 		if !ok {
 			return errors.New("received interface not of type APIProxy")
 		}
-		if new.ObjectMeta.Name != typed.ObjectMeta.Name && new.ObjectMeta.Namespace != typed.ObjectMeta.Namespace {
+		if new.ObjectMeta.Name != typed.ObjectMeta.Name || new.ObjectMeta.Namespace != typed.ObjectMeta.Namespace {
 			return errors.New("there exists an APIProxy as the targeted path - APIProxy can not be updated - consider using kanalictl to avoid this error in the future")
 		}
 	}
 
 	new.Spec.Service.Namespace = new.ObjectMeta.Namespace
-	logrus.Debugf("updating ApiProxy %s", new.ObjectMeta.Name)
 	s.proxyTree.doSet(strings.Split(new.Spec.Path[1:], "/"), &new)
 	if old.Spec.Path != new.Spec.Path {
 		s.proxyTree.delete(strings.Split(old.Spec.Path[1:], "/"))
@@ -151,7 +149,6 @@ func (s *ProxyFactory) Set(obj interface{}) error {
 		return errors.New("parameter was not of type APIProxy")
 	}
 	p.Spec.Service.Namespace = p.ObjectMeta.Namespace
-	logrus.Debugf("adding ApiProxy %s", p.ObjectMeta.Name)
 	normalize(&p)
 	s.proxyTree.doSet(strings.Split(p.Spec.Path[1:], "/"), &p)
 	return nil
@@ -224,7 +221,6 @@ func (s *ProxyFactory) Delete(obj interface{}) (interface{}, error) {
 		return nil, errors.New("there's no way this api proxy could've gotten in here")
 	}
 	normalize(&p)
-	logrus.Debugf("deleting ApiProxy %s", p.ObjectMeta.Name)
 	result := s.proxyTree.delete(strings.Split(p.Spec.Path[1:], "/"))
 	if result == nil {
 		return nil, nil

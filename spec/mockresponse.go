@@ -27,7 +27,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
@@ -95,21 +94,16 @@ func (s *MockResponseFactory) Set(obj interface{}) error {
 func (s *MockResponseFactory) set(cm v1.ConfigMap) error {
 	mockResponse, ok := cm.Data["response"]
 	if !ok {
-		logrus.Debugf("ConfigMap %s does not contains a response data field", cm.ObjectMeta.Name)
 		return nil
 	}
 
 	var m mock
 	if err := json.Unmarshal([]byte(mockResponse), &m); err != nil {
-		logrus.Debugf("ConfigMap %s does not contains a properly formed response field", cm.ObjectMeta.Name)
 		return nil
 	}
 
-	logrus.Debugf("adding ConfigMap %s", cm.ObjectMeta.Name)
-
 	for _, route := range m {
 		if !isValidHTTPMethod(route.Method) {
-			logrus.Warnf("route %s in ConfigMap %s contains an invalid HTTP method", route.Route, cm.ObjectMeta.Name)
 			continue
 		}
 		copyRoute := route
@@ -219,7 +213,6 @@ func (s *MockResponseFactory) Delete(obj interface{}) (interface{}, error) {
 	if _, ok := s.mockRespTree[cm.ObjectMeta.Namespace][cm.ObjectMeta.Name]; !ok {
 		return nil, nil
 	}
-	logrus.Debugf("deleting ConfigMap %s", cm.ObjectMeta.Name)
 	delete(s.mockRespTree[cm.ObjectMeta.Namespace], cm.ObjectMeta.Name)
 	if len(s.mockRespTree[cm.ObjectMeta.Namespace]) == 0 {
 		delete(s.mockRespTree, cm.ObjectMeta.Namespace)

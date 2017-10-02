@@ -22,9 +22,10 @@ package flow
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
@@ -43,9 +44,11 @@ func (f *Flow) Add(steps ...Step) {
 
 // Play executes all step in a flow in the order they were added.
 func (f *Flow) Play(ctx context.Context, proxy *spec.APIProxy, metrics *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-	logrus.Debugf("flow with %d step about to play", len(*f))
+	logger := logging.WithContext(ctx)
+
+	logger.Debug("flow is about to play")
 	for _, step := range *f {
-		logrus.Debugf("playing step %s", step.GetName())
+		logger.Debug(fmt.Sprintf("playing step %s", step.GetName()))
 		if err := step.Do(ctx, proxy, metrics, w, r, resp, trace); err != nil {
 			trace.SetTag(tracer.Error, true)
 			trace.LogKV(

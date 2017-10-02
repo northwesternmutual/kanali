@@ -28,25 +28,31 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/NYTimes/gziphandler"
 	"github.com/armon/go-proxyproto"
 	"github.com/northwesternmutual/kanali/config"
 	h "github.com/northwesternmutual/kanali/handlers"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/monitor"
 	"github.com/spf13/viper"
 )
 
 // Start will start the HTTP server for the Kanali gateway
 // It could either be an HTTP or HTTPS server depending on the configuration
-func Start(influxCtlr *monitor.InfluxController) {
+func Start(influxCtlr *monitor.InfluxController) error {
 
 	var listener net.Listener
 	var lerr error
 	var scheme string
 
-	router := h.Logger(h.Handler{InfluxController: influxCtlr, H: h.IncomingRequest})
+	logger := logging.WithContext(nil)
+
+	handler := h.Handler{InfluxController: influxCtlr, H: h.IncomingRequest}
+
+	router := gziphandler.GzipHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler.ServeHTTP(w, r)
+	}))
 
 	address := fmt.Sprintf("%s:%d",
 		viper.GetString(config.FlagServerBindAddress.GetLong()),
@@ -59,27 +65,23 @@ func Start(influxCtlr *monitor.InfluxController) {
 		scheme = "http"
 		listener, lerr = net.Listen("tcp4", address)
 		if lerr != nil {
-			logrus.Fatalf("error creating http listener: %s", lerr.Error())
-			os.Exit(1)
+			return lerr
 		}
 	} else {
 		scheme = "https"
 		cert, err := tls.LoadX509KeyPair(viper.GetString(config.FlagTLSCertFile.GetLong()), viper.GetString(config.FlagTLSKeyFile.GetLong()))
 		if err != nil {
-			logrus.Fatal("could not load server cert/key pair")
-			os.Exit(1)
+			return err
 		}
 		listener, lerr = tls.Listen("tcp4", address, &tls.Config{Certificates: []tls.Certificate{cert}, Rand: rand.Reader})
 		if lerr != nil {
-			logrus.Fatal("error creating https net listener")
-			os.Exit(1)
+			return lerr
 		}
 		// is bi-direction ssl required
 		if viper.GetString(config.FlagTLSCaFile.GetLong()) != "" {
 			caCert, err := ioutil.ReadFile(viper.GetString(config.FlagTLSCaFile.GetLong()))
 			if err != nil {
-				logrus.Fatal(err.Error())
-				os.Exit(1)
+				return err
 			}
 			// load and set client certificate
 			caCertPool := x509.NewCertPool()
@@ -97,12 +99,9 @@ func Start(influxCtlr *monitor.InfluxController) {
 		listener = &proxyproto.Listener{Listener: listener}
 	}
 
-	logrus.Infof(fmt.Sprintf("%s server listening on %s", scheme, address))
+	logger.Info(fmt.Sprintf("%s server listening on %s", scheme, address))
 
-	if err := server.Serve(listener); err != nil {
-		logrus.Fatal(err.Error())
-		os.Exit(1)
-	}
+	return server.Serve(listener)
 
 }
 

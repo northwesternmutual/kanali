@@ -1,7 +1,5 @@
 package: github.com/northwesternmutual/kanali
 import:
-- package: github.com/Sirupsen/logrus
-  version: 0.11.5
 - package: github.com/NYTimes/gziphandler
 - package: github.com/PuerkitoBio/purell
 - package: github.com/spf13/cobra
@@ -22,6 +20,10 @@ import:
   version: release-4.0
 - package: k8s.io/apiextensions-apiserver
   version: release-1.7
+- package: go.uber.org/zap
+  version: v1.7.1
+- package: github.com/satori/go.uuid
+  version: v1.1.0
 testImport:
 - package: github.com/stretchr/testify
   version: v1.1.4

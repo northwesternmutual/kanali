@@ -25,12 +25,13 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 )
 
 // ValidateProxyStep is factory that defines a step responsible for
@@ -49,7 +50,7 @@ func (step ValidateProxyStep) Do(ctx context.Context, proxy *spec.APIProxy, m *m
 	untypedProxy, err := spec.ProxyStore.Get(r.URL.EscapedPath())
 	if err != nil || untypedProxy == nil {
 		if err != nil {
-			logrus.Error(err.Error())
+			logging.WithContext(ctx).Error("error retrieving proxy", zap.String("msg", err.Error()))
 		}
 
 		trace.SetTag(tracer.KanaliProxyName, "unknown")

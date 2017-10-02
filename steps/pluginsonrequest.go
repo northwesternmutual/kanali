@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/plugins"
 	"github.com/northwesternmutual/kanali/spec"
@@ -58,9 +58,11 @@ func (step PluginsOnRequestStep) Do(ctx context.Context, proxy *spec.APIProxy, m
 }
 
 func doOnRequest(ctx context.Context, m *metrics.Metrics, name string, proxy spec.APIProxy, req *http.Request, span opentracing.Span, p plugins.Plugin) (e error) {
+	logger := logging.WithContext(ctx)
+
 	defer func() {
 		if r := recover(); r != nil {
-			logrus.Errorf("OnRequest paniced: %v", r)
+			logger.Error(fmt.Sprintf("OnRequest paniced: %v", r))
 			e = errors.New("OnRequest paniced")
 		}
 	}()

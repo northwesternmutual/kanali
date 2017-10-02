@@ -25,7 +25,6 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
@@ -76,7 +75,6 @@ func (s *SecretFactory) Set(obj interface{}) error {
 }
 
 func (s *SecretFactory) set(secret v1.Secret) error {
-	logrus.Infof("Adding new Secret named %s", secret.ObjectMeta.Name)
 	if _, ok := s.secretMap[secret.ObjectMeta.Namespace]; ok {
 		s.secretMap[secret.ObjectMeta.Namespace][secret.ObjectMeta.Name] = secret
 	} else {
@@ -127,7 +125,6 @@ func (s *SecretFactory) Delete(obj interface{}) (interface{}, error) {
 	if !ok {
 		return nil, nil
 	}
-	logrus.Debugf("deleting secret object %s", oldSecret.ObjectMeta.Name)
 	delete(s.secretMap[secret.ObjectMeta.Namespace], secret.ObjectMeta.Name)
 	if len(s.secretMap[secret.ObjectMeta.Namespace]) == 0 {
 		delete(s.secretMap, secret.ObjectMeta.Namespace)

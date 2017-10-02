@@ -29,13 +29,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/monitor"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
+	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 )
 
 // Handler is used to provide additional parameters to an HTTP handler
@@ -44,7 +46,12 @@ type Handler struct {
 	H func(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error
 }
 
-func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
+// ServeHTTP serves an HTTP request
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	httpContext := context.Background()
+	rqCtx := logging.NewContext(httpContext, zap.Stringer("correlation_id", uuid.NewV4()))
+	logger := logging.WithContext(rqCtx)
 
 	t0 := time.Now()
 	m := &metrics.Metrics{}
@@ -58,11 +65,16 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 			metrics.Metric{Name: "http_uri", Value: r.URL.EscapedPath(), Index: false},
 			metrics.Metric{Name: "client_ip", Value: strings.Split(r.RemoteAddr, ":")[0], Index: false},
 		)
+		logger.Info("request details",
+			zap.String(tracer.HTTPRequestRemoteAddress, strings.Split(r.RemoteAddr, ":")[0]),
+			zap.String(tracer.HTTPRequestMethod, r.Method),
+			zap.String(tracer.HTTPRequestURLPath, r.URL.EscapedPath()),
+		)
 		go func() {
 			if err := h.InfluxController.WriteRequestData(m); err != nil {
-				logrus.Warnf("error writing metrics to InfluxDB: %s", err.Error())
+				logger.Warn(err.Error())
 			} else {
-				logrus.Debugf("wrote metrics to InfluxDB")
+				logger.Debug("wrote metrics to InfluxDB")
 			}
 		}()
 	}()
@@ -75,7 +87,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 	tracer.HydrateSpanFromRequest(r, sp)
 
-	err := h.H(context.Background(), &spec.APIProxy{}, m, w, r, sp)
+	err := h.H(httpContext, &spec.APIProxy{}, m, w, r, sp)
 	if err == nil {
 		return
 	}
@@ -89,17 +101,16 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 		sp.SetTag(tracer.HTTPResponseStatusCode, e.Status())
 
-		// log error
-		logrus.WithFields(logrus.Fields{
-			"method": r.Method,
-			"uri":    r.URL.EscapedPath(),
-		}).Error(e.Error())
+		logger.Info(err.Error(),
+			zap.String(tracer.HTTPRequestMethod, r.Method),
+			zap.String(tracer.HTTPRequestURLPath, r.URL.EscapedPath()),
+		)
 
 		m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(e.Status()), Index: true})
 
 		errStatus, err := json.Marshal(utils.JSONErr{Code: e.Status(), Msg: e.Error()})
 		if err != nil {
-			logrus.Warnf("could not marsah request headers into JSON - tracing data maybe not be as expected")
+			logger.Warn(err.Error())
 		} else {
 			sp.SetTag(tracer.HTTPResponseBody, string(errStatus))
 		}
@@ -109,24 +120,23 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// write error message to response
 		if err := json.NewEncoder(w).Encode(utils.JSONErr{Code: e.Status(), Msg: e.Error()}); err != nil {
-			logrus.Fatal(err.Error())
+			logger.Error(err.Error())
 		}
 
 	default:
 
 		sp.SetTag(tracer.HTTPResponseStatusCode, http.StatusInternalServerError)
 
-		// log error
-		logrus.WithFields(logrus.Fields{
-			"method": r.Method,
-			"uri":    r.URL.EscapedPath(),
-		}).Error("unknown error")
+		logger.Info("unknown error",
+			zap.String(tracer.HTTPRequestMethod, r.Method),
+			zap.String(tracer.HTTPRequestURLPath, r.URL.EscapedPath()),
+		)
 
 		m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(http.StatusInternalServerError), Index: true})
 
 		errStatus, err := json.Marshal(utils.JSONErr{Code: http.StatusInternalServerError, Msg: "unknown error"})
 		if err != nil {
-			logrus.Warnf("could not marsah request headers into JSON - tracing data maybe not be as expected")
+			logger.Warn(err.Error())
 		} else {
 			sp.SetTag(tracer.HTTPResponseBody, string(errStatus))
 		}
@@ -136,7 +146,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// write error message to response
 		if err := json.NewEncoder(w).Encode(utils.JSONErr{Code: http.StatusInternalServerError, Msg: "unknown error"}); err != nil {
-			logrus.Fatal(err.Error())
+			logger.Error(err.Error())
 		}
 
 	}

@@ -26,7 +26,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/pkg/api/v1"
@@ -102,7 +101,6 @@ func (s *ServiceFactory) Set(obj interface{}) error {
 }
 
 func (s *ServiceFactory) set(service Service) error {
-	logrus.Infof("Adding new Service named %s", service.Name)
 	if s.serviceMap[service.Namespace] == nil {
 		s.serviceMap[service.Namespace] = []Service{service}
 		return nil
@@ -173,7 +171,6 @@ func (s *ServiceFactory) Delete(obj interface{}) (interface{}, error) {
 	if i < 0 {
 		return nil, nil
 	}
-	logrus.Debugf("deleting service object %s", service.Name)
 	if len(s.serviceMap[service.Namespace]) == 1 {
 		delete(s.serviceMap, service.Namespace)
 	} else {
