@@ -88,7 +88,6 @@ func TestIncomingRequest(t *testing.T) {
 	mockTracer := mocktracer.New()
 
 	viper.SetDefault(config.FlagProxyEnableMockResponses.GetLong(), true)
-	defer viper.Reset()
 	span := mockTracer.StartSpan("test span")
 	err := IncomingRequest(context.Background(), &spec.APIProxy{}, metrics, writer, request, span)
 	span.Finish()

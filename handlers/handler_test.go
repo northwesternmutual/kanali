@@ -32,25 +32,17 @@ import (
 	"time"
 
 	"github.com/northwesternmutual/kanali/config"
-	"github.com/northwesternmutual/kanali/logging"
 	"github.com/northwesternmutual/kanali/spec"
-	"github.com/northwesternmutual/kanali/tracer"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"go.uber.org/zap/zaptest/observer"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
 func TestServeHTTP(t *testing.T) {
-	viper.SetDefault(config.FlagProcessLogLevel.GetLong(), "debug")
-	defer viper.Reset()
-	core, obsvr := observer.New(zap.NewAtomicLevelAt(zapcore.DebugLevel))
-	logging.Init(core)
 
 	randomHTTPPort := random(40000, 49999)
+  viper.SetDefault(config.FlagProxyEnableMockResponses.GetLong(), true)
 
 	handler := Handler{InfluxController: nil, H: IncomingRequest}
 	server := &http.Server{Addr: fmt.Sprintf("127.0.0.1:%d", randomHTTPPort), Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,35 +56,9 @@ func TestServeHTTP(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, resp.Header.Get("Content-Type"), "application/json")
 
-  if obsvr.All()[obsvr.Len()-1].Entry.Message == "request details" {
-    assert.Equal(t, zapcore.InfoLevel, obsvr.All()[obsvr.Len()-1].Entry.Level)
-  	assert.Equal(t, 4, len(obsvr.All()[obsvr.Len()-1].Context))
-  	assert.Equal(t, "correlation_id", obsvr.All()[obsvr.Len()-1].Context[0].Key)
-  	assert.Equal(t, tracer.HTTPRequestRemoteAddress, obsvr.All()[obsvr.Len()-1].Context[1].Key)
-  	assert.Equal(t, "127.0.0.1", obsvr.All()[obsvr.Len()-1].Context[1].String)
-  	assert.Equal(t, tracer.HTTPRequestMethod, obsvr.All()[obsvr.Len()-1].Context[2].Key)
-  	assert.Equal(t, "GET", obsvr.All()[obsvr.Len()-1].Context[2].String)
-  	assert.Equal(t, tracer.HTTPRequestURLPath, obsvr.All()[obsvr.Len()-1].Context[3].Key)
-  	assert.Equal(t, "/", obsvr.All()[obsvr.Len()-1].Context[3].String)
-
-  	assert.Equal(t, "proxy not found", obsvr.All()[obsvr.Len()-2].Entry.Message)
-  	assert.Equal(t, 3, len(obsvr.All()[obsvr.Len()-2].Context))
-  	assert.Equal(t, "correlation_id", obsvr.All()[obsvr.Len()-2].Context[0].Key)
-  	assert.Equal(t, tracer.HTTPRequestMethod, obsvr.All()[obsvr.Len()-2].Context[1].Key)
-  	assert.Equal(t, "GET", obsvr.All()[obsvr.Len()-2].Context[1].String)
-  	assert.Equal(t, tracer.HTTPRequestURLPath, obsvr.All()[obsvr.Len()-2].Context[2].Key)
-  	assert.Equal(t, "/", obsvr.All()[obsvr.Len()-2].Context[2].String)
-  } else if obsvr.All()[obsvr.Len()-1].Entry.Message == "influxdb paniced while attempting to write" {
-    assert.Equal(t, zapcore.WarnLevel, obsvr.All()[obsvr.Len()-1].Entry.Level)
-  } else {
-    assert.Fail(t, "unexpected log output")
-  }
-
 	body, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(t, string(body), fmt.Sprintf("%s\n", `{"code":404,"msg":"proxy not found"}`))
 	assert.Equal(t, resp.StatusCode, 404)
-
-	viper.SetDefault(config.FlagProxyEnableMockResponses.GetLong(), true)
 
 	testProxyOne := spec.APIProxy{
 		ObjectMeta: metav1.ObjectMeta{
