@@ -64,7 +64,7 @@
           "bars": true,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "request count matching filters",
           "fill": 1,
           "id": 1,
@@ -266,7 +266,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "aggregated proxy response time metrics",
           "fill": 3,
           "id": 2,
@@ -394,7 +394,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "aggregated target response time",
           "fill": 3,
           "id": 11,
@@ -538,7 +538,7 @@
             "rgb(190, 127, 173)",
             "rgba(214,203,211,1)"
           ],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "decimals": 0,
           "description": "total requests matching filters",
           "format": "none",
@@ -658,7 +658,7 @@
             "rgb(80, 177, 132)",
             "rgba(150,206,180,1)"
           ],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "decimals": 0,
           "description": "total request success matching filters",
           "format": "none",
@@ -784,7 +784,7 @@
             "rgb(222, 107, 115)",
             "rgba(236,161,166,1)"
           ],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "decimals": 0,
           "description": "total request errors matching filters",
           "format": "none",
@@ -920,7 +920,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "response time percentiles",
           "fill": 3,
           "id": 10,
@@ -1206,7 +1206,7 @@
       "panels": [
         {
           "columns": [],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "average proxy response time per proxy",
           "fontSize": "100%",
           "id": 3,
@@ -1303,7 +1303,7 @@
         },
         {
           "columns": [],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "average target response time per proxy",
           "fontSize": "100%",
           "id": 12,
@@ -1412,7 +1412,7 @@
       "panels": [
         {
           "columns": [],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "total requests by api proxy",
           "fontSize": "100%",
           "id": 4,
@@ -1515,7 +1515,7 @@
         },
         {
           "columns": [],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "total requests by api key",
           "fontSize": "100%",
           "id": 13,
@@ -1636,7 +1636,7 @@
       "panels": [
         {
           "columns": [],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "total error count by api proxy",
           "fontSize": "100%",
           "id": 8,
@@ -1740,7 +1740,7 @@
         },
         {
           "columns": [],
-          "datasource": "kanali",
+          "datasource": "${DS_KANALI}",
           "description": "total error count by api key",
           "fontSize": "100%",
           "id": 9,
@@ -1868,7 +1868,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "kanali",
+        "datasource": "${DS_KANALI}",
         "hide": 0,
         "includeAll": true,
         "label": "Proxy Name",
@@ -1891,7 +1891,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "kanali",
+        "datasource": "${DS_KANALI}",
         "hide": 0,
         "includeAll": true,
         "label": "Proxy Namespace",
@@ -1914,7 +1914,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "kanali",
+        "datasource": "${DS_KANALI}",
         "hide": 2,
         "includeAll": true,
         "label": null,
@@ -1937,7 +1937,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "kanali",
+        "datasource": "${DS_KANALI}",
         "hide": 2,
         "includeAll": true,
         "label": "",
@@ -1960,7 +1960,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "kanali",
+        "datasource": "${DS_KANALI}",
         "hide": 2,
         "includeAll": true,
         "label": "",

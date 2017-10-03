@@ -23,6 +23,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -48,7 +49,6 @@ type Handler struct {
 
 // ServeHTTP serves an HTTP request
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	httpContext := context.Background()
 	rqCtx := logging.NewContext(httpContext, zap.Stringer("correlation_id", uuid.NewV4()))
 	logger := logging.WithContext(rqCtx)
@@ -92,63 +92,32 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// all errors will need the application/json Content-Type header
+	var e utils.Error
+	if _, ok := err.(utils.Error); !ok {
+		e = utils.StatusError{Err: errors.New("unknown error"), Code: http.StatusInternalServerError}
+	} else {
+		e = err.(utils.Error)
+	}
+
+	sp.SetTag(tracer.HTTPResponseStatusCode, e.Status())
+	m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(e.Status()), Index: true})
+	logger.Info(err.Error(),
+		zap.String(tracer.HTTPRequestMethod, r.Method),
+		zap.String(tracer.HTTPRequestURLPath, r.URL.EscapedPath()),
+	)
+
+	errStatus, err := json.Marshal(utils.JSONErr{Code: e.Status(), Msg: e.Error()})
+	if err != nil {
+		logger.Warn(err.Error())
+	} else {
+		sp.SetTag(tracer.HTTPResponseBody, string(errStatus))
+	}
+
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(e.Status())
 
-	// we'll have multiple types off errors
-	switch e := err.(type) {
-	case utils.Error:
-
-		sp.SetTag(tracer.HTTPResponseStatusCode, e.Status())
-
-		logger.Info(err.Error(),
-			zap.String(tracer.HTTPRequestMethod, r.Method),
-			zap.String(tracer.HTTPRequestURLPath, r.URL.EscapedPath()),
-		)
-
-		m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(e.Status()), Index: true})
-
-		errStatus, err := json.Marshal(utils.JSONErr{Code: e.Status(), Msg: e.Error()})
-		if err != nil {
-			logger.Warn(err.Error())
-		} else {
-			sp.SetTag(tracer.HTTPResponseBody, string(errStatus))
-		}
-
-		// write error code to response
-		w.WriteHeader(e.Status())
-
-		// write error message to response
-		if err := json.NewEncoder(w).Encode(utils.JSONErr{Code: e.Status(), Msg: e.Error()}); err != nil {
-			logger.Error(err.Error())
-		}
-
-	default:
-
-		sp.SetTag(tracer.HTTPResponseStatusCode, http.StatusInternalServerError)
-
-		logger.Info("unknown error",
-			zap.String(tracer.HTTPRequestMethod, r.Method),
-			zap.String(tracer.HTTPRequestURLPath, r.URL.EscapedPath()),
-		)
-
-		m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(http.StatusInternalServerError), Index: true})
-
-		errStatus, err := json.Marshal(utils.JSONErr{Code: http.StatusInternalServerError, Msg: "unknown error"})
-		if err != nil {
-			logger.Warn(err.Error())
-		} else {
-			sp.SetTag(tracer.HTTPResponseBody, string(errStatus))
-		}
-
-		// write error code to response
-		w.WriteHeader(http.StatusInternalServerError)
-
-		// write error message to response
-		if err := json.NewEncoder(w).Encode(utils.JSONErr{Code: http.StatusInternalServerError, Msg: "unknown error"}); err != nil {
-			logger.Error(err.Error())
-		}
-
+	if err := json.NewEncoder(w).Encode(utils.JSONErr{Code: e.Status(), Msg: e.Error()}); err != nil {
+		logger.Error(err.Error())
 	}
 }
 
