@@ -42,7 +42,7 @@ import (
 func TestServeHTTP(t *testing.T) {
 
 	randomHTTPPort := random(40000, 49999)
-  viper.SetDefault(config.FlagProxyEnableMockResponses.GetLong(), true)
+	viper.SetDefault(config.FlagProxyEnableMockResponses.GetLong(), true)
 
 	handler := Handler{InfluxController: nil, H: IncomingRequest}
 	server := &http.Server{Addr: fmt.Sprintf("127.0.0.1:%d", randomHTTPPort), Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
