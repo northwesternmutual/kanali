@@ -22,7 +22,7 @@ package controller
 
 import (
 	"crypto/x509"
-	//"encoding/json"
+	"encoding/json"
 	"encoding/pem"
 	"net/http"
 	"testing"
@@ -293,399 +293,95 @@ func TestServiceHandlerFuncs(t *testing.T) {
 	assertLog(t, zapcore.ErrorLevel, "received malformed Service from k8s apiserver", obsvr)
 }
 
+func TestConfigMapHandlerFuncs(t *testing.T) {
+	viper.SetDefault(config.FlagProcessLogLevel.GetLong(), "debug")
+	defer viper.Reset()
+	core, obsvr := observer.New(zap.NewAtomicLevelAt(zapcore.DebugLevel))
+	logging.Init(core)
+
+	mockOne, _ := json.Marshal([]spec.Route{
+		{
+			Route:  "/foo",
+			Code:   200,
+			Method: "GET",
+			Body:   "{\"foo\": \"bar\"}",
+		},
+	})
+
+	testConfigMapOne := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testConfigMapOne",
+			Namespace: "foo",
+		},
+		Data: map[string]string{
+			"response": string(mockOne),
+		},
+	}
+
+	configMapHandlerFuncs.AddFunc(&testConfigMapOne)
+	result, err := spec.MockResponseStore.Get("foo", "testConfigMapOne", "/foo", "GET")
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assertLog(t, zapcore.DebugLevel, "added ConfigMap testConfigMapOne in foo namespace", obsvr)
+
+	configMapHandlerFuncs.AddFunc(testConfigMapOne)
+	assertLog(t, zapcore.ErrorLevel, "received malformed ConfigMap from k8s apiserver", obsvr)
+
+	configMapHandlerFuncs.UpdateFunc(&testConfigMapOne, &testConfigMapOne)
+	assertLog(t, zapcore.DebugLevel, "updated ConfigMap testConfigMapOne in foo namespace", obsvr)
+
+	configMapHandlerFuncs.UpdateFunc(testConfigMapOne, &testConfigMapOne)
+	assertLog(t, zapcore.ErrorLevel, "received malformed ConfigMap from k8s apiserver", obsvr)
+
+	configMapHandlerFuncs.UpdateFunc(&testConfigMapOne, testConfigMapOne)
+	assertLog(t, zapcore.ErrorLevel, "received malformed ConfigMap from k8s apiserver", obsvr)
+
+	configMapHandlerFuncs.DeleteFunc(&testConfigMapOne)
+	result, err = spec.MockResponseStore.Get("foo", "testConfigMapOne", "/foo", "GET")
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	assertLog(t, zapcore.DebugLevel, "deleted ConfigMap testConfigMapOne in foo namespace", obsvr)
+
+	configMapHandlerFuncs.DeleteFunc(testConfigMapOne)
+	assertLog(t, zapcore.ErrorLevel, "received malformed ConfigMap from k8s apiserver", obsvr)
+}
+
+func TestEndpointsHandlerFuncs(t *testing.T) {
+	viper.SetDefault(config.FlagProcessLogLevel.GetLong(), "debug")
+	defer viper.Reset()
+	core, obsvr := observer.New(zap.NewAtomicLevelAt(zapcore.DebugLevel))
+	logging.Init(core)
+
+	testEndpointsOne := v1.Endpoints{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kanali",
+			Namespace: "foo",
+		},
+	}
+
+	assert.Equal(t, spec.KanaliEndpoints, &v1.Endpoints{})
+	endpointsHandlerFuncs.AddFunc(&testEndpointsOne)
+	assert.NotNil(t, spec.KanaliEndpoints)
+	assertLog(t, zapcore.DebugLevel, "adding Endpoints kanali in foo namespace", obsvr)
+
+	endpointsHandlerFuncs.AddFunc(testEndpointsOne)
+	assertLog(t, zapcore.ErrorLevel, "received malformed Endpoints from k8s apiserver", obsvr)
+
+	endpointsHandlerFuncs.UpdateFunc(&testEndpointsOne, &testEndpointsOne)
+	assertLog(t, zapcore.DebugLevel, "updated Endpoints kanali in foo namespace", obsvr)
+
+	endpointsHandlerFuncs.UpdateFunc(testEndpointsOne, &testEndpointsOne)
+	assertLog(t, zapcore.ErrorLevel, "received malformed Endpoints from k8s apiserver", obsvr)
+
+	endpointsHandlerFuncs.UpdateFunc(&testEndpointsOne, testEndpointsOne)
+	assertLog(t, zapcore.ErrorLevel, "received malformed Endpoints from k8s apiserver", obsvr)
+}
+
 func assertLog(t *testing.T, l zapcore.LevelEnabler, msg string, obsvr *observer.ObservedLogs) {
 	assert.Equal(t, l, obsvr.All()[obsvr.Len()-1].Entry.Level)
 	assert.Equal(t, msg, obsvr.All()[obsvr.Len()-1].Entry.Message)
 	assert.Equal(t, 0, len(obsvr.All()[obsvr.Len()-1].Context))
 }
-
-// func TestAddFunc(t *testing.T) {
-// 	clearAllStores()
-// 	defer clearAllStores()
-// 	handlers := k8sEventHandler{}
-// 	setDecryptionKey(t)
-//
-// 	handlers.addFunc(spec.APIProxy{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "exampleAPIProxyOne",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIProxySpec{
-// 			Path: "api/v1/accounts",
-// 			Service: spec.Service{
-// 				Name: "my-service",
-// 				Port: 8080,
-// 			},
-// 		},
-// 	})
-// 	result, err := spec.ProxyStore.Get("/api/v1/accounts")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	handlers.addFunc(spec.APIKey{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name: "def456",
-// 		},
-// 		Spec: spec.APIKeySpec{
-// 			APIKeyData: "encrypted",
-// 		},
-// 	})
-// 	handlers.addFunc(spec.APIKey{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name: "abc123",
-// 		},
-// 		Spec: spec.APIKeySpec{
-// 			APIKeyData: "9210f613f32a54eca4601d199b81dda5a4f93c0540ee6a8b9634c2d4976b13399a03276820cd85a35b625a96ffdeffa2e094f1349e1ed7510afd7f0f904595f0f1bd8707170a46e6d366395456568323e4de71973977d872ab9aa733b35fbdeec279fc1f4bc147e242f414652bae8d46b7c53af76a1c37254096e4e0aa89dfdf86d599692ab74849bfedd7ecc6b4409b01d1e4d989cdd9ca6db7c1a90cd86086da7508f85186d938ab2922e862832eb07281e5934d417addaba0ddc43f57f3613ab0aff4f353fdadc1116f9dca10338562a842904eb7b3ab77b6f919ac244a8b8fa4d2634ac2f9bec60ee4631894e6b823dd200dc0c793f5d1dfc08b749b2bba",
-// 		},
-// 	})
-// 	result, err = spec.KeyStore.Get("i3CZlcRnDhJZeZfkDw9BgeEtZuFQKiw9")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	handlers.addFunc(spec.APIKeyBinding{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "abc123",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIKeyBindingSpec{
-// 			APIProxyName: "api-proxy-one",
-// 			Keys: []spec.Key{
-// 				{
-// 					Name: "franks-api-key",
-// 				},
-// 			},
-// 		},
-// 	})
-// 	result, err = spec.BindingStore.Get("api-proxy-one", "foo")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	handlers.addFunc(api.Secret{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "secret-one",
-// 			Namespace: "foo",
-// 		},
-// 		Type: "kubernetes.io/tls",
-// 		Data: map[string][]byte{
-// 			"tls.key": []byte("YWJjMTIz"),
-// 			"tls.crt": []byte("ZGVmNDU2"),
-// 		},
-// 	})
-// 	result, err = spec.SecretStore.Get("secret-one", "foo")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	service := api.Service{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "foo",
-// 			Namespace: "bar",
-// 			Labels: map[string]string{
-// 				"release":  "production",
-// 				"name-two": "value-two",
-// 			},
-// 		},
-// 	}
-// 	handlers.addFunc(service)
-// 	result, err = spec.ServiceStore.Get(spec.CreateService(service), nil)
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	ep := api.Endpoints{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "kanali",
-// 			Namespace: "bar",
-// 		},
-// 	}
-// 	handlers.addFunc(ep)
-// 	assert.Equal(t, *(spec.KanaliEndpoints), ep)
-//
-// 	mockOne, _ := json.Marshal([]spec.Route{
-// 		{
-// 			Route:  "/foo",
-// 			Code:   200,
-// 			Method: "GET",
-// 			Body:   "{\"foo\": \"bar\"}",
-// 		},
-// 	})
-//
-// 	handlers.addFunc(api.ConfigMap{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "cm-one",
-// 			Namespace: "foo",
-// 		},
-// 		Data: map[string]string{
-// 			"response": string(mockOne),
-// 		},
-// 	})
-// 	result, err = spec.MockResponseStore.Get("foo", "cm-one", "/foo", "GET")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// }
-//
-// func TestUpdateFunc(t *testing.T) {
-// 	clearAllStores()
-// 	defer clearAllStores()
-// 	handlers := k8sEventHandler{}
-// 	setDecryptionKey(t)
-//
-// 	proxy := spec.APIProxy{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "exampleAPIProxyOne",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIProxySpec{
-// 			Path: "api/v1/accounts",
-// 			Service: spec.Service{
-// 				Name: "my-service",
-// 				Port: 8080,
-// 			},
-// 		},
-// 	}
-// 	spec.ProxyStore.Set(proxy)
-// 	result, _ := spec.ProxyStore.Get("/api/v1/accounts")
-// 	assert.NotNil(t, result)
-// 	proxy.Spec.Path = "/modified/path"
-// 	handlers.updateFunc(proxy)
-// 	result, _ = spec.ProxyStore.Get("/api/v1/accounts")
-// 	assert.Nil(t, result)
-// 	result, _ = spec.ProxyStore.Get("/modified/path")
-// 	assert.NotNil(t, result)
-//
-// 	handlers.updateFunc(spec.APIKey{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name: "def456",
-// 		},
-// 		Spec: spec.APIKeySpec{
-// 			APIKeyData: "encrypted",
-// 		},
-// 	})
-// 	handlers.addFunc(spec.APIKey{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name: "abc123",
-// 		},
-// 		Spec: spec.APIKeySpec{
-// 			APIKeyData: "9210f613f32a54eca4601d199b81dda5a4f93c0540ee6a8b9634c2d4976b13399a03276820cd85a35b625a96ffdeffa2e094f1349e1ed7510afd7f0f904595f0f1bd8707170a46e6d366395456568323e4de71973977d872ab9aa733b35fbdeec279fc1f4bc147e242f414652bae8d46b7c53af76a1c37254096e4e0aa89dfdf86d599692ab74849bfedd7ecc6b4409b01d1e4d989cdd9ca6db7c1a90cd86086da7508f85186d938ab2922e862832eb07281e5934d417addaba0ddc43f57f3613ab0aff4f353fdadc1116f9dca10338562a842904eb7b3ab77b6f919ac244a8b8fa4d2634ac2f9bec60ee4631894e6b823dd200dc0c793f5d1dfc08b749b2bba",
-// 		},
-// 	})
-// 	result, err := spec.KeyStore.Get("i3CZlcRnDhJZeZfkDw9BgeEtZuFQKiw9")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	handlers.updateFunc(spec.APIKeyBinding{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "abc123",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIKeyBindingSpec{
-// 			APIProxyName: "api-proxy-one",
-// 			Keys: []spec.Key{
-// 				{
-// 					Name: "franks-api-key",
-// 				},
-// 			},
-// 		},
-// 	})
-// 	result, err = spec.BindingStore.Get("api-proxy-one", "foo")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	handlers.updateFunc(api.Secret{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "secret-one",
-// 			Namespace: "foo",
-// 		},
-// 		Type: "kubernetes.io/tls",
-// 		Data: map[string][]byte{
-// 			"tls.key": []byte("YWJjMTIz"),
-// 			"tls.crt": []byte("ZGVmNDU2"),
-// 		},
-// 	})
-// 	result, err = spec.SecretStore.Get("secret-one", "foo")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	service := api.Service{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "foo",
-// 			Namespace: "bar",
-// 			Labels: map[string]string{
-// 				"release":  "production",
-// 				"name-two": "value-two",
-// 			},
-// 		},
-// 	}
-// 	handlers.updateFunc(service)
-// 	result, err = spec.ServiceStore.Get(spec.CreateService(service), nil)
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-//
-// 	ep := api.Endpoints{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "kanali",
-// 			Namespace: "bar",
-// 		},
-// 	}
-// 	handlers.updateFunc(ep)
-// 	assert.Equal(t, *(spec.KanaliEndpoints), ep)
-//
-// 	mockOne, _ := json.Marshal([]spec.Route{
-// 		{
-// 			Route:  "/foo",
-// 			Code:   200,
-// 			Method: "GET",
-// 			Body:   "{\"foo\": \"bar\"}",
-// 		},
-// 	})
-//
-// 	handlers.updateFunc(api.ConfigMap{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "cm-one",
-// 			Namespace: "foo",
-// 		},
-// 		Data: map[string]string{
-// 			"response": string(mockOne),
-// 		},
-// 	})
-// 	result, err = spec.MockResponseStore.Get("foo", "cm-one", "/foo", "GET")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, result)
-// }
-//
-// func TestDeleteFunc(t *testing.T) {
-// 	clearAllStores()
-// 	defer clearAllStores()
-// 	handlers := k8sEventHandler{}
-// 	setDecryptionKey(t)
-//
-// 	proxy := spec.APIProxy{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "exampleAPIProxyOne",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIProxySpec{
-// 			Path: "api/v1/accounts",
-// 			Service: spec.Service{
-// 				Name: "my-service",
-// 				Port: 8080,
-// 			},
-// 		},
-// 	}
-// 	spec.ProxyStore.Set(proxy)
-// 	assert.False(t, spec.ProxyStore.IsEmpty())
-// 	handlers.deleteFunc(proxy)
-// 	assert.True(t, spec.ProxyStore.IsEmpty())
-//
-// 	binding := spec.APIKeyBinding{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "abc123",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIKeyBindingSpec{
-// 			APIProxyName: "api-proxy-one",
-// 			Keys: []spec.Key{
-// 				{
-// 					Name: "franks-api-key",
-// 				},
-// 			},
-// 		},
-// 	}
-// 	spec.BindingStore.Set(binding)
-// 	assert.False(t, spec.BindingStore.IsEmpty())
-// 	handlers.deleteFunc(binding)
-// 	assert.True(t, spec.BindingStore.IsEmpty())
-//
-// 	spec.KeyStore.Set(spec.APIKey{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name: "def456",
-// 		},
-// 		Spec: spec.APIKeySpec{
-// 			APIKeyData: "i3CZlcRnDhJZeZfkDw9BgeEtZuFQKiw9",
-// 		},
-// 	})
-// 	assert.False(t, spec.KeyStore.IsEmpty())
-// 	handlers.deleteFunc(spec.APIKey{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name: "abc123",
-// 		},
-// 		Spec: spec.APIKeySpec{
-// 			APIKeyData: "9210f613f32a54eca4601d199b81dda5a4f93c0540ee6a8b9634c2d4976b13399a03276820cd85a35b625a96ffdeffa2e094f1349e1ed7510afd7f0f904595f0f1bd8707170a46e6d366395456568323e4de71973977d872ab9aa733b35fbdeec279fc1f4bc147e242f414652bae8d46b7c53af76a1c37254096e4e0aa89dfdf86d599692ab74849bfedd7ecc6b4409b01d1e4d989cdd9ca6db7c1a90cd86086da7508f85186d938ab2922e862832eb07281e5934d417addaba0ddc43f57f3613ab0aff4f353fdadc1116f9dca10338562a842904eb7b3ab77b6f919ac244a8b8fa4d2634ac2f9bec60ee4631894e6b823dd200dc0c793f5d1dfc08b749b2bba",
-// 		},
-// 	})
-// 	assert.True(t, spec.KeyStore.IsEmpty())
-//
-// 	secret := api.Secret{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "secret-one",
-// 			Namespace: "foo",
-// 		},
-// 		Type: "kubernetes.io/tls",
-// 		Data: map[string][]byte{
-// 			"tls.key": []byte("YWJjMTIz"),
-// 			"tls.crt": []byte("ZGVmNDU2"),
-// 		},
-// 	}
-// 	spec.SecretStore.Set(secret)
-// 	assert.False(t, spec.SecretStore.IsEmpty())
-// 	handlers.deleteFunc(secret)
-// 	assert.True(t, spec.SecretStore.IsEmpty())
-// 	handlers.deleteFunc(spec.APIKey{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name: "def456",
-// 		},
-// 		Spec: spec.APIKeySpec{
-// 			APIKeyData: "encrypted",
-// 		},
-// 	})
-//
-// 	service := api.Service{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "foo",
-// 			Namespace: "bar",
-// 			Labels: map[string]string{
-// 				"release":  "production",
-// 				"name-two": "value-two",
-// 			},
-// 		},
-// 	}
-//
-// 	spec.ServiceStore.Set(spec.CreateService(service))
-// 	assert.False(t, spec.ServiceStore.IsEmpty())
-// 	handlers.deleteFunc(service)
-// 	assert.True(t, spec.ServiceStore.IsEmpty())
-//
-// 	mockOne, _ := json.Marshal([]spec.Route{
-// 		{
-// 			Route:  "/foo",
-// 			Code:   200,
-// 			Method: "GET",
-// 			Body:   "{\"foo\": \"bar\"}",
-// 		},
-// 	})
-// 	cm := api.ConfigMap{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "cm-one",
-// 			Namespace: "foo",
-// 		},
-// 		Data: map[string]string{
-// 			"response": string(mockOne),
-// 		},
-// 	}
-//
-// 	spec.MockResponseStore.Set(cm)
-// 	assert.False(t, spec.MockResponseStore.IsEmpty())
-// 	handlers.deleteFunc(cm)
-// 	assert.True(t, spec.MockResponseStore.IsEmpty())
-// }
-//
-// func clearAllStores() {
-// 	spec.ProxyStore.Clear()
-// 	spec.KeyStore.Clear()
-// 	spec.BindingStore.Clear()
-// 	spec.SecretStore.Clear()
-// 	spec.ServiceStore.Clear()
-// 	spec.MockResponseStore.Clear()
-// }
 
 func setDecryptionKey(t *testing.T) {
 	// setup a private key

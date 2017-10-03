@@ -20,31 +20,28 @@
 
 package tracer
 
-//
-// import (
-// 	"bytes"
-// 	"testing"
-//
-// 	"github.com/Sirupsen/logrus"
-// 	"github.com/stretchr/testify/assert"
-// )
+import (
+	"testing"
 
-// func TestCustomLoggerError(t *testing.T) {
-// 	logger := customLogger{}
-//
-// 	writerOne := new(bytes.Buffer)
-// 	writerTwo := new(bytes.Buffer)
-// 	logrus.SetOutput(writerOne)
-// 	logger.Error("custom error message")
-// 	logrus.SetOutput(writerTwo)
-// 	logrus.Error("custom error message")
-// 	assert.Equal(t, writerOne.String(), writerTwo.String())
-//
-// 	writerOne = new(bytes.Buffer)
-// 	writerTwo = new(bytes.Buffer)
-// 	logrus.SetOutput(writerOne)
-// 	logger.Infof("custom %s message", "info")
-// 	logrus.SetOutput(writerTwo)
-// 	logrus.Infof("custom %s message", "info")
-// 	assert.Equal(t, writerOne.String(), writerTwo.String())
-// }
+	"github.com/northwesternmutual/kanali/logging"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
+)
+
+func TestCustomLoggerError(t *testing.T) {
+	core, obsvr := observer.New(zap.NewAtomicLevelAt(zapcore.DebugLevel))
+	logging.Init(core)
+	logger := customLogger{}
+
+	logger.Error("custom error message")
+	assert.Equal(t, zapcore.ErrorLevel, obsvr.All()[obsvr.Len()-1].Entry.Level)
+	assert.Equal(t, "custom error message", obsvr.All()[obsvr.Len()-1].Entry.Message)
+	assert.Equal(t, 0, len(obsvr.All()[obsvr.Len()-1].Context))
+
+	logger.Infof("custom %s message", "info")
+	assert.Equal(t, zapcore.InfoLevel, obsvr.All()[obsvr.Len()-1].Entry.Level)
+	assert.Equal(t, "custom info message", obsvr.All()[obsvr.Len()-1].Entry.Message)
+	assert.Equal(t, 0, len(obsvr.All()[obsvr.Len()-1].Context))
+}

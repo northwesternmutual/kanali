@@ -259,24 +259,23 @@ var configMapHandlerFuncs = cache.ResourceEventHandlerFuncs{
 			logger.Error("received malformed ConfigMap from k8s apiserver")
 			return
 		}
-		if err := spec.MockResponseStore.Set(*cm); err != nil {
-			logger.Error(err.Error())
-		} else {
-			logger.Debug(fmt.Sprintf("added ConfigMap %s in %s namespace", cm.ObjectMeta.Name, cm.ObjectMeta.Namespace))
-		}
+		spec.MockResponseStore.Set(*cm)
+		logger.Debug(fmt.Sprintf("added ConfigMap %s in %s namespace", cm.ObjectMeta.Name, cm.ObjectMeta.Namespace))
 	},
 	UpdateFunc: func(old, new interface{}) {
 		logger := logging.WithContext(nil)
-		cm, ok := old.(*v1.ConfigMap)
+		oldConfigMap, ok := old.(*v1.ConfigMap)
 		if !ok {
 			logger.Error("received malformed ConfigMap from k8s apiserver")
 			return
 		}
-		if err := spec.MockResponseStore.Set(*cm); err != nil {
-			logger.Error(err.Error())
-		} else {
-			logger.Debug(fmt.Sprintf("updated ConfigMap %s in %s namespace", cm.ObjectMeta.Name, cm.ObjectMeta.Namespace))
+		newConfigMap, ok := new.(*v1.ConfigMap)
+		if !ok {
+			logger.Error("received malformed ConfigMap from k8s apiserver")
+			return
 		}
+		spec.MockResponseStore.Update(*oldConfigMap, *newConfigMap)
+		logger.Debug(fmt.Sprintf("updated ConfigMap %s in %s namespace", newConfigMap.ObjectMeta.Name, newConfigMap.ObjectMeta.Namespace))
 	},
 	DeleteFunc: func(obj interface{}) {
 		logger := logging.WithContext(nil)
@@ -285,11 +284,8 @@ var configMapHandlerFuncs = cache.ResourceEventHandlerFuncs{
 			logger.Error("received malformed ConfigMap from k8s apiserver")
 			return
 		}
-		if _, err := spec.MockResponseStore.Delete(*cm); err != nil {
-			logger.Error(err.Error())
-		} else {
-			logger.Debug(fmt.Sprintf("deleted ConfigMap %s in %s namespace", cm.ObjectMeta.Name, cm.ObjectMeta.Namespace))
-		}
+		spec.MockResponseStore.Delete(*cm)
+		logger.Debug(fmt.Sprintf("deleted ConfigMap %s in %s namespace", cm.ObjectMeta.Name, cm.ObjectMeta.Namespace))
 	},
 }
 
@@ -302,23 +298,26 @@ var endpointsHandlerFuncs = cache.ResourceEventHandlerFuncs{
 			return
 		}
 		if endpoints.ObjectMeta.Name == "kanali" {
-			logger.Debug("adding Kanali endpoints object")
+			logger.Debug(fmt.Sprintf("adding Endpoints kanali in %s namespace", endpoints.ObjectMeta.Namespace))
 			spec.KanaliEndpoints = endpoints
 		}
 	},
 	UpdateFunc: func(old, new interface{}) {
 		logger := logging.WithContext(nil)
-		endpoints, ok := old.(*v1.Endpoints)
+		_, ok := old.(*v1.Endpoints)
 		if !ok {
 			logger.Error("received malformed Endpoints from k8s apiserver")
 			return
 		}
-		if endpoints.ObjectMeta.Name == "kanali" {
-			logger.Debug("updating Kanali endpoints object")
-			spec.KanaliEndpoints = endpoints
+		newEndpoints, ok := new.(*v1.Endpoints)
+		if !ok {
+			logger.Error("received malformed Endpoints from k8s apiserver")
+			return
+		}
+		if newEndpoints.ObjectMeta.Name == "kanali" {
+			logger.Debug(fmt.Sprintf("updated Endpoints kanali in %s namespace", newEndpoints.ObjectMeta.Namespace))
+			spec.KanaliEndpoints = newEndpoints
 		}
 	},
-	DeleteFunc: func(obj interface{}) {
-		return
-	},
+	DeleteFunc: func(obj interface{}) {},
 }
