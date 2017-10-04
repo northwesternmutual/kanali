@@ -66,6 +66,8 @@ A new branch and tag will be create for each new major or minor version. At any 
 
 Branches will be maintained for at least six months after their first stable tag is cut (e.g. the clock for the release-2.0 branch started ticking when `v2.0.0` was tagged).
 
+Bug fixes, not features, will be ported into older, maintained versions of _kanali_.
+
 ## Compatibility
 
 > Always reference the [CHANGELOG](./CHANGELOG.md) for a detailed description of changes between versions.
