@@ -76,25 +76,25 @@ The following legend will be used for the following matrices:
 
 |             | Kubernetes 1.6 | Kubernetes 1.7 | Kubernetes 1.8 |
 |-------------|----------------|----------------|----------------|
-| kanali 1.0  | &#10003;       | &#10005;       | &#10005;       |
-| kanali 2.0  | &#10005;       | &#10013;       | &#10003;       |
-| kanali HEAD | &#10005;       | &#10013;       | &#10003;       |
+| kanali 1.0  | ✓              | x              | x              |
+| kanali 2.0  | x              | †              | ✓              |
+| kanali HEAD | x              | †              | ✓              |
 
-<code>&#10003;</code> Kanali is fully compatible with this version of Kubernetes  
-<code>&#10013;</code> Kanali is compatible with this version of Kubernetes with proper configuration.   
-<code>&#10005;</code> Kanali is not compatible with this version of Kubernetes
+`✓` Kanali is fully compatible with this version of Kubernetes  
+`†` Kanali is compatible with this version of Kubernetes with proper configuration.   
+`x` Kanali is not compatible with this version of Kubernetes
 
 ### CustomResourceDefinitions
 
 |             | kanali.io/v1 |
 |-------------|--------------|
-| kanali 1.0  | &#10003;     |
-| kanali 2.0  | &#10003;     |
-| kanali HEAD | &#10003;     |
+| kanali 1.0  | ✓            |
+| kanali 2.0  | ✓            |
+| kanali HEAD | ✓            |
 
-<code>&#10003;</code> Kanali is fully compatible with this version of the `kanali.io` API group. Every field in the spec potentially modifies behavior.  
-<code>&#10013;</code> Kanali is compatible with this version of the `kanali.io` API group. There are fields that were either added or removed. Their existence will not cause errors and their values, if set, will not modify behavior.   
-<code>&#10005;</code> Kanali is not compatible with this version of the `kanali.io` API group. Fields have been removed from the spec and their existence could cause errors.
+`✓` Kanali is fully compatible with this version of the `kanali.io` API group. Every field in the spec potentially modifies behavior.  
+`†` Kanali is compatible with this version of the `kanali.io` API group. There are fields that were either added or removed. Their existence will not cause errors and their values, if set, will not modify behavior.   
+`x` Kanali is not compatible with this version of the `kanali.io` API group. Fields have been removed from the spec and their existence could cause errors.
 
 # Plugins
 
