@@ -1,5 +1,5 @@
 hash: b472c5bf9e72cab0a3c8397ca70b057ce5ed9e472225db7c79ca09f46c417701
-updated: 2017-09-30T19:59:42.993091352-05:00
+updated: 2017-10-03T17:40:10.507476346-05:00
 imports:
 - name: github.com/apache/thrift
   version: b2a4d4ae21c789b689dd162deb819665567f481c
@@ -110,8 +110,6 @@ imports:
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
 - name: github.com/satori/go.uuid
   version: 879c5887cd475cd7864858769793b2ceb0d44feb
-- name: github.com/Sirupsen/logrus
-  version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: github.com/spf13/afero
   version: b28a7effac979219c2a2ed6205a4d70e4b1bcd02
   subpackages:
@@ -159,6 +157,7 @@ imports:
   - internal/color
   - internal/exit
   - zapcore
+  - zaptest/observer
 - name: golang.org/x/crypto
   version: d172538b2cfce0c13cee31e647d0367aa8cd2486
   subpackages:

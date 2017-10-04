@@ -20,6 +20,11 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 * [Quick Start](#quick-start)
 * [Tutorial](#tutorial)
 * [Documentation](#documentation)
+* [Versioning](#versioning)
+  * [Branches and Tags](#branches-and-tags)
+  * [Compatibility](#compatibility)
+    * [Kubernetes](#kubernetes)
+    * [CustomResourceDefinitions](#customresourcedefinitions)
 * [Plugins](#plugins)
 * [Security](#security)
 * [Analytics, Monitoring, and Tracing](#analytics-monitoring-and-tracing)
@@ -51,6 +56,45 @@ A complete guide showcasing all of Kanali's features is provided to ease the lea
 # Documentation
 
 Looking for documentation for the custom Kubernetes resources that Kanali creates and uses? Find it [here](./docs/docs.md).
+
+# Versioning
+
+_Kanali_ follows [semver](http://semver.org/). A non backwards compatible change will be defined as one that either invalidates the previously required Kubernetes version, breaks any of the CRD resources, or breaks the existing public interfaces (e.g. [`Plugin`](https://github.com/northwesternmutual/kanali/blob/master/plugins/plugin.go#L41-L44) interface).
+
+## Branches and Tags
+A new branch and tag will be create for each new major or minor version. At any given time, the master branch will represent `x.(y+1).0-alpha` or `(x+1).0.0-alpha`, where x and y are the current major and minor versions.
+
+Branches will be maintained for at least six months after their first stable tag is cut (e.g. the clock for the release-2.0 branch started ticking when `v2.0.0` was tagged).
+
+## Compatibility
+
+> Always reference the [CHANGELOG](./CHANGELOG.md) for a detailed description of changes between versions.
+
+The following legend will be used for the following matrices:
+
+### Kubernetes
+
+|             | Kubernetes 1.6 | Kubernetes 1.7 | Kubernetes 1.8 |
+|-------------|----------------|----------------|----------------|
+| kanali 1.0  | &#10003;       | &#10005;       | &#10005;       |
+| kanali 2.0  | &#10005;       | &#10013;       | &#10003;       |
+| kanali HEAD | &#10005;       | &#10013;       | &#10003;       |
+
+<code>&#10003;</code> Kanali is fully compatible with this version of Kubernetes  
+<code>&#10013;</code> Kanali is compatible with this version of Kubernetes with proper configuration.   
+<code>&#10005;</code> Kanali is not compatible with this version of Kubernetes
+
+### CustomResourceDefinitions
+
+|             | kanali.io/v1 |
+|-------------|--------------|
+| kanali 1.0  | &#10003;     |
+| kanali 2.0  | &#10003;     |
+| kanali HEAD | &#10003;     |
+
+<code>&#10003;</code> Kanali is fully compatible with this version of the `kanali.io` API group. Every field in the spec potentially modifies behavior.  
+<code>&#10013;</code> Kanali is compatible with this version of the `kanali.io` API group. There are fields that were either added or removed. Their existence will not cause errors and their values, if set, will not modify behavior.   
+<code>&#10005;</code> Kanali is not compatible with this version of the `kanali.io` API group. Fields have been removed from the spec and their existence could cause errors.
 
 # Plugins
 
