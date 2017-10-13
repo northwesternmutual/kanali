@@ -223,7 +223,7 @@ func getTargetURL(proxy *spec.APIProxy, originalRequest *http.Request) (*url.URL
 			uri,
 			proxy.Spec.Service.Port,
 		),
-		Path:       utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.Path),
+		Path:       utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.EscapedPath()),
 		RawPath:    utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.EscapedPath()),
 		ForceQuery: originalRequest.URL.ForceQuery,
 		RawQuery:   originalRequest.URL.RawQuery,

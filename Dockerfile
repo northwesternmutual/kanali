@@ -16,7 +16,7 @@ COPY glide.lock glide.yaml Makefile /go/src/github.com/northwesternmutual/kanali
 RUN make install
 COPY ./ /go/src/github.com/northwesternmutual/kanali/
 RUN sed -ie "s/changeme/`echo ${VERSION}`/g" /go/src/github.com/northwesternmutual/kanali/cmd/version.go
-RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/v1.2.0/plugin.go
+RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/etcd-grpc/plugin.go
 RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -buildmode=plugin -o apiKey_v1.2.0.so plugin.go
 RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -o kanali
 

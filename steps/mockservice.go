@@ -48,7 +48,7 @@ func (step MockServiceStep) GetName() string {
 // Do executes the logic of the MockServiceStep step
 func (step MockServiceStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
-  targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, r.URL.EscapedPath())
+  targetPath := utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, utils.ComputeURLPath(r.URL))
 
   untypedMr, err := spec.MockResponseStore.Get(proxy.ObjectMeta.Namespace, proxy.Spec.Mock.ConfigMapName, targetPath, r.Method)
   if err != nil {

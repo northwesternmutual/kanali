@@ -33,6 +33,13 @@ proxy_protocol = false
 [process]
 log_level = "debug"
 
+[etcd]
+cert_file = ""
+key_file = ""
+ca_file = ""
+endpoints = "http://localhost:23790"
+prefix = "kanali"
+
 [proxy]
 enable_cluster_ip = true
 enable_mock_responses = true

@@ -264,6 +264,6 @@ func (p Plugin) GetFileName() string {
 }
 
 func normalize(p *APIProxy) {
-	(*p).Spec.Path = utils.NormalizePath(p.Spec.Path)
-	(*p).Spec.Target = utils.NormalizePath(p.Spec.Target)
+	(*p).Spec.Path = utils.NormalizeURLPath(p.Spec.Path)
+	(*p).Spec.Target = utils.NormalizeURLPath(p.Spec.Target)
 }

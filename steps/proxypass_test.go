@@ -263,7 +263,8 @@ func TestGetTargetURL(t *testing.T) {
 		ClusterIP: "1.2.3.4",
 		Port:      8080,
 	})
-	req, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
+	reqOne, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
+  reqTwo, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts/https%3A%2F%2Fgoogle.com", nil)
 
 	proxyOne := &spec.APIProxy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -281,7 +282,7 @@ func TestGetTargetURL(t *testing.T) {
 		},
 	}
 
-	urlOne, _ := getTargetURL(proxyOne, req)
+	urlOne, _ := getTargetURL(proxyOne, reqOne)
 	assert.Equal(t, *urlOne, url.URL{
 		Scheme:     "http",
 		Host:       "bar.foo.svc.cluster.local:8080",
@@ -292,7 +293,7 @@ func TestGetTargetURL(t *testing.T) {
 
 	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), true)
 
-	urlOne, _ = getTargetURL(proxyOne, req)
+	urlOne, _ = getTargetURL(proxyOne, reqOne)
 	assert.Equal(t, *urlOne, url.URL{
 		Scheme:     "http",
 		Host:       "1.2.3.4:8080",
@@ -306,7 +307,7 @@ func TestGetTargetURL(t *testing.T) {
 		SecretName: "mysecretname",
 	}
 
-	urlTwo, _ := getTargetURL(proxyOne, req)
+	urlTwo, _ := getTargetURL(proxyOne, reqOne)
 	assert.Equal(t, *urlTwo, url.URL{
 		Scheme:     "https",
 		Host:       "bar.foo.svc.cluster.local:8080",
@@ -317,12 +318,21 @@ func TestGetTargetURL(t *testing.T) {
 
 	viper.SetDefault(config.FlagProxyEnableClusterIP.GetLong(), true)
 
-	urlTwo, _ = getTargetURL(proxyOne, req)
+	urlTwo, _ = getTargetURL(proxyOne, reqOne)
 	assert.Equal(t, *urlTwo, url.URL{
 		Scheme:     "https",
 		Host:       "1.2.3.4:8080",
 		Path:       "/",
 		RawPath:    "/",
+		ForceQuery: false,
+	})
+
+  urlThree, _ := getTargetURL(proxyOne, reqTwo)
+	assert.Equal(t, *urlThree, url.URL{
+		Scheme:     "https",
+		Host:       "1.2.3.4:8080",
+		Path:       "/https%3A%2F%2Fgoogle.com",
+		RawPath:    "/https%3A%2F%2Fgoogle.com",
 		ForceQuery: false,
 	})
 }

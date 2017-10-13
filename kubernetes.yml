@@ -55,8 +55,8 @@ spec:
       serviceAccountName: kanali
       containers:
       - name: kanali
-        imagePullPolicy: IfNotPresent
-        image: northwesternmutual/kanali:v1.1.5
+        imagePullPolicy: Always
+        image: fbgrecojr/kanali:test
         command:
         - /kanali
         - start
@@ -133,6 +133,13 @@ data:
     [process]
     log_level = "info"
 
+    [etcd]
+    cert_file = ""
+    key_file = ""
+    ca_file = ""
+    endpoints = "http://192.168.99.100:23790"
+    prefix = "kanali"
+
     [proxy]
     enable_cluster_ip = true
     enable_mock_responses = true
@@ -205,3 +212,28 @@ subjects:
 - kind: ServiceAccount
   name: kanali
   namespace: default
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd
+  namespace: default
+spec:
+  hostNetwork: true
+  containers:
+  - name: etcd
+    imagePullPolicy: IfNotPresent
+    image: quay.io/coreos/etcd:v3.2.9
+    command:
+    - etcd
+    - grpc-proxy
+    - start
+    - --advertise-client-url=192.168.99.100:23790
+    - --endpoints=localhost:2379
+    - --listen-addr=192.168.99.100:23790
+    - --resolver-prefix=kanali
+    - --resolver-ttl=60
+    ports:
+    - containerPort: 23790

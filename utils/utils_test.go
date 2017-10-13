@@ -27,19 +27,19 @@ import (
 )
 
 func TestComputeTargetPath(t *testing.T) {
-	assert.Equal(t, "/", ComputeTargetPath("/foo/bar", "", "/foo/bar"))
-	assert.Equal(t, "/", ComputeTargetPath("/foo/bar", "/", "/foo/bar"))
-	assert.Equal(t, "/foo", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar"))
-	assert.Equal(t, "/foo/bar", ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar"))
-	assert.Equal(t, "/bar", ComputeTargetPath("/foo/bar", "", "/foo/bar/bar"))
-	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts"))
-	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/"))
-	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/"))
-	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/"))
-	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/"))
-	assert.Equal(t, "/accounts", ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts"))
-	assert.Equal(t, "/", ComputeTargetPath("/", "", "/"), "path not what expected")
-	assert.Equal(t, "/", ComputeTargetPath("/", "/", "/"), "path not what expected")
+	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/foo/bar", "", "/foo/bar")))
+	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/", "/foo/bar")))
+	assert.Equal(t, "/foo", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/foo", "/foo/bar")))
+	assert.Equal(t, "/foo/bar", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar")))
+	assert.Equal(t, "/bar", NormalizeURLPath(ComputeTargetPath("/foo/bar", "", "/foo/bar/bar")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts")))
+	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/", "", "/")))
+	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/", "/", "/")))
 }
 
 func TestAbsPath(t *testing.T) {
@@ -51,11 +51,12 @@ func TestAbsPath(t *testing.T) {
 	assert.Equal(t, "", p)
 }
 
-func TestNormalizePath(t *testing.T) {
-	assert.Equal(t, "/foo/bar", NormalizePath("foo////bar"))
-	assert.Equal(t, "/foo", NormalizePath("foo"))
-	assert.Equal(t, "/foo", NormalizePath("foo////"))
-	assert.Equal(t, "/foo/bar", NormalizePath("///foo////bar//"))
-	assert.Equal(t, "/", NormalizePath(""))
-	assert.Equal(t, "/", NormalizePath("////"))
+func TestNormalizeURLPath(t *testing.T) {
+	assert.Equal(t, "/foo/bar", NormalizeURLPath("foo////bar"))
+	assert.Equal(t, "/foo", NormalizeURLPath("foo"))
+	assert.Equal(t, "/foo", NormalizeURLPath("foo////"))
+	assert.Equal(t, "/foo/bar", NormalizeURLPath("///foo////bar//"))
+	assert.Equal(t, "/", NormalizeURLPath(""))
+	assert.Equal(t, "/", NormalizeURLPath("////"))
+  assert.Equal(t, "/https%3A%2F%2Fgoogle.com", NormalizeURLPath("/////https%3A%2F%2Fgoogle.com"))
 }

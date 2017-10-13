@@ -36,6 +36,7 @@ import (
 	"github.com/northwesternmutual/kanali/server"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
+  "github.com/northwesternmutual/kanali/traffic"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -88,13 +89,18 @@ var startCmd = &cobra.Command{
 			}
 		}()
 
-		// start UDP server
-		go func() {
-			if err := server.StartUDPServer(); err != nil {
-				logger.Fatal(err.Error())
-				os.Exit(1)
+    etcdCtlr, err := traffic.NewController()
+		if err != nil {
+			logger.Fatal(err.Error())
+			os.Exit(1)
+		}
+		defer func() {
+			if err := etcdCtlr.Client.Close(); err != nil {
+				logger.Warn(err.Error())
 			}
 		}()
+
+		go etcdCtlr.MonitorTraffic()
 
 		tracer, closer, err := tracer.Jaeger()
 		if err != nil {

@@ -56,19 +56,17 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
 	m := &metrics.Metrics{}
 
-	normalize(r)
-
 	defer func() {
 		m.Add(
 			metrics.Metric{Name: "total_time", Value: int(time.Now().Sub(t0) / time.Millisecond), Index: false},
 			metrics.Metric{Name: "http_method", Value: r.Method, Index: true},
-			metrics.Metric{Name: "http_uri", Value: r.URL.EscapedPath(), Index: false},
+			metrics.Metric{Name: "http_uri", Value: utils.ComputeURLPath(r.URL), Index: false},
 			metrics.Metric{Name: "client_ip", Value: strings.Split(r.RemoteAddr, ":")[0], Index: false},
 		)
 		logger.Info("request details",
 			zap.String(tracer.HTTPRequestRemoteAddress, strings.Split(r.RemoteAddr, ":")[0]),
 			zap.String(tracer.HTTPRequestMethod, r.Method),
-			zap.String(tracer.HTTPRequestURLPath, r.URL.EscapedPath()),
+			zap.String(tracer.HTTPRequestURLPath, utils.ComputeURLPath(r.URL)),
 		)
 		go func() {
 			if err := h.InfluxController.WriteRequestData(m); err != nil {
@@ -119,9 +117,4 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(utils.JSONErr{Code: e.Status(), Msg: e.Error()}); err != nil {
 		logger.Error(err.Error())
 	}
-}
-
-func normalize(r *http.Request) {
-	r.URL.Path = utils.NormalizePath(r.URL.Path)
-	r.URL.RawPath = r.URL.EscapedPath()
 }
