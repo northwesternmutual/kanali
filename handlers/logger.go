@@ -24,8 +24,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/NYTimes/gziphandler"
 	"github.com/Sirupsen/logrus"
+	"github.com/northwesternmutual/kanali/utils"
 )
 
 // Logger creates a custom http.Handler that logs details around a request
@@ -33,18 +33,16 @@ import (
 // these metrics will be writtin to Influxdb
 func Logger(inner Handler) http.Handler {
 
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		inner.serveHTTP(w, r)
 
 		logrus.WithFields(logrus.Fields{
 			"client ip": strings.Split(r.RemoteAddr, ":")[0],
 			"method":    r.Method,
-			"uri":       r.URL.EscapedPath(),
+			"uri":       utils.ComputeURLPath(r.URL),
 		}).Info("request details")
 
 	})
-
-	return gziphandler.GzipHandler(h)
 
 }

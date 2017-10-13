@@ -172,7 +172,7 @@ func preformTargetProxy(client httpClient, request *http.Request, m *metrics.Met
 
 	sp := opentracing.StartSpan(fmt.Sprintf("%s %s",
 		request.Method,
-		request.URL.EscapedPath(),
+		utils.ComputeURLPath(request.URL),
 	), opentracing.ChildOf(span.Context()))
 	defer sp.Finish()
 
@@ -218,14 +218,19 @@ func getTargetURL(proxy *spec.APIProxy, originalRequest *http.Request) (*url.URL
 		uri = svc.ClusterIP
 	}
 
+	u, err := url.Parse(utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.EscapedPath()))
+	if err != nil {
+		return nil, err
+	}
+
 	return &url.URL{
 		Scheme: scheme,
 		Host: fmt.Sprintf("%s:%d",
 			uri,
 			proxy.Spec.Service.Port,
 		),
-		Path:       utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.Path),
-		RawPath:    utils.ComputeTargetPath(proxy.Spec.Path, proxy.Spec.Target, originalRequest.URL.EscapedPath()),
+		Path:       u.Path,
+		RawPath:    u.RawPath,
 		ForceQuery: originalRequest.URL.ForceQuery,
 		RawQuery:   originalRequest.URL.RawQuery,
 		Fragment:   originalRequest.URL.Fragment,

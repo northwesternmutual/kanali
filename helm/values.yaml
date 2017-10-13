@@ -1,7 +1,7 @@
 
 imageRegistry: northwesternmutual
 
-dockerImageTag: v1.2.0
+dockerImageTag: v1.2.1
 
 pullPolicy: Always
 

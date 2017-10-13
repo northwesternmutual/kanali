@@ -49,13 +49,11 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
 	m := &metrics.Metrics{}
 
-	normalize(r)
-
 	defer func() {
 		m.Add(
 			metrics.Metric{Name: "total_time", Value: int(time.Now().Sub(t0) / time.Millisecond), Index: false},
 			metrics.Metric{Name: "http_method", Value: r.Method, Index: true},
-			metrics.Metric{Name: "http_uri", Value: r.URL.EscapedPath(), Index: false},
+			metrics.Metric{Name: "http_uri", Value: utils.ComputeURLPath(r.URL), Index: false},
 			metrics.Metric{Name: "client_ip", Value: strings.Split(r.RemoteAddr, ":")[0], Index: false},
 		)
 		go func() {
@@ -69,7 +67,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 	sp := opentracing.StartSpan(fmt.Sprintf("%s %s",
 		r.Method,
-		r.URL.EscapedPath(),
+		utils.ComputeURLPath(r.URL),
 	))
 	defer sp.Finish()
 
@@ -92,7 +90,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		// log error
 		logrus.WithFields(logrus.Fields{
 			"method": r.Method,
-			"uri":    r.URL.EscapedPath(),
+			"uri":    utils.ComputeURLPath(r.URL),
 		}).Error(e.Error())
 
 		m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(e.Status()), Index: true})
@@ -119,7 +117,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		// log error
 		logrus.WithFields(logrus.Fields{
 			"method": r.Method,
-			"uri":    r.URL.EscapedPath(),
+			"uri":    utils.ComputeURLPath(r.URL),
 		}).Error("unknown error")
 
 		m.Add(metrics.Metric{Name: "http_response_code", Value: strconv.Itoa(http.StatusInternalServerError), Index: true})
@@ -140,9 +138,4 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
-}
-
-func normalize(r *http.Request) {
-	r.URL.Path = utils.NormalizePath(r.URL.Path)
-	r.URL.RawPath = r.URL.EscapedPath()
 }
