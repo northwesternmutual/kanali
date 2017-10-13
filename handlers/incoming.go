@@ -29,6 +29,7 @@ import (
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/steps"
+	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
 )
@@ -46,7 +47,7 @@ func IncomingRequest(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metri
 		steps.ValidateProxyStep{},
 		steps.PluginsOnRequestStep{},
 	)
-	if viper.GetBool(config.FlagProxyEnableMockResponses.GetLong()) && mockIsDefined(r.URL.Path) {
+	if viper.GetBool(config.FlagProxyEnableMockResponses.GetLong()) && mockIsDefined(utils.ComputeURLPath(r.URL)) {
 		f.Add(steps.MockServiceStep{})
 	} else {
 		f.Add(steps.ProxyPassStep{})

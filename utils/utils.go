@@ -22,51 +22,37 @@ package utils
 
 import (
 	"bytes"
+	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 
-	"github.com/PuerkitoBio/purell"
-	"github.com/Sirupsen/logrus"
 	"k8s.io/kubernetes/pkg/api"
 )
 
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
 // desired target path prefix and the assicated proxy
 func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
+
+	proxyPath = NormalizeURLPath(proxyPath)
+	proxyTarget = NormalizeURLPath(proxyTarget)
+	requestPath = NormalizeURLPath(requestPath)
+
 	var buffer bytes.Buffer
 
-	normalizePath(&proxyPath)
-	normalizePath(&requestPath)
-	normalizePath(&proxyTarget)
-
-	if proxyTarget == "/" {
-		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-			buffer.WriteString("/")
-		} else {
-			buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
-		}
-	} else {
-		if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-			buffer.WriteString("/")
-		} else {
-			buffer.WriteString(proxyTarget)
-			buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
-		}
+	if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
+		buffer.WriteString("/")
+	} else if proxyTarget != "/" {
+		buffer.WriteString(proxyTarget)
 	}
+
+	buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
 
 	if len(buffer.Bytes()) == 0 {
 		return "/"
 	}
 
 	return buffer.String()
-}
-
-func normalizePath(path *string) {
-	if len((*path)) == 0 {
-		*path = "/"
-	} else if (*path)[len((*path))-1] == '/' {
-		*path = (*path)[:len((*path))-1]
-	}
 }
 
 // GetAbsPath returns the absolute path given any path
@@ -95,29 +81,30 @@ func CompareObjectMeta(c1, c2 api.ObjectMeta) bool {
 	return c1.Namespace == c2.Namespace && c1.Name == c2.Name
 }
 
-// NormalizePath will correct a URL path that might be valid but no ideally formatted
-func NormalizePath(path string) string {
-	result, err := purell.NormalizeURLString(path, purell.FlagRemoveDotSegments|purell.FlagRemoveDuplicateSlashes|purell.FlagRemoveTrailingSlash)
-	if err != nil {
-		logrus.Errorf("error normalizing url path - using original url path: %s", err.Error())
-		return removeDupLeadingSlashes(path)
-	}
-	return removeDupLeadingSlashes(result)
+// ComputeURLPath will correct a URL path that might be valid but not ideally formatted
+func ComputeURLPath(u *url.URL) string {
+	return NormalizeURLPath(u.EscapedPath())
 }
 
-func removeDupLeadingSlashes(path string) string {
+// NormalizeURLPath will normalize any string treating it like a URL path.
+func NormalizeURLPath(path string) string {
 	if len(path) < 1 {
 		return "/"
 	}
-	var buffer bytes.Buffer
-	var i int
-	buffer.WriteString("/")
-	for i = 0; i < len(path); i++ {
-		if path[i] == '/' {
-			continue
-		}
-		break
+
+	path = regexp.MustCompile(`/{2,}`).ReplaceAllString(path, "/")
+
+	if strings.HasSuffix(path, "/") {
+		path = path[:len(path)-1]
 	}
-	buffer.WriteString(path[i:])
-	return buffer.String()
+
+	if len(path) < 1 {
+		return "/"
+	}
+
+	if path[0] != '/' {
+		path = "/" + path
+	}
+
+	return path
 }

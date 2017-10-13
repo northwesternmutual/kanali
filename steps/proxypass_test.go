@@ -122,7 +122,7 @@ func TestCreateTargetRequest(t *testing.T) {
 		Scheme:     "http",
 		Host:       "bar.foo.svc.cluster.local:8080",
 		Path:       "/",
-		RawPath:    "/",
+		RawPath:    "",
 		ForceQuery: false,
 	})
 }
@@ -262,6 +262,7 @@ func TestGetTargetURL(t *testing.T) {
 		Port:      8080,
 	})
 	req, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
+	reqTwo, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts"+"/https%3A%2F%2Fgoogle.com", nil)
 
 	proxyOne := &spec.APIProxy{
 		ObjectMeta: api.ObjectMeta{
@@ -284,7 +285,7 @@ func TestGetTargetURL(t *testing.T) {
 		Scheme:     "http",
 		Host:       "bar.foo.svc.cluster.local:8080",
 		Path:       "/",
-		RawPath:    "/",
+		RawPath:    "",
 		ForceQuery: false,
 	})
 
@@ -295,7 +296,7 @@ func TestGetTargetURL(t *testing.T) {
 		Scheme:     "http",
 		Host:       "1.2.3.4:8080",
 		Path:       "/",
-		RawPath:    "/",
+		RawPath:    "",
 		ForceQuery: false,
 	})
 
@@ -309,7 +310,7 @@ func TestGetTargetURL(t *testing.T) {
 		Scheme:     "https",
 		Host:       "bar.foo.svc.cluster.local:8080",
 		Path:       "/",
-		RawPath:    "/",
+		RawPath:    "",
 		ForceQuery: false,
 	})
 
@@ -320,7 +321,16 @@ func TestGetTargetURL(t *testing.T) {
 		Scheme:     "https",
 		Host:       "1.2.3.4:8080",
 		Path:       "/",
-		RawPath:    "/",
+		RawPath:    "",
+		ForceQuery: false,
+	})
+
+	urlThree, _ := getTargetURL(proxyOne, reqTwo)
+	assert.Equal(t, *urlThree, url.URL{
+		Scheme:     "https",
+		Host:       "1.2.3.4:8080",
+		Path:       "/https://google.com",
+		RawPath:    "/https%3A%2F%2Fgoogle.com",
 		ForceQuery: false,
 	})
 }

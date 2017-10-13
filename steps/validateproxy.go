@@ -46,7 +46,7 @@ func (step ValidateProxyStep) GetName() string {
 // Do executes the logic of the ValidateProxyStep step
 func (step ValidateProxyStep) Do(ctx context.Context, proxy *spec.APIProxy, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
-	untypedProxy, err := spec.ProxyStore.Get(r.URL.EscapedPath())
+	untypedProxy, err := spec.ProxyStore.Get(utils.ComputeURLPath(r.URL))
 	if err != nil || untypedProxy == nil {
 		if err != nil {
 			logrus.Error(err.Error())

@@ -1,5 +1,5 @@
-hash: 09dde83c9aca4daf66c9b2977c6a14846b2c7775a39b09a3647a23eb99dee222
-updated: 2017-09-15T11:21:23.87595025-05:00
+hash: 92875d208b3153214847738ba9cb9d1deab92c9bd1984fe8f13cc3058f9a0767
+updated: 2017-10-13T09:33:04.337759-05:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -168,13 +168,12 @@ imports:
   - jwriter
 - name: github.com/mitchellh/mapstructure
   version: d0303fe809921458f417bcf828397a65db30a7e4
-- name: github.com/NYTimes/gziphandler
-  version: 46766160161ff594e6d56bf8fcffb0b0399dc62d
 - name: github.com/opentracing/opentracing-go
   version: 1949ddbfd147afd4d964a9f00b24eb291e0e7c38
   subpackages:
   - ext
   - log
+  - mocktracer
 - name: github.com/pborman/uuid
   version: ca53cad383cad2479bbba7f7a1a05797ec1386e4
 - name: github.com/pelletier/go-toml
@@ -184,7 +183,7 @@ imports:
 - name: github.com/pkg/sftp
   version: 4d0e916071f68db74f8a73926335f809396d6b42
 - name: github.com/PuerkitoBio/purell
-  version: 0bcb03f4b4d0a9428594752bd2a3b9aa0a9d4bd4
+  version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
 - name: github.com/PuerkitoBio/urlesc
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
 - name: github.com/Sirupsen/logrus
