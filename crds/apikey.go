@@ -23,8 +23,8 @@ package crds
 import (
 	"fmt"
 
+  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
@@ -33,17 +33,58 @@ var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	},
 	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
 		Group:   KanaliGroupName,
-		Version: "v1",
+		Version: Version,
 		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 			Plural:   "apikeys",
 			Singular: "apikey",
 			ShortNames: []string{
 				"ak",
-				"keys",
 			},
 			Kind:     "ApiKey",
 			ListKind: "ApiKeyList",
 		},
 		Scope: apiextensionsv1beta1.ClusterScoped,
+    Validation: &apiextensionsv1beta1.CustomResourceValidation{
+      OpenAPIV3Schema: &apiextensionsv1beta1.JSONSchemaProps{
+        Required: []string{
+          "spec",
+        },
+        AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+          Allows: false,
+        },
+        Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+          "keys": apiextensionsv1beta1.JSONSchemaProps{
+            Type: "array",
+            UniqueItems: true,
+            MinLength: int64Ptr(1),
+            Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+              Schema: &apiextensionsv1beta1.JSONSchemaProps{
+                Type: "object",
+                Required: []string{
+                  "data",
+                  "status",
+                },
+                Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+                  "data": apiextensionsv1beta1.JSONSchemaProps{
+                    Type: "string",
+                  },
+                  "status": apiextensionsv1beta1.JSONSchemaProps{
+                    Type: "string",
+                    Enum: []apiextensionsv1beta1.JSON{
+      								{
+      									Raw: []byte(`"active"`),
+      								},
+      								{
+      									Raw: []byte(`"inactive"`),
+      								},
+      							},
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
 	},
 }
