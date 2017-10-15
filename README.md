@@ -78,9 +78,9 @@ The following legend will be used for the following matrices:
 
 |             | Kubernetes 1.6 | Kubernetes 1.7 | Kubernetes 1.8 |
 |-------------|----------------|----------------|----------------|
-| kanali 1.0  | ✓              | x              | x              |
-| kanali 2.0  | x              | †              | ✓              |
-| kanali HEAD | x              | †              | ✓              |
+| kanali 1.0  | ✓              | ✓              | x              |
+| kanali 2.0  | x              | x              | ✓              |
+| kanali HEAD | x              | x              | ✓              |
 
 `✓` Kanali is fully compatible with this version of Kubernetes  
 `†` Kanali is compatible with this version of Kubernetes with proper configuration.   
@@ -88,11 +88,11 @@ The following legend will be used for the following matrices:
 
 ### CustomResourceDefinitions
 
-|             | kanali.io/v1 |
-|-------------|--------------|
-| kanali 1.0  | ✓            |
-| kanali 2.0  | ✓            |
-| kanali HEAD | ✓            |
+|             | kanali.io/v1 | kanali.io/v2alpha1 |
+|-------------|--------------|--------------------|
+| kanali 1.0  | ✓            | x                  |
+| kanali 2.0  | x            | ✓                  |
+| kanali HEAD | x            | ✓                  |
 
 `✓` Kanali is fully compatible with this version of the `kanali.io` API group. Every field in the spec potentially modifies behavior.  
 `†` Kanali is compatible with this version of the `kanali.io` API group. There are fields that were either added or removed. Their existence will not cause errors and their values, if set, will not modify behavior.   
