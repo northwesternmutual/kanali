@@ -28,7 +28,7 @@ import (
 
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/spf13/viper"
-	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/api/core/v1"
 )
 
 // Service in an internal representation of a Kubernetes Service

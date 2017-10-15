@@ -27,7 +27,7 @@ import (
   "io/ioutil"
   "encoding/json"
 
-  "k8s.io/client-go/pkg/api/v1"
+  "k8s.io/api/core/v1"
 	"github.com/stretchr/testify/assert"
   "github.com/northwesternmutual/kanali/spec"
   metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -20,7 +20,7 @@
 
 package spec
 
-import "k8s.io/client-go/pkg/api/v1"
+import "k8s.io/api/core/v1"
 
 // KanaliEndpoints represents the endpoints of all running instances of Kanali
 var KanaliEndpoints *v1.Endpoints

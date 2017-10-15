@@ -28,6 +28,7 @@ import (
 	"errors"
 	"sync"
 
+  "k8s.io/apimachinery/pkg/runtime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -43,6 +44,16 @@ type APIKey struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              APIKeySpec `json:"spec"`
+}
+
+// DeepCopyObject TODO
+func (p *APIKey) DeepCopyObject() runtime.Object {
+  return p
+}
+
+// DeepCopyObject TODO
+func (p *APIKeyList) DeepCopyObject() runtime.Object {
+  return p
 }
 
 // APIKeySpec represents the data fields for the APIKey TPR

@@ -26,6 +26,7 @@ import (
 	"strings"
 	"sync"
 
+  "k8s.io/apimachinery/pkg/runtime"
 	"github.com/northwesternmutual/kanali/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -42,6 +43,16 @@ type APIProxy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              APIProxySpec `json:"spec"`
+}
+
+// DeepCopyObject TODO
+func (p *APIProxy) DeepCopyObject() runtime.Object {
+  return p
+}
+
+// DeepCopyObject TODO
+func (p *APIProxyList) DeepCopyObject() runtime.Object {
+  return p
 }
 
 // APIProxySpec represents the data fields for the APIProxy TPR

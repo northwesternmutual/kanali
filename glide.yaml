@@ -17,11 +17,14 @@ import:
 - package: github.com/coreos/etcd
 - package: github.com/uber/jaeger-client-go
   version: 2.9.0
-- package: k8s.io/apimachinery
-- package: k8s.io/client-go
-  version: release-4.0
 - package: k8s.io/apiextensions-apiserver
-  version: release-1.7
+  version: 89b2a556a65053a90552eaed26f810df4a266367 #release-1.8
+- package: k8s.io/apimachinery
+  version: 9d38e20d609d27e00d4ec18f7b9db67105a2bde0 #release-1.8
+- package: k8s.io/client-go
+  version: afb4606c45bae77c4dc2c15291d4d7d6d792196c #release-5.0
+- package: k8s.io/api
+  version: cadaf100c0a3dd6b254f320d6d651df079ec8e0a #release-1.8
 - package: go.uber.org/zap
   version: v1.7.1
 - package: github.com/satori/go.uuid
