@@ -28,8 +28,8 @@ import (
 	"errors"
 	"sync"
 
-  "k8s.io/apimachinery/pkg/runtime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // APIKeyList represents a list of APIKeys
@@ -48,12 +48,12 @@ type APIKey struct {
 
 // DeepCopyObject TODO
 func (p *APIKey) DeepCopyObject() runtime.Object {
-  return p
+	return p
 }
 
 // DeepCopyObject TODO
 func (p *APIKeyList) DeepCopyObject() runtime.Object {
-  return p
+	return p
 }
 
 // APIKeySpec represents the data fields for the APIKey TPR

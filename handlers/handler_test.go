@@ -35,8 +35,8 @@ import (
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestServeHTTP(t *testing.T) {
@@ -86,7 +86,7 @@ func TestServeHTTP(t *testing.T) {
 			Method: "GET",
 			Body:   "{\"foo\": \"bar\"}",
 		},
-    {
+		{
 			Route:  "/https%3A%2F%2Fgoogle.com",
 			Code:   200,
 			Method: "GET",
@@ -110,12 +110,12 @@ func TestServeHTTP(t *testing.T) {
 	assert.Equal(t, resp.Header.Get("Content-Type"), "application/json")
 	assert.Equal(t, resp.StatusCode, 200)
 
-  resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d/api/v1/accounts", randomHTTPPort) + "/https%3A%2F%2Fgoogle.com")
+	resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d/api/v1/accounts", randomHTTPPort) + "/https%3A%2F%2Fgoogle.com")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.Header.Get("Content-Type"), "application/json")
 	assert.Equal(t, resp.StatusCode, 200)
 
-  resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d////api///v1////accounts", randomHTTPPort) + "/https%3A%2F%2Fgoogle.com")
+	resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d////api///v1////accounts", randomHTTPPort) + "/https%3A%2F%2Fgoogle.com")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.Header.Get("Content-Type"), "application/json")
 	assert.Equal(t, resp.StatusCode, 200)

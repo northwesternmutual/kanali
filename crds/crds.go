@@ -31,7 +31,7 @@ import (
 const (
 	// KanaliGroupName represents the CRD group
 	KanaliGroupName = "kanali.io"
-  Version = "v2alpha1"
+	Version         = "v2alpha1"
 )
 
 // CreateCRDs will create all the CRDs that Kanali requires

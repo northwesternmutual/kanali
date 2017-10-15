@@ -38,8 +38,8 @@ import (
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type mockHTTPClient struct{}
@@ -264,7 +264,7 @@ func TestGetTargetURL(t *testing.T) {
 		Port:      8080,
 	})
 	reqOne, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts", nil)
-  reqTwo, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts/https%3A%2F%2Fgoogle.com", nil)
+	reqTwo, _ := http.NewRequest("GET", "http://foo.bar.com/api/v1/accounts/https%3A%2F%2Fgoogle.com", nil)
 
 	proxyOne := &spec.APIProxy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -327,7 +327,7 @@ func TestGetTargetURL(t *testing.T) {
 		ForceQuery: false,
 	})
 
-  urlThree, _ := getTargetURL(proxyOne, reqTwo)
+	urlThree, _ := getTargetURL(proxyOne, reqTwo)
 	assert.Equal(t, *urlThree, url.URL{
 		Scheme:     "https",
 		Host:       "1.2.3.4:8080",

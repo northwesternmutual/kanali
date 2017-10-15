@@ -22,10 +22,10 @@ package utils
 
 import (
 	"bytes"
+	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
-  "regexp"
-  "net/url"
 )
 
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
@@ -33,13 +33,13 @@ import (
 func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
 	var buffer bytes.Buffer
 
-  if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-    buffer.WriteString("/")
-  } else if proxyTarget != "/" {
-    buffer.WriteString(proxyTarget)
-  }
+	if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
+		buffer.WriteString("/")
+	} else if proxyTarget != "/" {
+		buffer.WriteString(proxyTarget)
+	}
 
-  buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
+	buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
 
 	if len(buffer.Bytes()) == 0 {
 		return "/"
@@ -70,27 +70,27 @@ func GetAbsPath(path string) (string, error) {
 
 // ComputeURLPath will correct a URL path that might be valid but not ideally formatted
 func ComputeURLPath(u *url.URL) string {
-  return NormalizeURLPath(u.EscapedPath())
+	return NormalizeURLPath(u.EscapedPath())
 }
 
 func NormalizeURLPath(path string) string {
-  if len(path) < 1 {
-    return "/"
-  }
+	if len(path) < 1 {
+		return "/"
+	}
 
-  path = regexp.MustCompile(`/{2,}`).ReplaceAllString(path, "/")
+	path = regexp.MustCompile(`/{2,}`).ReplaceAllString(path, "/")
 
-  if strings.HasSuffix(path, "/") {
-  	path = path[:len(path)-1]
-  }
+	if strings.HasSuffix(path, "/") {
+		path = path[:len(path)-1]
+	}
 
-  if len(path) < 1 {
-    return "/"
-  }
+	if len(path) < 1 {
+		return "/"
+	}
 
-  if path[0] != '/' {
-    path = "/" + path
-  }
+	if path[0] != '/' {
+		path = "/" + path
+	}
 
-  return path
+	return path
 }

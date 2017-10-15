@@ -58,5 +58,5 @@ func TestNormalizeURLPath(t *testing.T) {
 	assert.Equal(t, "/foo/bar", NormalizeURLPath("///foo////bar//"))
 	assert.Equal(t, "/", NormalizeURLPath(""))
 	assert.Equal(t, "/", NormalizeURLPath("////"))
-  assert.Equal(t, "/https%3A%2F%2Fgoogle.com", NormalizeURLPath("/////https%3A%2F%2Fgoogle.com"))
+	assert.Equal(t, "/https%3A%2F%2Fgoogle.com", NormalizeURLPath("/////https%3A%2F%2Fgoogle.com"))
 }

@@ -29,7 +29,7 @@ import (
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/steps"
-  "github.com/northwesternmutual/kanali/utils"
+	"github.com/northwesternmutual/kanali/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
 )

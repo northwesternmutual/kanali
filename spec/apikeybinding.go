@@ -25,8 +25,8 @@ import (
 	"strings"
 	"sync"
 
-  "k8s.io/apimachinery/pkg/runtime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // APIKeyBindingList represents a list of APIKeyBindingings
@@ -45,12 +45,12 @@ type APIKeyBinding struct {
 
 // DeepCopyObject TODO
 func (p *APIKeyBinding) DeepCopyObject() runtime.Object {
-  return p
+	return p
 }
 
-// DeepCopyObject TODO 
+// DeepCopyObject TODO
 func (p *APIKeyBindingList) DeepCopyObject() runtime.Object {
-  return p
+	return p
 }
 
 // APIKeyBindingSpec represents the data fields for the APIKeyBinding TPR

@@ -23,8 +23,8 @@ package crds
 import (
 	"fmt"
 
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
@@ -44,242 +44,242 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 			ListKind: "ApiProxyList",
 		},
 		Scope: apiextensionsv1beta1.NamespaceScoped,
-    Validation: &apiextensionsv1beta1.CustomResourceValidation{
-      OpenAPIV3Schema: &apiextensionsv1beta1.JSONSchemaProps{
-        Required: []string{
-          "spec",
-        },
-        AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-          Allows: false,
-        },
-        Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-          "spec": apiextensionsv1beta1.JSONSchemaProps{
-            Required: []string{
-              "source",
-              "target",
-            },
-            AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-              Allows: false,
-            },
-            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-              "source": apiextensionsv1beta1.JSONSchemaProps{
-                Required: []string{
-                  "path",
-                },
-                AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                  Allows: false,
-                },
-                Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                  "path": apiextensionsv1beta1.JSONSchemaProps{
-                    Type: "string",
-                    Pattern: `^\/.*`,
-                    MinLength: int64Ptr(1),
-                  },
-                  "virtualHost": apiextensionsv1beta1.JSONSchemaProps{
-                    Type: "string",
-                  },
-                },
-              },
-              "target": apiextensionsv1beta1.JSONSchemaProps{
-                Required: []string{
-                  "backend",
-                },
-                AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                  Allows: false,
-                },
-                Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                  "path": apiextensionsv1beta1.JSONSchemaProps{
-                    Type: "string",
-                    Pattern: `^\/.*`,
-                    MinLength: int64Ptr(1),
-                  },
-                  "mock": apiextensionsv1beta1.JSONSchemaProps{
-                    Type: "object",
-                    Required: []string{
-                      "configMapName",
-                    },
-                    AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                      Allows: false,
-                    },
-                    Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                      "configMapName": apiextensionsv1beta1.JSONSchemaProps{
-                        Ref: stringPtr("#/definitions/name"),
-                      },
-                    },
-                  },
-                  "backend": apiextensionsv1beta1.JSONSchemaProps{
-                    OneOf: []apiextensionsv1beta1.JSONSchemaProps{
-                      apiextensionsv1beta1.JSONSchemaProps{
-                        Type: "object",
-                        Required: []string{
-                          "endpoint",
-                        },
-                        AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                          Allows: false,
-                        },
-                        Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                          "endpoint": apiextensionsv1beta1.JSONSchemaProps{
-                            Type: "string",
-                          },
-                        },
-                      },
-                      apiextensionsv1beta1.JSONSchemaProps{
-                        Type: "object",
-                        Required: []string{
-                          "service",
-                        },
-                        AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                          Allows: false,
-                        },
-                        Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                          "service": apiextensionsv1beta1.JSONSchemaProps{
-                            Type: "object",
-                            OneOf: []apiextensionsv1beta1.JSONSchemaProps{
-                              apiextensionsv1beta1.JSONSchemaProps{
-                                Type: "object",
-                                Required: []string{
-                                  "name",
-                                  "port",
-                                },
-                                AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                                  Allows: false,
-                                },
-                                Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                                  "name": apiextensionsv1beta1.JSONSchemaProps{
-                                    Ref: stringPtr("#/definitions/name"),
-                                  },
-                                  "port": apiextensionsv1beta1.JSONSchemaProps{
-                                    Ref: stringPtr("#/definitions/port"),
-                                  },
-                                },
-                              },
-                              apiextensionsv1beta1.JSONSchemaProps{
-                                Type: "object",
-                                Required: []string{
-                                  "labels",
-                                  "port",
-                                },
-                                AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                                  Allows: false,
-                                },
-                                Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                                  "port": apiextensionsv1beta1.JSONSchemaProps{
-                                    Ref: stringPtr("#/definitions/port"),
-                                  },
-                                  "labels": apiextensionsv1beta1.JSONSchemaProps{
-                                    Type: "array",
-                                    UniqueItems: true,
-                                    Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
-                                      Schema: &apiextensionsv1beta1.JSONSchemaProps{
-                                        OneOf: []apiextensionsv1beta1.JSONSchemaProps{
-                                          apiextensionsv1beta1.JSONSchemaProps{
-                                            Type: "object",
-                                            Required: []string{
-                                              "name",
-                                              "value",
-                                            },
-                                            AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                                              Allows: false,
-                                            },
-                                            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                                              "name": apiextensionsv1beta1.JSONSchemaProps{
-                                                Ref: stringPtr("#/definitions/name"),
-                                              },
-                                              "value": apiextensionsv1beta1.JSONSchemaProps{
-                                                Type: "string",
-                                              },
-                                            },
-                                          },
-                                          apiextensionsv1beta1.JSONSchemaProps{
-                                            Type: "object",
-                                            Required: []string{
-                                              "name",
-                                              "header",
-                                            },
-                                            AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                                              Allows: false,
-                                            },
-                                            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                                              "name": apiextensionsv1beta1.JSONSchemaProps{
-                                                Ref: stringPtr("#/definitions/name"),
-                                              },
-                                              "header": apiextensionsv1beta1.JSONSchemaProps{
-                                                Type: "string",
-                                              },
-                                            },
-                                          },
-                                        },
-                                      },
-                                    },
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                  "ssl": apiextensionsv1beta1.JSONSchemaProps{
-                    Type: "object",
-                    Required: []string{
-                      "secretName",
-                    },
-                    AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                      Allows: false,
-                    },
-                    Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                      "secretName": apiextensionsv1beta1.JSONSchemaProps{
-                        Ref: stringPtr("#/definitions/name"),
-                      },
-                    },
-                  },
-                },
-              },
-              "plugins": apiextensionsv1beta1.JSONSchemaProps{
-                Type: "array",
-                UniqueItems: true,
-                Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
-                  Schema: &apiextensionsv1beta1.JSONSchemaProps{
-                    Required: []string{
-                      "name",
-                    },
-                    AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-                      Allows: false,
-                    },
-                    Type: "object",
-                    Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                      "name": apiextensionsv1beta1.JSONSchemaProps{
-                        Type: "string",
-                      },
-                      "version": apiextensionsv1beta1.JSONSchemaProps{
-                        Type: "string",
-                        Pattern: "^v?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\\+[0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*)?$",
-                      },
-                      "config": apiextensionsv1beta1.JSONSchemaProps{
-                        Type: "object",
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        Definitions: map[string]apiextensionsv1beta1.JSONSchemaProps{
-          "name": apiextensionsv1beta1.JSONSchemaProps{
-            Type: "string",
-            MinLength: int64Ptr(1),
-            MaxLength: int64Ptr(63),
-            Pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?",
-          },
-          "port": apiextensionsv1beta1.JSONSchemaProps{
-            Type: "integer",
-            Minimum: float64Ptr(0),
-            Maximum: float64Ptr(65535),
-          },
-        },
-      },
-    },
+		Validation: &apiextensionsv1beta1.CustomResourceValidation{
+			OpenAPIV3Schema: &apiextensionsv1beta1.JSONSchemaProps{
+				Required: []string{
+					"spec",
+				},
+				AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+					Allows: false,
+				},
+				Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+					"spec": {
+						Required: []string{
+							"source",
+							"target",
+						},
+						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+							Allows: false,
+						},
+						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+							"source": {
+								Required: []string{
+									"path",
+								},
+								AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+									Allows: false,
+								},
+								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+									"path": {
+										Type:      "string",
+										Pattern:   `^\/.*`,
+										MinLength: int64Ptr(1),
+									},
+									"virtualHost": {
+										Type: "string",
+									},
+								},
+							},
+							"target": {
+								Required: []string{
+									"backend",
+								},
+								AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+									Allows: false,
+								},
+								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+									"path": {
+										Type:      "string",
+										Pattern:   `^\/.*`,
+										MinLength: int64Ptr(1),
+									},
+									"mock": {
+										Type: "object",
+										Required: []string{
+											"configMapName",
+										},
+										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+											Allows: false,
+										},
+										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+											"configMapName": {
+												Ref: stringPtr("#/definitions/name"),
+											},
+										},
+									},
+									"backend": {
+										OneOf: []apiextensionsv1beta1.JSONSchemaProps{
+											{
+												Type: "object",
+												Required: []string{
+													"endpoint",
+												},
+												AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+													Allows: false,
+												},
+												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+													"endpoint": {
+														Type: "string",
+													},
+												},
+											},
+											{
+												Type: "object",
+												Required: []string{
+													"service",
+												},
+												AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+													Allows: false,
+												},
+												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+													"service": {
+														Type: "object",
+														OneOf: []apiextensionsv1beta1.JSONSchemaProps{
+															{
+																Type: "object",
+																Required: []string{
+																	"name",
+																	"port",
+																},
+																AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+																	Allows: false,
+																},
+																Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+																	"name": {
+																		Ref: stringPtr("#/definitions/name"),
+																	},
+																	"port": {
+																		Ref: stringPtr("#/definitions/port"),
+																	},
+																},
+															},
+															{
+																Type: "object",
+																Required: []string{
+																	"labels",
+																	"port",
+																},
+																AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+																	Allows: false,
+																},
+																Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+																	"port": {
+																		Ref: stringPtr("#/definitions/port"),
+																	},
+																	"labels": {
+																		Type:        "array",
+																		UniqueItems: true,
+																		Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+																			Schema: &apiextensionsv1beta1.JSONSchemaProps{
+																				OneOf: []apiextensionsv1beta1.JSONSchemaProps{
+																					{
+																						Type: "object",
+																						Required: []string{
+																							"name",
+																							"value",
+																						},
+																						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+																							Allows: false,
+																						},
+																						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+																							"name": {
+																								Ref: stringPtr("#/definitions/name"),
+																							},
+																							"value": {
+																								Type: "string",
+																							},
+																						},
+																					},
+																					{
+																						Type: "object",
+																						Required: []string{
+																							"name",
+																							"header",
+																						},
+																						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+																							Allows: false,
+																						},
+																						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+																							"name": {
+																								Ref: stringPtr("#/definitions/name"),
+																							},
+																							"header": {
+																								Type: "string",
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"ssl": {
+										Type: "object",
+										Required: []string{
+											"secretName",
+										},
+										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+											Allows: false,
+										},
+										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+											"secretName": {
+												Ref: stringPtr("#/definitions/name"),
+											},
+										},
+									},
+								},
+							},
+							"plugins": {
+								Type:        "array",
+								UniqueItems: true,
+								Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+									Schema: &apiextensionsv1beta1.JSONSchemaProps{
+										Required: []string{
+											"name",
+										},
+										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+											Allows: false,
+										},
+										Type: "object",
+										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+											"name": {
+												Type: "string",
+											},
+											"version": {
+												Type:    "string",
+												Pattern: "^v?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\\+[0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*)?$",
+											},
+											"config": {
+												Type: "object",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				Definitions: map[string]apiextensionsv1beta1.JSONSchemaProps{
+					"name": {
+						Type:      "string",
+						MinLength: int64Ptr(1),
+						MaxLength: int64Ptr(63),
+						Pattern:   "[a-z0-9]([-a-z0-9]*[a-z0-9])?",
+					},
+					"port": {
+						Type:    "integer",
+						Minimum: float64Ptr(0),
+						Maximum: float64Ptr(65535),
+					},
+				},
+			},
+		},
 	},
 }
