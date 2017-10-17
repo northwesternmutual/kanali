@@ -34,3 +34,5 @@ testImport:
   version: v1.1.4
   subpackages:
   - assert
+- package: k8s.io/apiserver
+  version: f9b476d61dbdf6474e3d42cc5e854d0d8b7f759e

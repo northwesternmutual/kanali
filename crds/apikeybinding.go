@@ -46,6 +46,7 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 		Scope: apiextensionsv1beta1.NamespaceScoped,
 		Validation: &apiextensionsv1beta1.CustomResourceValidation{
 			OpenAPIV3Schema: &apiextensionsv1beta1.JSONSchemaProps{
+				Description: "top level field wrapping for the ApiKeyBinding resource",
 				Required: []string{
 					"spec",
 				},
@@ -53,66 +54,88 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 					Allows: false,
 				},
 				Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-					"keys": {
-						Type:        "array",
-						UniqueItems: true,
-						MinLength:   int64Ptr(1),
-						Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
-							Schema: &apiextensionsv1beta1.JSONSchemaProps{
-								Type: "object",
-								Required: []string{
-									"name",
-								},
-								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-									"name": {
-										Ref: stringPtr("#/definitions/name"),
-									},
-									"defaultRule": {
-										Ref: stringPtr("#/definitions/rule"),
-									},
-									"subpaths": {
-										Type:        "array",
-										UniqueItems: true,
-										MinLength:   int64Ptr(1),
-										Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
-											Schema: &apiextensionsv1beta1.JSONSchemaProps{
-												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-													"path": {
-														Type:      "string",
-														Pattern:   `^\/.*`,
-														MinLength: int64Ptr(1),
-													},
-													"rule": {
-														Ref: stringPtr("#/definitions/rule"),
+					"spec": {
+						Description: "ApiKeyBinding resource body",
+						Required: []string{
+							"keys",
+						},
+						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+							Allows: false,
+						},
+						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+							"keys": {
+								Description: "list of ApiKey resources granted permissions",
+								Type:        "array",
+								UniqueItems: true,
+								MinLength:   int64Ptr(1),
+								Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+									Schema: &apiextensionsv1beta1.JSONSchemaProps{
+										Description: "ApiKey permissions",
+										Type:        "object",
+										Required: []string{
+											"name",
+										},
+										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+											Allows: false,
+										},
+										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+											"name": {
+												Ref: stringPtr("#/definitions/name"),
+											},
+											"defaultRule": {
+												Ref: stringPtr("#/definitions/rule"),
+											},
+											"subpaths": {
+												Description: "list of subpaths defining fine grained permissions",
+												Type:        "array",
+												UniqueItems: true,
+												MinLength:   int64Ptr(1),
+												Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+													Schema: &apiextensionsv1beta1.JSONSchemaProps{
+														Description: "unique subpath",
+														Required: []string{
+															"path",
+															"rule",
+														},
+														AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
+															Allows: false,
+														},
+														Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+															"path": {
+																Ref: stringPtr("#/definitions/path"),
+															},
+															"rule": {
+																Ref: stringPtr("#/definitions/rule"),
+															},
+														},
 													},
 												},
 											},
-										},
-									},
-									"quota": {
-										Type:       "integer",
-										Minimum:    float64Ptr(1),
-										MultipleOf: float64Ptr(1),
-									},
-									"rate": {
-										Type: "object",
-										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-											"amount": {
-												Type:       "integer",
-												Minimum:    float64Ptr(1),
-												MultipleOf: float64Ptr(1),
+											"quota": {
+												Description: "number of requests authorized for this ApiKey",
+												Ref:         stringPtr("#/definitions/wholeNumber"),
 											},
-											"unit": {
-												Type: "string",
-												Enum: []apiextensionsv1beta1.JSON{
-													{
-														Raw: []byte(`"SECOND"`),
+											"rate": {
+												Description: "number of requests an ApiKey can make over an interval",
+												Type:        "object",
+												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+													"amount": {
+														Ref: stringPtr("#/definitions/wholeNumber"),
 													},
-													{
-														Raw: []byte(`"MINUTE"`),
-													},
-													{
-														Raw: []byte(`"HOUR"`),
+													"unit": {
+														Description: "valid intervals",
+														Type:        "string",
+														Enum: []apiextensionsv1beta1.JSON{
+															{
+																Raw: []byte(`"SECOND"`),
+															},
+															{
+																Raw: []byte(`"MINUTE"`),
+															},
+															{
+																Raw: []byte(`"HOUR"`),
+															},
+														},
 													},
 												},
 											},
@@ -125,16 +148,33 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 				},
 				Definitions: map[string]apiextensionsv1beta1.JSONSchemaProps{
 					"name": {
-						Type:      "string",
-						MinLength: int64Ptr(1),
-						MaxLength: int64Ptr(63),
-						Pattern:   "[a-z0-9]([-a-z0-9]*[a-z0-9])?",
+						Description: "valid qualified Kubernetes name",
+						Type:        "string",
+						MinLength:   int64Ptr(1),
+						MaxLength:   int64Ptr(63),
+						Pattern:     k8sQualifiedNameRegex,
+					},
+					"path": {
+						Description: "http path",
+						Type:        "string",
+						Pattern:     httpPathRegex,
+						MinLength:   int64Ptr(1),
+						Default: &apiextensionsv1beta1.JSON{
+							Raw: []byte("/"),
+						},
+					},
+					"wholeNumber": {
+						Type:       "integer",
+						Minimum:    float64Ptr(1),
+						MultipleOf: float64Ptr(1),
 					},
 					"rule": {
-						Type: "object",
+						Description: "defines http method that an ApiKey has access to",
+						Type:        "object",
 						OneOf: []apiextensionsv1beta1.JSONSchemaProps{
 							{
-								Type: "object",
+								Description: "global access",
+								Type:        "object",
 								AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
 									Allows: false,
 								},
@@ -143,12 +183,14 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 								},
 								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 									"global": {
-										Type: "boolean",
+										Description: "does ApiKey have access to all http methods",
+										Type:        "boolean",
 									},
 								},
 							},
 							{
-								Type: "object",
+								Description: "fine grained http verb access",
+								Type:        "object",
 								AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
 									Allows: false,
 								},
@@ -157,7 +199,8 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 								},
 								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 									"granular": {
-										Type: "object",
+										Description: "fine grained http verb access",
+										Type:        "object",
 										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
 											Allows: false,
 										},
@@ -166,12 +209,14 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										},
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"verbs": {
+												Description: "list of http methods that ApiKey has access to",
 												Type:        "array",
 												UniqueItems: true,
 												MinLength:   int64Ptr(1),
 												Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
 													Schema: &apiextensionsv1beta1.JSONSchemaProps{
-														Type: "string",
+														Description: "valid htp methods",
+														Type:        "string",
 														Enum: []apiextensionsv1beta1.JSON{
 															{
 																Raw: []byte(`"GET"`),

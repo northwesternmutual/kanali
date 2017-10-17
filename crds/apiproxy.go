@@ -27,6 +27,21 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var (
+	httpPathRegex = `^\/.*`
+	// https://stackoverflow.com/questions/1418423/the-hostname-regex
+	virtualHostRegex = `^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?$`
+	// https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url
+	httpURLRegex = `https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)`
+	// https://github.com/kubernetes/apimachinery/blob/master/pkg/util/validation/validation.go
+	k8sPrefixFmt          = `([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\/?)?`
+	k8sNameFmt            = `([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]`
+	k8sNameRegex          = `^` + k8sNameFmt + `$`
+	k8sQualifiedNameRegex = `^` + k8sPrefixFmt + k8sNameFmt + `$`
+	httpHeaderNameRegex   = `^[0-9a-zA-Z](.*)[0-9a-zA-Z]$`
+	semanticVersionRegex  = `^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$`
+)
+
 var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: fmt.Sprintf("apiproxies.%s", KanaliGroupName),
@@ -46,6 +61,7 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 		Scope: apiextensionsv1beta1.NamespaceScoped,
 		Validation: &apiextensionsv1beta1.CustomResourceValidation{
 			OpenAPIV3Schema: &apiextensionsv1beta1.JSONSchemaProps{
+				Description: "top level field wrapping for the ApiProxy resource",
 				Required: []string{
 					"spec",
 				},
@@ -54,6 +70,7 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 				},
 				Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 					"spec": {
+						Description: "ApiProxy resource body",
 						Required: []string{
 							"source",
 							"target",
@@ -63,6 +80,7 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 						},
 						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 							"source": {
+								Description: "unique incoming http path and virtual host combination",
 								Required: []string{
 									"path",
 								},
@@ -71,12 +89,12 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 								},
 								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 									"path": {
-										Type:      "string",
-										Pattern:   `^\/.*`,
-										MinLength: int64Ptr(1),
+										Ref: stringPtr("#/definitions/path"),
 									},
 									"virtualHost": {
-										Type: "string",
+										Description: "http hostname",
+										Type:        "string",
+										Pattern:     virtualHostRegex,
 									},
 								},
 							},
@@ -89,12 +107,11 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 								},
 								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 									"path": {
-										Type:      "string",
-										Pattern:   `^\/.*`,
-										MinLength: int64Ptr(1),
+										Ref: stringPtr("#/definitions/path"),
 									},
 									"mock": {
-										Type: "object",
+										Description: "name of ConfigMap defining a valid mock response for this ApiProxy",
+										Type:        "object",
 										Required: []string{
 											"configMapName",
 										},
@@ -108,9 +125,11 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										},
 									},
 									"backend": {
+										Description: "defines the anatomy of an upstream server",
 										OneOf: []apiextensionsv1beta1.JSONSchemaProps{
 											{
-												Type: "object",
+												Description: "upstream server location outside a Kubernetes context",
+												Type:        "object",
 												Required: []string{
 													"endpoint",
 												},
@@ -119,12 +138,15 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 												},
 												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 													"endpoint": {
-														Type: "string",
+														Description: "valid http url",
+														Type:        "string",
+														Pattern:     httpURLRegex,
 													},
 												},
 											},
 											{
-												Type: "object",
+												Description: "upstream server location inside a Kubernetes context",
+												Type:        "object",
 												Required: []string{
 													"service",
 												},
@@ -133,10 +155,12 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 												},
 												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 													"service": {
-														Type: "object",
+														Description: "dynamic or static Kubernetes service",
+														Type:        "object",
 														OneOf: []apiextensionsv1beta1.JSONSchemaProps{
 															{
-																Type: "object",
+																Description: "statically defined Kubernetes service",
+																Type:        "object",
 																Required: []string{
 																	"name",
 																	"port",
@@ -154,7 +178,8 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																},
 															},
 															{
-																Type: "object",
+																Description: "dynamically defined Kubernetes service",
+																Type:        "object",
 																Required: []string{
 																	"labels",
 																	"port",
@@ -167,13 +192,16 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																		Ref: stringPtr("#/definitions/port"),
 																	},
 																	"labels": {
+																		Description: "list of Kubernetes service metadata labels to be matched against",
 																		Type:        "array",
 																		UniqueItems: true,
 																		Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
 																			Schema: &apiextensionsv1beta1.JSONSchemaProps{
+																				Description: "statically or dynamically defined label",
 																				OneOf: []apiextensionsv1beta1.JSONSchemaProps{
 																					{
-																						Type: "object",
+																						Description: "statically defined metadata label",
+																						Type:        "object",
 																						Required: []string{
 																							"name",
 																							"value",
@@ -186,12 +214,15 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																								Ref: stringPtr("#/definitions/name"),
 																							},
 																							"value": {
-																								Type: "string",
+																								Description: "service metadata label value",
+																								Type:        "string",
+																								Pattern:     k8sNameRegex,
 																							},
 																						},
 																					},
 																					{
-																						Type: "object",
+																						Description: "dynamically defined metadata label based on http header value",
+																						Type:        "object",
 																						Required: []string{
 																							"name",
 																							"header",
@@ -204,7 +235,10 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																								Ref: stringPtr("#/definitions/name"),
 																							},
 																							"header": {
-																								Type: "string",
+																								Description: "http header name",
+																								Type:        "string",
+																								Pattern:     httpHeaderNameRegex,
+																								MinLength:   int64Ptr(1),
 																							},
 																						},
 																					},
@@ -221,7 +255,8 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										},
 									},
 									"ssl": {
-										Type: "object",
+										Description: "kubernetes.io/tls secret type containing key, cert, and/or ca for ApiProxy tls configuration",
+										Type:        "object",
 										Required: []string{
 											"secretName",
 										},
@@ -237,10 +272,12 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 								},
 							},
 							"plugins": {
+								Description: "list of plugins to be executed on each request",
 								Type:        "array",
 								UniqueItems: true,
 								Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
 									Schema: &apiextensionsv1beta1.JSONSchemaProps{
+										Description: "unique plugin item",
 										Required: []string{
 											"name",
 										},
@@ -250,14 +287,18 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										Type: "object",
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"name": {
-												Type: "string",
+												Description: "plugin name",
+												Type:        "string",
+												MinLength:   int64Ptr(1),
 											},
 											"version": {
-												Type:    "string",
-												Pattern: "^v?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-(0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\\+[0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*)?$",
+												Description: "plugin version",
+												Type:        "string",
+												Pattern:     semanticVersionRegex,
 											},
 											"config": {
-												Type: "object",
+												Description: "unstructured plugin configuration",
+												Type:        "object",
 											},
 										},
 									},
@@ -268,15 +309,26 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 				},
 				Definitions: map[string]apiextensionsv1beta1.JSONSchemaProps{
 					"name": {
-						Type:      "string",
-						MinLength: int64Ptr(1),
-						MaxLength: int64Ptr(63),
-						Pattern:   "[a-z0-9]([-a-z0-9]*[a-z0-9])?",
+						Description: "valid qualified Kubernetes name",
+						Type:        "string",
+						MinLength:   int64Ptr(1),
+						MaxLength:   int64Ptr(63),
+						Pattern:     k8sQualifiedNameRegex,
 					},
 					"port": {
-						Type:    "integer",
-						Minimum: float64Ptr(0),
-						Maximum: float64Ptr(65535),
+						Description: "tcp port",
+						Type:        "integer",
+						Minimum:     float64Ptr(0),
+						Maximum:     float64Ptr(65535),
+					},
+					"path": {
+						Description: "http path",
+						Type:        "string",
+						Pattern:     httpPathRegex,
+						MinLength:   int64Ptr(1),
+						Default: &apiextensionsv1beta1.JSON{
+							Raw: []byte("/"),
+						},
 					},
 				},
 			},
