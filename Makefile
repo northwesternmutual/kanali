@@ -3,7 +3,6 @@ ALL_SRC := $(shell find . -name "*.go" | grep -v -e vendor \
         -e ".*/_.*" \
         -e ".*/mocks.*")
 
-BINARY=$(shell echo $${PWD\#\#*/})
 FILES = $(shell go list ./... | grep -v /vendor/)
 PACKAGES := $(shell glide novendor)
 
@@ -11,7 +10,7 @@ RACE=-race
 GOTEST=go test -v $(RACE)
 GOLINT=golint
 GOVET=go vet
-GOBUILD=go build $(RACE)
+GOINSTALL=go install $(RACE)
 GOFMT=gofmt
 FMT_LOG=fmt.log
 LINT_LOG=lint.log
@@ -29,9 +28,9 @@ install:
 	glide --version || go get github.com/Masterminds/glide
 	glide install
 
-.PHONY: build
-build:
-	GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` $(GOBUILD) -o $(BINARY)
+.PHONY: binary
+binary:
+	CGO_ENABLED=1 ./scripts/binary.sh $(VERSION)
 
 .PHONY: fmt
 fmt:

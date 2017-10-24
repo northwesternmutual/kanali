@@ -1,0 +1,78 @@
+package apikeybinding
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
+	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/store"
+	"k8s.io/client-go/tools/cache"
+)
+
+type ApiKeyBindingController struct {
+	apikeybindings informers.ApiKeyBindingInformer
+}
+
+func NewApiKeyBindingController(apikeybindings informers.ApiKeyBindingInformer) *ApiKeyBindingController {
+
+	ctlr := &ApiKeyBindingController{}
+
+	ctlr.apikeybindings = apikeybindings
+	apikeybindings.Informer().AddEventHandlerWithResyncPeriod(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    ctlr.apiKeyBindingAdd,
+			UpdateFunc: ctlr.apiKeyBindingUpdate,
+			DeleteFunc: ctlr.apiKeyBindingDelete,
+		},
+		5*time.Minute,
+	)
+
+	return ctlr
+}
+
+func (ctlr *ApiKeyBindingController) Run(stopCh <-chan struct{}) {
+	ctlr.apikeybindings.Informer().Run(stopCh)
+}
+
+func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
+	logger := logging.WithContext(nil)
+	binding, ok := obj.(*v2.ApiKeyBinding)
+	if !ok {
+		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
+		return
+	}
+	store.ApiKeyBindingStore.Set(*binding)
+	logger.Debug(fmt.Sprintf("added ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace))
+}
+
+func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new interface{}) {
+	logger := logging.WithContext(nil)
+	newBinding, ok := new.(*v2.ApiKeyBinding)
+	if !ok {
+		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
+		return
+	}
+	oldBinding, ok := old.(*v2.ApiKeyBinding)
+	if !ok {
+		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
+		return
+	}
+	store.ApiKeyBindingStore.Update(*newBinding, *oldBinding)
+	logger.Debug(fmt.Sprintf("updated ApiKeyBinding %s in %s namespace", newBinding.ObjectMeta.Name, newBinding.ObjectMeta.Namespace))
+}
+
+func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
+	logger := logging.WithContext(nil)
+	binding, ok := obj.(*v2.ApiKeyBinding)
+	if !ok {
+		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
+		return
+	}
+	result, _ := store.ApiKeyBindingStore.Delete(*binding)
+	if result != nil {
+		result := result.(v2.ApiKeyBinding)
+		logger.Debug(fmt.Sprintf("deleted ApiKeyBinding %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
+	}
+}

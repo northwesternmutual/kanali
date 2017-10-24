@@ -4,7 +4,6 @@ ARG CENTOS_VERSION=7
 FROM golang:${GO_VERSION} AS BUILD
 LABEL maintainer="frankgreco@northwesternmutual.com"
 LABEL version="${VERSION}"
-ARG VERSION=""
 ARG GLIDE_VERSION=0.12.3
 WORKDIR /go/src/github.com/northwesternmutual/kanali/
 RUN wget "https://github.com/Masterminds/glide/releases/download/v${GLIDE_VERSION}/glide-v${GLIDE_VERSION}-`go env GOHOSTOS`-`go env GOHOSTARCH`.tar.gz" -O /tmp/glide.tar.gz \
@@ -15,10 +14,9 @@ RUN wget "https://github.com/Masterminds/glide/releases/download/v${GLIDE_VERSIO
 COPY glide.lock glide.yaml Makefile /go/src/github.com/northwesternmutual/kanali/
 RUN make install
 COPY ./ /go/src/github.com/northwesternmutual/kanali/
-RUN sed -ie "s/changeme/`echo ${VERSION}`/g" /go/src/github.com/northwesternmutual/kanali/cmd/version.go
 RUN curl -O https://raw.githubusercontent.com/northwesternmutual/kanali-plugin-apikey/etcd-grpc/plugin.go
-RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -buildmode=plugin -o apiKey_v1.2.0.so plugin.go
-RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` go build -o kanali
+RUN go build -buildmode=plugin -o apiKey_v1.2.0.so plugin.go
+RUN make binary ${VERSION}
 
 FROM centos:${CENTOS_VERSION}
 LABEL maintainer="frankgreco@northwesternmutual.com"

@@ -25,6 +25,10 @@ import:
   version: afb4606c45bae77c4dc2c15291d4d7d6d792196c #release-5.0
 - package: k8s.io/api
   version: cadaf100c0a3dd6b254f320d6d651df079ec8e0a #release-1.8
+- package: k8s.io/code-generator
+  version: release-1.8 #release-1.8
+- package: k8s.io/gengo
+  version: 9e661e9308f078838e266cca1c673922088c0ea4
 - package: go.uber.org/zap
   version: v1.7.1
 - package: github.com/satori/go.uuid

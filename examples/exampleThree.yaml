@@ -9,37 +9,6 @@ metadata:
 
 ---
 
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: example-three
-  namespace: application
-data:
-  response: |-
-    [{
-        "route": "/health",
-        "code": 200,
-        "method": "GET",
-        "body": {
-            "msg": "all systems are up and running"
-        }
-    },
-    {
-        "route": "/accounts",
-        "code": 200,
-        "method": "GET",
-        "body": [{
-            "id": "1",
-            "balance": "$500.00"
-        },
-        {
-            "id": "2",
-            "balance": "$1000.00"
-        }]
-    }]
-
----
-
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -81,16 +50,54 @@ spec:
 
 ---
 
-apiVersion: "kanali.io/v1"
+apiVersion: kanali.io/v1
+kind: MockTarget
+metadata:
+  name: example-three
+  namespace: application
+spec:
+  routes:
+  - path: /health
+    status: 200
+    methods:
+    - GET
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+          "msg": "all systems are up and running"
+      }
+  - path: /accounts
+    status: 200
+    methods:
+    - GET
+    headers:
+      Content-Type: application/json
+    body: |
+      [{
+          "id": "1",
+          "balance": "$500.00"
+      },
+      {
+          "id": "2",
+          "balance": "$1000.00"
+      }]
+
+---
+
+apiVersion: kanali.io/v1
 kind: ApiProxy
 metadata:
   name: example-three
   namespace: application
 spec:
-  path: /api/v1/example-three
-  target: /
-  mock:
-    configMapName: example-three
-  service:
-    port: 8080
-    name: example-three
+  source:
+    path: /api/v1/example-three
+  target:
+    path: /
+    backend:
+      mock:
+        mockTargetName: example-three
+      service:
+        port: 8080
+        name: example-three

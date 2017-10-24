@@ -1,5 +1,5 @@
-hash: 8c43359c7e1d9833c98cbcd8ac66e093f91dec8c419cc9d4a3137d12e77e20d7
-updated: 2017-10-15T15:08:41.38764-05:00
+hash: b28e6890521b3cab630ef53e2c57bcc3aa38269b198c4b210b99a4433a7319f2
+updated: 2017-10-17T10:11:21.302619-05:00
 imports:
 - name: github.com/apache/thrift
   version: b2a4d4ae21c789b689dd162deb819665567f481c
@@ -404,13 +404,14 @@ imports:
   - util/flowcontrol
   - util/homedir
   - util/integer
+- name: k8s.io/code-generator
+  version: 0c5165a97e055df28cca8bbcb8b7c8ae1019b3f1
+- name: k8s.io/gengo
+  version: 9e661e9308f078838e266cca1c673922088c0ea4
 - name: k8s.io/kube-openapi
   version: 868f2f29720b192240e18284659231b440f9cda5
   subpackages:
-  - pkg/builder
   - pkg/common
-  - pkg/handler
-  - pkg/util
 testImports:
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
