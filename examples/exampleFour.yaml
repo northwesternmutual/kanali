@@ -75,10 +75,13 @@ metadata:
   name: example-four
   namespace: application
 spec:
-  path: /api/v1/example-four
-  target: /
-  service:
-    port: 8080
-    name: example-four
-  ssl:
-    secretName: example-four
+  source:
+    path: /api/v1/example-four
+  target:
+    path: /
+    backend:
+      service:
+        port: 8080
+        name: example-four
+    ssl:
+      secretName: example-four

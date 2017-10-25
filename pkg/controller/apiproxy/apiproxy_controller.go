@@ -7,7 +7,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
-	"github.com/northwesternmutual/kanali/pkg/store"
+	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -26,7 +26,7 @@ func NewApiProxyController(apiproxies informers.ApiProxyInformer) *ApiProxyContr
 			UpdateFunc: ctlr.apiProxyUpdate,
 			DeleteFunc: ctlr.apiProxyDelete,
 		},
-		5*time.Minute,
+		5 * time.Minute,
 	)
 
 	return ctlr
@@ -43,7 +43,7 @@ func (ctlr *ApiProxyController) apiProxyAdd(obj interface{}) {
 	if !ok {
 		logger.Error("received malformed APIProxy from k8s apiserver")
 	} else {
-		store.ApiProxyStore.Set(*proxy)
+		store.ApiProxyStore().Set(proxy)
 		logger.Debug(fmt.Sprintf("added ApiProxy %s in %s namespace", proxy.ObjectMeta.Name, proxy.ObjectMeta.Namespace))
 	}
 }
@@ -61,7 +61,7 @@ func (ctlr *ApiProxyController) apiProxyUpdate(old interface{}, new interface{})
 		logger.Error("received malformed ApiProxy from k8s apiserver")
 		return
 	}
-	if err := store.ApiProxyStore.Update(*oldProxy, *newProxy); err != nil {
+	if err := store.ApiProxyStore().Update(oldProxy, newProxy); err != nil {
 		logger.Error(err.Error())
 	} else {
 		logger.Debug(fmt.Sprintf("updated ApiProxy %s in %s namespace", newProxy.ObjectMeta.Name, newProxy.ObjectMeta.Namespace))
@@ -76,8 +76,7 @@ func (ctlr *ApiProxyController) apiProxyDelete(obj interface{}) {
 		logger.Error("received malformed ApiProxy from k8s apiserver")
 		return
 	}
-	if result, _ := store.ApiProxyStore.Delete(*proxy); result != nil {
-		result := result.(v2.ApiProxy)
+	if result, _ := store.ApiProxyStore().Delete(proxy); result != nil {
 		logger.Debug(fmt.Sprintf("deleted ApiProxy %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
 	}
 }

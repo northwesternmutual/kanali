@@ -54,14 +54,19 @@ metadata:
   name: example-nine
   namespace: application
 spec:
-  path: /api/v1/example-nine
-  target: /
-  service:
-    port: 8080
-    name: example-nine
+  source:
+    path: /api/v1/example-nine
+  target:
+    path: /
+    backend:
+      service:
+        port: 8080
+        name: example-nine
   plugins:
   - name: apiKey
     version: v1.2.0
+    config:
+      bindingName: example-nine
 
 ---
 
@@ -81,7 +86,6 @@ metadata:
   name: example-nine
   namespace: application
 spec:
-  proxy: example-nine
   keys:
   - name: johns-apikey
     rate:

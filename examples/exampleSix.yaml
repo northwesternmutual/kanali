@@ -54,14 +54,19 @@ metadata:
   name: example-six
   namespace: application
 spec:
-  path: /api/v1/example-six
-  target: /
-  service:
-    port: 8080
-    name: example-six
+  source:
+    path: /api/v1/example-six
+  target:
+    path: /
+    backend:
+      service:
+        port: 8080
+        name: example-six
   plugins:
   - name: apiKey
     version: v1.2.0
+    config:
+      bindingName: example-six
 
 ---
 
@@ -81,7 +86,6 @@ metadata:
   name: example-six
   namespace: application
 spec:
-  proxy: example-six
   keys:
   - name: janes-apikey
     defaultRule:

@@ -7,7 +7,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
-	"github.com/northwesternmutual/kanali/pkg/store"
+	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"k8s.io/client-go/tools/cache"
 )
 

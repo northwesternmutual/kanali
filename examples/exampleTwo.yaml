@@ -57,12 +57,15 @@ metadata:
   name: example-two
   namespace: application
 spec:
-  path: /api/v1/example-two
-  target: /
-  service:
-    port: 8080
-    labels:
-    - name: app
-      value: example-two
-    - name: release
-      header: deployment
+  source:
+    path: /api/v1/example-two
+  target:
+    path: /
+    backend:
+      service:
+        port: 8080
+        labels:
+        - name: app
+          value: example-two
+        - name: release
+          header: deployment

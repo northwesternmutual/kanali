@@ -1,0 +1,23 @@
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: application
+  labels:
+    name: application
+
+---
+
+apiVersion: kanali.io/v1
+kind: ApiProxy
+metadata:
+  name: example-one
+  namespace: application
+spec:
+  source:
+    path: /api/v1/example-one
+  target:
+    path: /
+    backend:
+      endpoint: https://api.google.com

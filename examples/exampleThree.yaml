@@ -98,6 +98,3 @@ spec:
     backend:
       mock:
         mockTargetName: example-three
-      service:
-        port: 8080
-        name: example-three

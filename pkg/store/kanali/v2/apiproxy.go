@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package store
+package v2
 
 import (
 	"errors"
@@ -29,8 +29,17 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/utils"
 )
 
-// ApiProxyFactory is factory that implements a concurrency safe store for Kanali ApiProxy resources
-type ApiProxyFactory struct {
+type ApiProxyStoreInterface interface {
+	Set(apiProxy *v2.ApiProxy) error
+	Update(old, new *v2.ApiProxy) error
+	Get(path string) (*v2.ApiProxy, error)
+	Delete(apiProxy *v2.ApiProxy) (*v2.ApiProxy, error)
+	Clear()
+	IsEmpty() bool
+  ApiProxyStoreExpansion
+}
+
+type apiProxyFactory struct {
 	mutex     sync.RWMutex
 	proxyTree *proxyNode
 }
@@ -41,14 +50,16 @@ type proxyNode struct {
 }
 
 var (
-	// ApiProxyStore holds all discovered ApiProxy resources in an efficient data structure.
-	// It should not be mutated directly!
-	ApiProxyStore = &ApiProxyFactory{sync.RWMutex{}, &proxyNode{}}
+	apiProxyStore = &apiProxyFactory{sync.RWMutex{}, &proxyNode{}}
 )
+
+func ApiProxyStore() ApiProxyStoreInterface {
+  return apiProxyStore
+}
 
 // Clear will remove all ApiProxy resources
 // O(1)
-func (s *ApiProxyFactory) Clear() {
+func (s *apiProxyFactory) Clear() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	*(s.proxyTree) = proxyNode{}
@@ -56,35 +67,23 @@ func (s *ApiProxyFactory) Clear() {
 
 // Update will update an ApiProxy resource.
 // O(n), n => number of path segments in the ApiProxy source path
-func (s *ApiProxyFactory) Update(old, new interface{}) error {
+func (s *apiProxyFactory) Update(old, new *v2.ApiProxy) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	oldProxy, ok := old.(v2.ApiProxy)
-	if !ok {
-		return errors.New("old ApiProxy not expected type")
-	}
-	newProxy, ok := new.(v2.ApiProxy)
-	if !ok {
-		return errors.New("new ApiProxy not expected type")
-	}
-	normalizeProxyPaths(&oldProxy)
-	normalizeProxyPaths(&newProxy)
-	return s.update(oldProxy, newProxy)
+	return s.update(old, new)
 }
 
-func (s *ApiProxyFactory) update(old, new v2.ApiProxy) error {
-	untyped := s.get(new.Spec.Source.Path)
-	if untyped != nil {
-		typed, ok := untyped.(v2.ApiProxy)
-		if !ok {
-			return errors.New("expected type ApiProxy")
-		}
-		if new.ObjectMeta.Name != typed.ObjectMeta.Name || new.ObjectMeta.Namespace != typed.ObjectMeta.Namespace {
+func (s *apiProxyFactory) update(old, new *v2.ApiProxy) error {
+  normalizeProxyPaths(old)
+	normalizeProxyPaths(new)
+	existing := s.get(new.Spec.Source.Path)
+	if existing != nil {
+		if new.ObjectMeta.Name != existing.ObjectMeta.Name || new.ObjectMeta.Namespace != existing.ObjectMeta.Namespace {
 			return errors.New("ApiProxy with different ObjectMeta exists at this path")
 		}
 	}
 
-	s.proxyTree.doSet(strings.Split(new.Spec.Source.Path[1:], "/"), &new)
+	s.proxyTree.doSet(strings.Split(new.Spec.Source.Path[1:], "/"), new)
 	if old.Spec.Source.Path != new.Spec.Source.Path {
 		s.proxyTree.delete(strings.Split(old.Spec.Source.Path[1:], "/"))
 	}
@@ -93,15 +92,20 @@ func (s *ApiProxyFactory) update(old, new v2.ApiProxy) error {
 
 // Set adds an ApiProxy resource
 // O(n), n => number of path segments in the ApiProxy source path
-func (s *ApiProxyFactory) Set(obj interface{}) error {
+func (s *apiProxyFactory) Set(apiProxy *v2.ApiProxy) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	proxy, ok := obj.(v2.ApiProxy)
-	if !ok {
-		return errors.New("ApiProxy not expected type")
-	}
-	normalizeProxyPaths(&proxy)
-	s.proxyTree.doSet(strings.Split(proxy.Spec.Source.Path[1:], "/"), &proxy)
+  return s.set(apiProxy)
+}
+
+func (s *apiProxyFactory) set(apiProxy *v2.ApiProxy) error {
+  normalizeProxyPaths(apiProxy)
+  // edge case
+  if apiProxy.Spec.Source.Path == "/" || apiProxy.Spec.Source.Path == "" {
+    s.proxyTree.value = apiProxy
+  } else {
+    s.proxyTree.doSet(strings.Split(apiProxy.Spec.Source.Path[1:], "/"), apiProxy)
+  }
 	return nil
 }
 
@@ -121,7 +125,7 @@ func (n *proxyNode) doSet(keys []string, v *v2.ApiProxy) {
 
 // IsEmpty reports whether the ApiProxyStore is empty
 // O(1)
-func (s *ApiProxyFactory) IsEmpty() bool {
+func (s *apiProxyFactory) IsEmpty() bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	return len(s.proxyTree.children) <= 0
@@ -129,24 +133,14 @@ func (s *ApiProxyFactory) IsEmpty() bool {
 
 // Get retrieves an ApiProxy if it exists from a request path
 // O(n), n => number of path segments in request path
-func (s *ApiProxyFactory) Get(params ...interface{}) (interface{}, error) {
+func (s *apiProxyFactory) Get(path string) (*v2.ApiProxy, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	if len(params) != 1 {
-		return nil, errors.New("too many arguments")
-	}
-	path, ok := params[0].(string)
-	if !ok {
-		return nil, errors.New("request path was not expected type")
-	}
 	return s.get(path), nil
 }
 
-func (s *ApiProxyFactory) get(path string) interface{} {
-	if len(s.proxyTree.children) == 0 || path == "" {
-		return nil
-	}
-	if path[0] == '/' {
+func (s *apiProxyFactory) get(path string) *v2.ApiProxy {
+	if len(path) > 0 && path[0] == '/' {
 		path = path[1:]
 	}
 	rootNode := s.proxyTree
@@ -159,31 +153,27 @@ func (s *ApiProxyFactory) get(path string) interface{} {
 	if rootNode.value == nil {
 		return nil
 	}
-	return *rootNode.value
+	return rootNode.value
 }
 
 // Delete will remove an ApiProxy resource
 // O(n), n => number of path segments in the ApiProxy source path
-func (s *ApiProxyFactory) Delete(obj interface{}) (interface{}, error) {
+func (s *apiProxyFactory) Delete(apiProxy *v2.ApiProxy) (*v2.ApiProxy, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	if obj == nil {
-		return nil, nil
-	}
-	p, ok := obj.(v2.ApiProxy)
-	if !ok {
-		return nil, errors.New("ApiProxy was not expected type")
-	}
-	normalizeProxyPaths(&p)
-	result := s.proxyTree.delete(strings.Split(p.Spec.Source.Path[1:], "/"))
-	if result == nil {
-		return nil, nil
-	}
-	return *result, nil
+  return s.delete(apiProxy)
+}
+
+func (s *apiProxyFactory) delete(apiProxy *v2.ApiProxy) (*v2.ApiProxy, error) {
+  if apiProxy == nil {
+    return nil, nil
+  }
+  normalizeProxyPaths(apiProxy)
+	return s.proxyTree.delete(strings.Split(apiProxy.Spec.Source.Path[1:], "/")), nil
 }
 
 func (n *proxyNode) delete(segments []string) *v2.ApiProxy {
-	if len(segments) == 0 {
+	if len(segments) == 0 || (len(segments) == 1 && segments[0] == "") {
 		tmp := n.value
 		n.value = nil
 		return tmp

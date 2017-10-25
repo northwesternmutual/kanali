@@ -75,12 +75,14 @@ metadata:
   name: example-five
   namespace: application
 spec:
-  path: /api/v1/example-five
-  target: /
-  hosts:
-  - name: foo.bar.com
+  source:
+    path: /api/v1/example-five
+    virtualHost: foo.bar.com
+  target:
+    path: /
+    backend:
+      service:
+        port: 8080
+        name: example-five
     ssl:
       secretName: example-five
-  service:
-    port: 8080
-    name: example-five

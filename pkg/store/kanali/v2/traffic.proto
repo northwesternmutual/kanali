@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package store;
+package v2;
 
 message TrafficPoint {
   int64 time = 1;

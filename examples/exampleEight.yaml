@@ -54,11 +54,14 @@ metadata:
   name: example-eight
   namespace: application
 spec:
-  path: /api/v1/example-eight
-  target: /
-  service:
-    port: 8080
-    name: example-eight
+  source:
+    path: /api/v1/example-eight
+  target:
+    path: /
+    backend:
+      service:
+        port: 8080
+        name: example-eight
   plugins:
   - name: apiKey
     version: v1.2.0

@@ -23,7 +23,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	"github.com/northwesternmutual/kanali/pkg/metrics"
 	plugin "github.com/northwesternmutual/kanali/pkg/plugin"
-	store "github.com/northwesternmutual/kanali/pkg/store"
+	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	tags "github.com/northwesternmutual/kanali/pkg/tags"
 	"github.com/northwesternmutual/kanali/pkg/utils"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -498,8 +498,8 @@ func (step validateProxyStep) getName() string {
 // Do executes the logic of the ValidateProxyStep step
 func (step validateProxyStep) do(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
-	untypedProxy, err := store.ApiProxyStore.Get(utils.ComputeURLPath(r.URL))
-	if err != nil || untypedProxy == nil {
+	typedProxy, err := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
+	if err != nil || typedProxy == nil {
 		if err != nil {
 			logging.WithContext(ctx).Error("error retrieving proxy", zap.String("msg", err.Error()))
 		}
@@ -515,9 +515,7 @@ func (step validateProxyStep) do(ctx context.Context, proxy *v2.ApiProxy, k8sCor
 		return kanaliErrors.StatusError{Code: http.StatusNotFound, Err: errors.New("proxy not found")}
 	}
 
-	typedProxy, _ := untypedProxy.(v2.ApiProxy)
-
-	*proxy = typedProxy
+	*proxy = *typedProxy
 
 	trace.SetTag(tags.KanaliProxyName, proxy.ObjectMeta.Name)
 	trace.SetTag(tags.KanaliProxyNamespace, proxy.ObjectMeta.Namespace)

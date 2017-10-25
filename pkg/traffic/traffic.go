@@ -29,7 +29,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/logging"
-	"github.com/northwesternmutual/kanali/pkg/store"
+	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/spf13/viper"
 	"go.uber.org/zap/zapgrpc"
 )

@@ -36,7 +36,7 @@ type httpHandler struct {
 }
 
 func startHTTP(ctx context.Context, handler http.HandlerFunc) error {
-	logger := logging.WithContext(ctx)
+	logger := logging.WithContext(nil)
 
 	address := fmt.Sprintf("%s:%d", viper.GetString(options.FlagServerBindAddress.GetLong()), getPort())
 

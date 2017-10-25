@@ -54,14 +54,19 @@ metadata:
   name: example-seven
   namespace: application
 spec:
-  path: /api/v1/example-seven
-  target: /
-  service:
-    port: 8080
-    name: example-seven
-  plugins:
-  - name: apiKey
-    version: v1.2.0
+  source:
+    path: /api/v1/example-seven
+  target:
+    path: /
+    backend:
+      service:
+        port: 8080
+        name: example-seven
+    plugins:
+    - name: apiKey
+      version: v1.2.0
+      config:
+        bindingName: example-seven
 
 ---
 
@@ -81,9 +86,10 @@ metadata:
   name: example-seven
   namespace: application
 spec:
-  proxy: example-seven
   keys:
   - name: bobs-apikey
+    defaultRule:
+      global: false
     subpaths:
     - path: /foo
       rule:
