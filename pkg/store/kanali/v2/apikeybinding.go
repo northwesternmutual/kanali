@@ -28,8 +28,17 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 )
 
-// ApiKeyBindingFactory is factory that implements a concurrency safe store for Kanali ApiKeyBinding resources
-type ApiKeyBindingFactory struct {
+type ApiKeyBindingStoreInterface interface {
+	Set(apiKeyBinding *v2.ApiKeyBinding)
+	Update(old, new *v2.ApiKeyBinding)
+	Get(namespace, binding, key, target string) *v2.Rule
+	Delete(apiKey *v2.ApiKeyBinding) *v2.ApiKeyBinding
+	Clear()
+	IsEmpty() bool
+	ApiKeyBindingStoreExpansion
+}
+
+type apiKeyBindingFactory struct {
 	mutex            sync.RWMutex
 	apiKeyBindingMap map[string]map[string]map[string]structuredKey
 }
@@ -45,14 +54,16 @@ type subpathNode struct {
 }
 
 var (
-	// ApiKeyBindingStore holds all discovered ApiKeyBinding resources in an efficient data structure.
-	// It should not be mutated directly!
-	ApiKeyBindingStore = &ApiKeyBindingFactory{sync.RWMutex{}, map[string]map[string]map[string]structuredKey{}}
+	apiKeyBindingStore = &apiKeyBindingFactory{sync.RWMutex{}, map[string]map[string]map[string]structuredKey{}}
 )
+
+func ApiKeyBindingStore() ApiKeyBindingStoreInterface {
+	return apiKeyBindingStore
+}
 
 // Clear will remove all ApiKeyBinding resources
 // O(n), n => number of ApiKeyBinding resources
-func (s *ApiKeyBindingFactory) Clear() {
+func (s *apiKeyBindingFactory) Clear() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	for b := range s.apiKeyBindingMap {
@@ -62,7 +73,7 @@ func (s *ApiKeyBindingFactory) Clear() {
 
 // IsEmpty reports whether the ApiKeyBindingStore is empty
 // O(1)
-func (s *ApiKeyBindingFactory) IsEmpty() bool {
+func (s *apiKeyBindingFactory) IsEmpty() bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	return len(s.apiKeyBindingMap) == 0
@@ -73,19 +84,10 @@ func (s *ApiKeyBindingFactory) IsEmpty() bool {
 //   x => number of ApiKey resources ApiKeyBinding
 //   y => number of subpaths defined in each ApiKey rule
 //   z => number of path segments in each subpath
-func (s *ApiKeyBindingFactory) Update(old, new interface{}) error {
+func (s *apiKeyBindingFactory) Update(old, new *v2.ApiKeyBinding) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	_, oldOk := old.(v2.ApiKeyBinding)
-	if !oldOk {
-		return errors.New("old ApiKeyBinding was not the expected type")
-	}
-	newBinding, newOk := new.(v2.ApiKeyBinding)
-	if !newOk {
-		return errors.New("new ApiKeyBinding was not the expected type")
-	}
-	s.set(newBinding)
-	return nil
+	s.set(new)
 }
 
 // Set will add an ApiKeyBinding resource
@@ -93,31 +95,26 @@ func (s *ApiKeyBindingFactory) Update(old, new interface{}) error {
 //   x => number of ApiKey resources ApiKeyBinding
 //   y => number of subpaths defined in each ApiKey rule
 //   z => number of path segments in each subpath
-func (s *ApiKeyBindingFactory) Set(obj interface{}) error {
+func (s *apiKeyBindingFactory) Set(apiKeyBinding *v2.ApiKeyBinding) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	binding, ok := obj.(v2.ApiKeyBinding)
-	if !ok {
-		return errors.New("ApiKeyBinding was not the expected type")
-	}
-	s.set(binding)
-	return nil
+	s.set(apiKeyBinding)
 }
 
-func (s *ApiKeyBindingFactory) set(binding v2.ApiKeyBinding) {
+func (s *apiKeyBindingFactory) set(apiKeyBinding *v2.ApiKeyBinding) {
 	// namespace is the first level
-	if _, ok := s.apiKeyBindingMap[binding.ObjectMeta.Namespace]; !ok {
-		s.apiKeyBindingMap[binding.ObjectMeta.Namespace] = map[string]map[string]structuredKey{}
+	if _, ok := s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace]; !ok {
+		s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace] = map[string]map[string]structuredKey{}
 	}
 
 	// binding is the second level
-	if _, ok := s.apiKeyBindingMap[binding.ObjectMeta.Namespace][binding.ObjectMeta.Name]; !ok {
-		s.apiKeyBindingMap[binding.ObjectMeta.Namespace][binding.ObjectMeta.Name] = map[string]structuredKey{}
+	if _, ok := s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name]; !ok {
+		s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name] = map[string]structuredKey{}
 	}
 
 	// keys are the third level
-	for _, key := range binding.Spec.Keys {
-		s.apiKeyBindingMap[binding.ObjectMeta.Namespace][binding.ObjectMeta.Name][key.Name] = structuredKey{
+	for _, key := range apiKeyBinding.Spec.Keys {
+		s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name][key.Name] = structuredKey{
 			key:         key,
 			subpathTree: generateSubpathTree(key),
 		}
@@ -130,55 +127,32 @@ func (s *ApiKeyBindingFactory) set(binding v2.ApiKeyBinding) {
 //   3. api key name
 //   4. target path
 // O(n), n => number of path segments in target path
-func (s *ApiKeyBindingFactory) Get(params ...interface{}) (interface{}, error) {
+func (s *apiKeyBindingFactory) Get(namespace, binding, key, target string) *v2.ApiKeyBinding {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	if len(params) != 4 {
-		return nil, errors.New("expected namespace, binding name, key name, and target path")
-	}
-	namespace, ok := params[0].(string)
-	if !ok {
-		return nil, errors.New("namespace should be a string")
-	}
-	binding, ok := params[1].(string)
-	if !ok {
-		return nil, errors.New("ApiKeyBinding name should be a string")
-	}
-	key, ok := params[2].(string)
-	if !ok {
-		return nil, errors.New("ApiKey name should be a string")
-	}
-	target, ok := params[3].(string)
-	if !ok {
-		return nil, errors.New("target path should be a string")
-	}
 
 	result, ok := s.apiKeyBindingMap[namespace][binding][key]
 	if !ok {
-		return nil, nil
+		return nil
 	}
-	return result.getHighestPriorityRule(target), nil
+	return result.getHighestPriorityRule(target)
 }
 
 // Delete will remove an ApiKeyBinding
 // O(1)
-func (s *ApiKeyBindingFactory) Delete(obj interface{}) (interface{}, error) {
+func (s *apiKeyBindingFactory) Delete(apiKeyBinding *v2.ApiKeyBinding) *v2.ApiKeyBinding {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	if obj == nil {
-		return nil, nil
+	if apiKeyBinding == nil {
+		return nil
 	}
-	binding, ok := obj.(v2.ApiKeyBinding)
-	if !ok {
-		return nil, errors.New("expected parameter of type ApiKeyBinding")
-	}
-	val, ok := s.apiKeyBindingMap[binding.ObjectMeta.Namespace][binding.ObjectMeta.Name]
+	val, ok := s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name]
 	if !ok {
 		return nil, nil
 	}
-	delete(s.apiKeyBindingMap[binding.ObjectMeta.Namespace], binding.ObjectMeta.Name)
-	if len(s.apiKeyBindingMap[binding.ObjectMeta.Namespace]) == 0 {
-		delete(s.apiKeyBindingMap, binding.ObjectMeta.Namespace)
+	delete(s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace], apiKeyBinding.ObjectMeta.Name)
+	if len(s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace]) == 0 {
+		delete(s.apiKeyBindingMap, apiKeyBinding.ObjectMeta.Namespace)
 	}
 	return val, nil
 }

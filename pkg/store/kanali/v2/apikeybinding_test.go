@@ -20,26 +20,20 @@
 
 package v2
 
-// import (
-// 	"testing"
-//
-// 	"github.com/stretchr/testify/assert"
-// 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-// )
-//
-// func TestGetKeyBindingStore(t *testing.T) {
-// 	assert := assert.New(t)
-// 	store := BindingStore
-//
-// 	store.Clear()
-// 	assert.Equal(0, len(store.bindingMap), "store should be empty")
-//
-// 	v := BindingFactory{}
-// 	var i interface{} = &v
-// 	_, ok := i.(Store)
-// 	assert.True(ok, "BindingFactory does not implement the Store interface")
-// }
-//
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+  "github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+)
+
+
+func TestApiKeyBindingStore(t *testing.T) {
+	_, ok := ApiKeyBindingStore().(ApiKeyBindingStoreInterface)
+	assert.True(t, ok)
+}
+
 // func TestAPIKeyBindingSet(t *testing.T) {
 // 	assert := assert.New(t)
 // 	store := BindingStore
@@ -267,137 +261,39 @@ package v2
 // 	result, _ = store.Get("api-proxy-three", "bar")
 // 	assert.Nil(result, message)
 // }
-//
-// func getTestAPIKeyBindingList() *APIKeyBindingList {
-//
-// 	return &APIKeyBindingList{
-// 		ListMeta: metav1.ListMeta{},
-// 		Items: []APIKeyBinding{
-// 			{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Name:      "abc123",
-// 					Namespace: "foo",
-// 				},
-// 				Spec: APIKeyBindingSpec{
-// 					APIProxyName: "api-proxy-one",
-// 					Keys: []Key{
-// 						{
-// 							Name:        "franks-api-key",
-// 							DefaultRule: Rule{},
-// 							Subpaths: []*Path{
-// 								{
-// 									Path: "/foo",
-// 									Rule: Rule{
-// 										Global: true,
-// 									},
-// 								},
-// 								{
-// 									Path: "foo/bar",
-// 									Rule: Rule{
-// 										Granular: &GranularProxy{
-// 											Verbs: []string{
-// 												"POST",
-// 												"GET",
-// 											},
-// 										},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Name:      "abc123",
-// 					Namespace: "foo",
-// 				},
-// 				Spec: APIKeyBindingSpec{
-// 					APIProxyName: "api-proxy-two",
-// 					Keys: []Key{
-// 						{
-// 							Name:        "franks-api-key",
-// 							DefaultRule: Rule{},
-// 							Subpaths: []*Path{
-// 								{
-// 									Path: "/foo",
-// 									Rule: Rule{
-// 										Global: true,
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Name:      "abc123",
-// 					Namespace: "bar",
-// 				},
-// 				Spec: APIKeyBindingSpec{
-// 					APIProxyName: "api-proxy-three",
-// 					Keys: []Key{
-// 						{
-// 							Name: "franks-api-key",
-// 							DefaultRule: Rule{
-// 								Global: true,
-// 							},
-// 							Subpaths: []*Path{
-// 								{
-// 									Path: "/foo",
-// 									Rule: Rule{
-// 										Global: true,
-// 									},
-// 								},
-// 								{
-// 									Path: "/foo/bar",
-// 									Rule: Rule{
-// 										Granular: &GranularProxy{
-// 											Verbs: []string{
-// 												"POST",
-// 												"GET",
-// 											},
-// 										},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Name:      "abc123",
-// 					Namespace: "foo",
-// 				},
-// 				Spec: APIKeyBindingSpec{
-// 					APIProxyName: "api-proxy-four",
-// 					Keys: []Key{
-// 						{
-// 							Name: "franks-api-key",
-// 							DefaultRule: Rule{
-// 								Global: true,
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Name:      "abc123",
-// 					Namespace: "foo",
-// 				},
-// 				Spec: APIKeyBindingSpec{
-// 					APIProxyName: "api-proxy-five",
-// 					Keys: []Key{
-// 						{
-// 							Name: "franks-api-key",
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-//
-// }
+
+func getTestAPIKeyBindingList(name, namespace string) *v2.ApiKeyBinding {
+	return &v2.ApiKeyBinding{
+    ObjectMeta: metav1.ObjectMeta{
+      Name:      name,
+      Namespace: namespace,
+    },
+    Spec: v2.ApiKeyBindingSpec{
+      Keys: []Key{
+        {
+          Name:        "franks-api-key",
+          DefaultRule: Rule{},
+          Subpaths: []*Path{
+            {
+              Path: "/foo",
+              Rule: Rule{
+                Global: true,
+              },
+            },
+            {
+              Path: "foo/bar",
+              Rule: Rule{
+                Granular: &GranularProxy{
+                  Verbs: []string{
+                    "POST",
+                    "GET",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
