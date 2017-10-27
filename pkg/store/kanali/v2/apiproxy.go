@@ -21,7 +21,6 @@
 package v2
 
 import (
-	"errors"
 	"strings"
 	"sync"
 
@@ -30,13 +29,13 @@ import (
 )
 
 type ApiProxyStoreInterface interface {
-	Set(apiProxy *v2.ApiProxy) error
-	Update(old, new *v2.ApiProxy) error
-	Get(path string) (*v2.ApiProxy, error)
-	Delete(apiProxy *v2.ApiProxy) (*v2.ApiProxy, error)
+	Set(apiProxy *v2.ApiProxy)
+	Update(old, new *v2.ApiProxy)
+	Get(path string) *v2.ApiProxy
+	Delete(apiProxy *v2.ApiProxy) *v2.ApiProxy
 	Clear()
 	IsEmpty() bool
-  ApiProxyStoreExpansion
+	ApiProxyStoreExpansion
 }
 
 type apiProxyFactory struct {
@@ -54,7 +53,7 @@ var (
 )
 
 func ApiProxyStore() ApiProxyStoreInterface {
-  return apiProxyStore
+	return apiProxyStore
 }
 
 // Clear will remove all ApiProxy resources
@@ -67,19 +66,19 @@ func (s *apiProxyFactory) Clear() {
 
 // Update will update an ApiProxy resource.
 // O(n), n => number of path segments in the ApiProxy source path
-func (s *apiProxyFactory) Update(old, new *v2.ApiProxy) error {
+func (s *apiProxyFactory) Update(old, new *v2.ApiProxy) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	return s.update(old, new)
+	s.update(old, new)
 }
 
-func (s *apiProxyFactory) update(old, new *v2.ApiProxy) error {
-  normalizeProxyPaths(old)
+func (s *apiProxyFactory) update(old, new *v2.ApiProxy) {
+	normalizeProxyPaths(old)
 	normalizeProxyPaths(new)
 	existing := s.get(new.Spec.Source.Path)
 	if existing != nil {
 		if new.ObjectMeta.Name != existing.ObjectMeta.Name || new.ObjectMeta.Namespace != existing.ObjectMeta.Namespace {
-			return errors.New("ApiProxy with different ObjectMeta exists at this path")
+			return
 		}
 	}
 
@@ -87,26 +86,24 @@ func (s *apiProxyFactory) update(old, new *v2.ApiProxy) error {
 	if old.Spec.Source.Path != new.Spec.Source.Path {
 		s.proxyTree.delete(strings.Split(old.Spec.Source.Path[1:], "/"))
 	}
-	return nil
 }
 
 // Set adds an ApiProxy resource
 // O(n), n => number of path segments in the ApiProxy source path
-func (s *apiProxyFactory) Set(apiProxy *v2.ApiProxy) error {
+func (s *apiProxyFactory) Set(apiProxy *v2.ApiProxy) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-  return s.set(apiProxy)
+	s.set(apiProxy)
 }
 
-func (s *apiProxyFactory) set(apiProxy *v2.ApiProxy) error {
-  normalizeProxyPaths(apiProxy)
-  // edge case
-  if apiProxy.Spec.Source.Path == "/" || apiProxy.Spec.Source.Path == "" {
-    s.proxyTree.value = apiProxy
-  } else {
-    s.proxyTree.doSet(strings.Split(apiProxy.Spec.Source.Path[1:], "/"), apiProxy)
-  }
-	return nil
+func (s *apiProxyFactory) set(apiProxy *v2.ApiProxy) {
+	normalizeProxyPaths(apiProxy)
+	// edge case
+	if apiProxy.Spec.Source.Path == "/" || apiProxy.Spec.Source.Path == "" {
+		s.proxyTree.value = apiProxy
+	} else {
+		s.proxyTree.doSet(strings.Split(apiProxy.Spec.Source.Path[1:], "/"), apiProxy)
+	}
 }
 
 func (n *proxyNode) doSet(keys []string, v *v2.ApiProxy) {
@@ -133,10 +130,10 @@ func (s *apiProxyFactory) IsEmpty() bool {
 
 // Get retrieves an ApiProxy if it exists from a request path
 // O(n), n => number of path segments in request path
-func (s *apiProxyFactory) Get(path string) (*v2.ApiProxy, error) {
+func (s *apiProxyFactory) Get(path string) *v2.ApiProxy {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	return s.get(path), nil
+	return s.get(path)
 }
 
 func (s *apiProxyFactory) get(path string) *v2.ApiProxy {
@@ -158,18 +155,18 @@ func (s *apiProxyFactory) get(path string) *v2.ApiProxy {
 
 // Delete will remove an ApiProxy resource
 // O(n), n => number of path segments in the ApiProxy source path
-func (s *apiProxyFactory) Delete(apiProxy *v2.ApiProxy) (*v2.ApiProxy, error) {
+func (s *apiProxyFactory) Delete(apiProxy *v2.ApiProxy) *v2.ApiProxy {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-  return s.delete(apiProxy)
+	return s.delete(apiProxy)
 }
 
-func (s *apiProxyFactory) delete(apiProxy *v2.ApiProxy) (*v2.ApiProxy, error) {
-  if apiProxy == nil {
-    return nil, nil
-  }
-  normalizeProxyPaths(apiProxy)
-	return s.proxyTree.delete(strings.Split(apiProxy.Spec.Source.Path[1:], "/")), nil
+func (s *apiProxyFactory) delete(apiProxy *v2.ApiProxy) *v2.ApiProxy {
+	if apiProxy == nil {
+		return nil
+	}
+	normalizeProxyPaths(apiProxy)
+	return s.proxyTree.delete(strings.Split(apiProxy.Spec.Source.Path[1:], "/"))
 }
 
 func (n *proxyNode) delete(segments []string) *v2.ApiProxy {
