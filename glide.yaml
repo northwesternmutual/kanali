@@ -4,9 +4,6 @@ import:
   version: 0.11.5
 - package: github.com/spf13/pflag
 - package: github.com/spf13/cobra
-- package: github.com/NYTimes/gziphandler
-- package: github.com/PuerkitoBio/purell
-  version: v1.1.0
 - package: github.com/spf13/viper
   version: v1.0.0
 - package: github.com/armon/go-proxyproto

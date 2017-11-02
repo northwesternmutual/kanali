@@ -4,12 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.2.1] - 2017-11-02
+## [1.2.2] - 2017-11-02
+### Changed
+- Support regular expressions for ApiKeyBinding key subpaths.
+
+## [1.2.1] - 2017-10-13
 ### Added
 - Adding `ClusterRole` in `scripts/install.sh` so that install works with latest Minikube releases.
 ### Changed
+- Upstream URLs will now be properly encoded/decoded.
 - Improved test coverage.
-- Support for regex in subpath
+### Removed
+- Gzip support. Kanali will be a transparent proxy.
 
 ## [1.2.0] - 2017-09-24
 ### Added
