@@ -21,8 +21,8 @@
 package v2
 
 import (
-	"errors"
 	"strings"
+  "errors"
 	"sync"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
@@ -32,7 +32,7 @@ type ApiKeyBindingStoreInterface interface {
 	Set(apiKeyBinding *v2.ApiKeyBinding)
 	Update(old, new *v2.ApiKeyBinding)
 	Get(namespace, binding, key, target string) *v2.Rule
-	Delete(apiKey *v2.ApiKeyBinding) *v2.ApiKeyBinding
+	Delete(apiKeyBinding *v2.ApiKeyBinding) error
 	Clear()
 	IsEmpty() bool
 	ApiKeyBindingStoreExpansion
@@ -127,7 +127,7 @@ func (s *apiKeyBindingFactory) set(apiKeyBinding *v2.ApiKeyBinding) {
 //   3. api key name
 //   4. target path
 // O(n), n => number of path segments in target path
-func (s *apiKeyBindingFactory) Get(namespace, binding, key, target string) *v2.ApiKeyBinding {
+func (s *apiKeyBindingFactory) Get(namespace, binding, key, target string) *v2.Rule {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -140,21 +140,21 @@ func (s *apiKeyBindingFactory) Get(namespace, binding, key, target string) *v2.A
 
 // Delete will remove an ApiKeyBinding
 // O(1)
-func (s *apiKeyBindingFactory) Delete(apiKeyBinding *v2.ApiKeyBinding) *v2.ApiKeyBinding {
+func (s *apiKeyBindingFactory) Delete(apiKeyBinding *v2.ApiKeyBinding) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	if apiKeyBinding == nil {
 		return nil
 	}
-	val, ok := s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name]
+	_, ok := s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name]
 	if !ok {
-		return nil, nil
+		return errors.New("ApiKeyBinding not found")
 	}
 	delete(s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace], apiKeyBinding.ObjectMeta.Name)
 	if len(s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace]) == 0 {
 		delete(s.apiKeyBindingMap, apiKeyBinding.ObjectMeta.Namespace)
 	}
-	return val, nil
+	return nil
 }
 
 func generateSubpathTree(key v2.Key) *subpathNode {
@@ -185,12 +185,12 @@ func (n *subpathNode) doSetSubpath(pathSegments []string, subpath v2.Path) {
 	}
 }
 
-func (k structuredKey) getHighestPriorityRule(path string) v2.Rule {
+func (k structuredKey) getHighestPriorityRule(path string) *v2.Rule {
 	subpath := k.subpathTree.getSubpath(path)
 	if subpath == nil {
-		return k.key.DefaultRule
+		return &k.key.DefaultRule
 	}
-	return subpath.Rule
+	return &subpath.Rule
 }
 
 func (n *subpathNode) getSubpath(path string) *v2.Path {
