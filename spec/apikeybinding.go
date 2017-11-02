@@ -22,6 +22,7 @@ package spec
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -50,11 +51,6 @@ type APIKeyBindingSpec struct {
 	Keys         []Key  `json:"keys"`
 }
 
-type subpathNode struct {
-	Children map[string]*subpathNode
-	Value    *Path
-}
-
 // Rate defines rate limit rule
 type Rate struct {
 	Amount int    `json:"amount,omitempty"`
@@ -71,12 +67,11 @@ type Path struct {
 // Key defines an apikey that has some level of permissions
 // the the proxy this binding is bound to
 type Key struct {
-	Name        string       `json:"name"`
-	Quota       int          `json:"quota,omitempty"`
-	Rate        *Rate        `json:"rate,omitempty"`
-	DefaultRule Rule         `json:"defaultRule,omitempty"`
-	Subpaths    []*Path      `json:"subpaths,omitempty"`
-	SubpathTree *subpathNode `json:"tree,omitempty"`
+	Name        string  `json:"name"`
+	Quota       int     `json:"quota,omitempty"`
+	Rate        *Rate   `json:"rate,omitempty"`
+	DefaultRule Rule    `json:"defaultRule,omitempty"`
+	Subpaths    []*Path `json:"subpaths,omitempty"`
 }
 
 // Rule defines the global and granular rules that this
@@ -122,42 +117,6 @@ func (s *BindingFactory) IsEmpty() bool {
 	return len(s.bindingMap) == 0
 }
 
-func (b *APIKeyBinding) hydrateSubpathTree() {
-
-	// we need to create a subpath tree for each apikey per binding
-	for i, key := range b.Spec.Keys {
-		// instantiate root node
-		tmpKey := key
-		tmpKey.SubpathTree = &subpathNode{}
-
-		for _, subpath := range key.Subpaths {
-			if subpath.Path[0] == '/' {
-				tmpKey.SubpathTree.doSetSubpath(strings.Split(subpath.Path[1:], "/"), subpath)
-			} else {
-				tmpKey.SubpathTree.doSetSubpath(strings.Split(subpath.Path, "/"), subpath)
-			}
-		}
-
-		b.Spec.Keys[i] = tmpKey
-
-	}
-
-}
-
-func (n *subpathNode) doSetSubpath(pathSegments []string, subpath *Path) {
-	if n.Children == nil {
-		n.Children = map[string]*subpathNode{}
-	}
-	if n.Children[pathSegments[0]] == nil {
-		n.Children[pathSegments[0]] = &subpathNode{}
-	}
-	if len(pathSegments) < 2 {
-		n.Children[pathSegments[0]].Value = subpath
-	} else {
-		n.Children[pathSegments[0]].doSetSubpath(pathSegments[1:], subpath)
-	}
-}
-
 // Update will update an APIKeyBinding
 func (s *BindingFactory) Update(obj interface{}) error {
 	s.mutex.Lock()
@@ -183,7 +142,15 @@ func (s *BindingFactory) Set(obj interface{}) error {
 
 func (s *BindingFactory) set(binding APIKeyBinding) error {
 	logrus.Infof("Adding new APIKeyBinding named %s in namespace %s", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace)
-	binding.hydrateSubpathTree()
+
+	for _, key := range binding.Spec.Keys {
+		for _, subpath := range key.Subpaths {
+			if subpath.Path[0] != '/' {
+				subpath.Path = "/" + subpath.Path
+			}
+		}
+	}
+
 	if s.bindingMap[binding.ObjectMeta.Namespace] == nil {
 		s.bindingMap[binding.ObjectMeta.Namespace] = map[string]APIKeyBinding{
 			binding.Spec.APIProxyName: binding,
@@ -243,37 +210,13 @@ func (s *BindingFactory) Delete(obj interface{}) (interface{}, error) {
 // GetRule returns the highest priority rule to use
 // for the incoming request path
 func (k *Key) GetRule(targetPath string) Rule {
-
-	subpath := k.SubpathTree.getSubpath(targetPath)
-
-	if subpath == nil {
-		return k.DefaultRule
-	}
-
-	return subpath.Rule
-
-}
-
-func (n *subpathNode) getSubpath(path string) *Path {
-
-	if len(n.Children) == 0 || path == "" {
-		return nil
-	}
-
-	if path[0] == '/' {
-		path = path[1:]
-	}
-
-	for _, part := range strings.Split(path, "/") {
-		if n.Children[part] == nil {
-			break
-		} else {
-			n = n.Children[part]
+	for _, subpath := range k.Subpaths {
+		if result, err := regexp.MatchString("^"+subpath.Path, targetPath); err != nil || !result {
+			continue
 		}
+		return subpath.Rule
 	}
-
-	return n.Value
-
+	return k.DefaultRule
 }
 
 // GetAPIKey retrieves a pointer to a Key object for a given

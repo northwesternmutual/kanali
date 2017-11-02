@@ -51,8 +51,6 @@ func TestAPIKeyBindingSet(t *testing.T) {
 	err := store.Set(5)
 	assert.Equal(err.Error(), "grrr - you're only allowed add api key bindings to the api key binding store.... duh", "wrong error")
 	assert.Equal(keyBindingList.Bindings[0], store.bindingMap["foo"]["api-proxy-one"], "binding should exist")
-	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children), "subpath incorrect")
-	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children["foo"].Children), "subpath incorrect")
 	store.Set(keyBindingList.Bindings[1])
 	store.Set(keyBindingList.Bindings[2])
 	assert.Equal(keyBindingList.Bindings[1], store.bindingMap["foo"]["api-proxy-two"], "binding should exist")
@@ -71,8 +69,6 @@ func TestAPIKeyBindingUpdate(t *testing.T) {
 	err := store.Update(5)
 	assert.Equal(err.Error(), "grrr - you're only allowed add api key bindings to the api key binding store.... duh", "wrong error")
 	assert.Equal(keyBindingList.Bindings[0], store.bindingMap["foo"]["api-proxy-one"], "binding should exist")
-	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children), "subpath incorrect")
-	assert.Equal(1, len(store.bindingMap["foo"]["api-proxy-one"].Spec.Keys[0].SubpathTree.Children["foo"].Children), "subpath incorrect")
 	store.Update(keyBindingList.Bindings[1])
 	store.Update(keyBindingList.Bindings[2])
 	assert.Equal(keyBindingList.Bindings[1], store.bindingMap["foo"]["api-proxy-two"], "binding should exist")
@@ -136,7 +132,7 @@ func TestGetRule(t *testing.T) {
 	result, _ := untypedResult.(APIKeyBinding)
 	assert.Equal(Rule{Global: true}, result.Spec.Keys[0].GetRule("/foo"), message)
 	assert.Equal(Rule{Global: true}, result.Spec.Keys[0].GetRule("/foo/car"), message)
-	assert.NotEqual(Rule{Global: true}, result.Spec.Keys[0].GetRule("/foo/bar"), message)
+	assert.NotEqual(Rule{Global: true}, result.Spec.Keys[0].GetRule("/bar/car/foo"), message)
 	assert.Equal(Rule{
 		Granular: &GranularProxy{
 			Verbs: []string{
@@ -144,7 +140,7 @@ func TestGetRule(t *testing.T) {
 				"GET",
 			},
 		},
-	}, result.Spec.Keys[0].GetRule("/foo/bar"), message)
+	}, result.Spec.Keys[0].GetRule("/bar/car"), message)
 	assert.Equal(Rule{
 		Granular: &GranularProxy{
 			Verbs: []string{
@@ -152,7 +148,7 @@ func TestGetRule(t *testing.T) {
 				"GET",
 			},
 		},
-	}, result.Spec.Keys[0].GetRule("/foo/bar/car"), message)
+	}, result.Spec.Keys[0].GetRule("/bar/car/car"), message)
 
 	untypedResult, _ = store.Get("api-proxy-two", "foo")
 	result, _ = untypedResult.(APIKeyBinding)
@@ -164,7 +160,7 @@ func TestGetRule(t *testing.T) {
 	result, _ = untypedResult.(APIKeyBinding)
 	assert.Equal(Rule{Global: true}, result.Spec.Keys[0].GetRule("/foo"), message)
 	assert.Equal(Rule{Global: true}, result.Spec.Keys[0].GetRule("/foo/car"), message)
-	assert.NotEqual(Rule{Global: true}, result.Spec.Keys[0].GetRule("/foo/bar"), message)
+	assert.NotEqual(Rule{Global: true}, result.Spec.Keys[0].GetRule("/car/bar"), message)
 	assert.Equal(Rule{
 		Granular: &GranularProxy{
 			Verbs: []string{
@@ -172,7 +168,7 @@ func TestGetRule(t *testing.T) {
 				"GET",
 			},
 		},
-	}, result.Spec.Keys[0].GetRule("/foo/bar"), message)
+	}, result.Spec.Keys[0].GetRule("/car/bar"), message)
 	assert.Equal(Rule{
 		Granular: &GranularProxy{
 			Verbs: []string{
@@ -180,7 +176,7 @@ func TestGetRule(t *testing.T) {
 				"GET",
 			},
 		},
-	}, result.Spec.Keys[0].GetRule("/foo/bar/car"), message)
+	}, result.Spec.Keys[0].GetRule("/car/bar/car"), message)
 	assert.Equal(Rule{Global: true}, result.Spec.Keys[0].GetRule("/bar"), message)
 
 	untypedResult, _ = store.Get("api-proxy-four", "foo")
@@ -295,7 +291,7 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 									},
 								},
 								{
-									Path: "foo/bar",
+									Path: "bar/car",
 									Rule: Rule{
 										Granular: &GranularProxy{
 											Verbs: []string{
@@ -356,7 +352,7 @@ func getTestAPIKeyBindingList() *APIKeyBindingList {
 									},
 								},
 								{
-									Path: "/foo/bar",
+									Path: "/car/bar",
 									Rule: Rule{
 										Granular: &GranularProxy{
 											Verbs: []string{
