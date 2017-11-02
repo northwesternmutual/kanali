@@ -9,7 +9,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kanali-role
+  name: kanali
 subjects:
 - kind: ServiceAccount
   name: kanali
