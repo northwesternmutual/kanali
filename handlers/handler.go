@@ -58,9 +58,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		)
 		go func() {
 			if err := h.InfluxController.WriteRequestData(m); err != nil {
-				logrus.Warnf("error writing metrics to InfluxDB: %s", err.Error())
-			} else {
-				logrus.Debugf("wrote metrics to InfluxDB")
+				logrus.Warnf("error enqueuing request metrics for future InfluxDB write: %s", err.Error())
 			}
 		}()
 	}()

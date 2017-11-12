@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/northwesternmutual/kanali/config"
 	"github.com/northwesternmutual/kanali/metrics"
@@ -33,7 +34,9 @@ import (
 
 // InfluxController represents configuration to create an Influxdb connection
 type InfluxController struct {
-	Client influx.Client
+	Client    influx.Client
+	capacity  int
+	taskQueue chan *influx.Point
 }
 
 // NewInfluxdbController creates a new controller allowing
@@ -47,38 +50,85 @@ func NewInfluxdbController() (*InfluxController, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &InfluxController{Client: influxClient}, nil
+	return &InfluxController{
+		Client:    influxClient,
+		capacity:  viper.GetInt(config.FlagAnalyticsInfluxBufferSize.GetLong()),
+		taskQueue: make(chan *influx.Point),
+	}, nil
 }
 
-// WriteRequestData writes contextual request metrics to Influxdb
-func (c *InfluxController) WriteRequestData(m *metrics.Metrics) (err error) {
+// Run will begin a watch that receives request metrics
+// and writes them to InfluxDB when the specificed buffer is full
+func (ctlr *InfluxController) Run() {
+	var buffer []*influx.Point
+
+	for {
+		buffer = append(buffer, <-ctlr.taskQueue)
+		if len(buffer) == ctlr.capacity {
+			batchPoints, err := prepareWrite(buffer)
+			// clear the buffer
+			buffer = []*influx.Point{}
+			if err != nil {
+				logrus.Warnf("error preparing batched metrics: %s", err.Error())
+				continue
+			}
+			go func() {
+				if err := ctlr.write(batchPoints); err != nil {
+					logrus.Warnf("error writing batched metrics to InfluxDB: %s", err.Error())
+				}
+			}()
+		}
+	}
+}
+
+func (ctlr *InfluxController) write(bp influx.BatchPoints) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errors.New("influxdb paniced while attempting to write")
 		}
 	}()
+
+	if err := ctlr.Client.Write(bp); err == nil {
+		return nil
+	}
+	if err := createDatabase(ctlr.Client); err != nil {
+		return err
+	}
+	return ctlr.Client.Write(bp)
+}
+
+func prepareWrite(buffer []*influx.Point) (influx.BatchPoints, error) {
 	bp, err := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database: viper.GetString(config.FlagAnalyticsInfluxDb.GetLong()),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	for _, pt := range buffer {
+		bp.AddPoint(pt)
+	}
+
+	return bp, nil
+}
+
+// WriteRequestData writes contextual request metrics to Influxdb
+func (ctlr *InfluxController) WriteRequestData(m *metrics.Metrics) error {
+	if ctlr == nil {
+		return errors.New("influxDB controller not initialized")
+	}
+
 	tags, err := getTags(m)
 	if err != nil {
 		return err
 	}
-	pt, err := influx.NewPoint("request_details", tags, getFields(m), time.Now())
+	pt, err := influx.NewPoint(viper.GetString(config.FlagAnalyticsInfluxMeasurement.GetLong()), tags, getFields(m), time.Now())
 	if err != nil {
 		return err
 	}
-	bp.AddPoint(pt)
-	if err := c.Client.Write(bp); err == nil {
-		return nil
-	}
-	if err := createDatabase(c.Client); err != nil {
-		return err
-	}
-	return c.Client.Write(bp)
+
+	ctlr.taskQueue <- pt
+	return nil
 }
 
 func createDatabase(c influx.Client) error {

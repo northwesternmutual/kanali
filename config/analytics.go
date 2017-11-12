@@ -24,6 +24,10 @@ func init() {
 	Flags.Add(
 		FlagAnalyticsInfluxAddr,
 		FlagAnalyticsInfluxDb,
+		FlagAnalyticsInfluxUsername,
+		FlagAnalyticsInfluxPassword,
+		FlagAnalyticsInfluxBufferSize,
+		FlagAnalyticsInfluxMeasurement,
 	)
 }
 
@@ -55,5 +59,20 @@ var (
 		Short: "",
 		Value: "",
 		Usage: "InfluxDB password",
+	}
+	// FlagAnalyticsInfluxBufferSize specifies the InfluxDB buffer size.
+	// Request metrics will be written to InfluxDB when this buffer is full.
+	FlagAnalyticsInfluxBufferSize = Flag{
+		Long:  "analytics.influx_buffer_size",
+		Short: "",
+		Value: 10,
+		Usage: "InfluxDB buffer size. Request metrics will be written to InfluxDB when this buffer is full.",
+	}
+	// FlagAnalyticsInfluxMeasurement specifies the InfluxDB measurement to be used for Kanali request metrics.
+	FlagAnalyticsInfluxMeasurement = Flag{
+		Long:  "analytics.influx_measurement",
+		Short: "",
+		Value: "request_details",
+		Usage: " InfluxDB measurement to be used for Kanali request metrics.",
 	}
 )

@@ -124,6 +124,7 @@ var startCmd = &cobra.Command{
 		if err != nil {
 			logrus.Warnf("error connecting to InfluxDB: %s", err.Error())
 		} else {
+			go influxCtlr.Run()
 			defer func() {
 				if err := influxCtlr.Client.Close(); err != nil {
 					logrus.Warnf("error closing the connection to InfluxDB: %s", err.Error())
