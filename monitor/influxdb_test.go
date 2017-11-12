@@ -23,6 +23,7 @@ package monitor
 import (
 	"errors"
 	"regexp"
+	"sync"
 	"testing"
 	"time"
 
@@ -34,7 +35,9 @@ import (
 )
 
 type mockClient struct {
-	db string
+	db    string
+	store []influx.BatchPoints
+	mutex sync.RWMutex
 }
 
 func (c *mockClient) Ping(timeout time.Duration) (time.Duration, string, error) {
@@ -42,9 +45,12 @@ func (c *mockClient) Ping(timeout time.Duration) (time.Duration, string, error) 
 }
 
 func (c *mockClient) Write(bp influx.BatchPoints) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	if bp.Database() == "" || c.db != bp.Database() {
 		return errors.New("database does not exist")
 	}
+	c.store = append(c.store, bp)
 	return nil
 }
 
@@ -66,18 +72,58 @@ func (c *mockClient) Close() error {
 }
 
 func TestWriteRequestData(t *testing.T) {
-	ctlr := &InfluxController{Client: &mockClient{}}
+	ctlr := &InfluxController{
+		Client:    &mockClient{},
+		capacity:  viper.GetInt(config.FlagAnalyticsInfluxBufferSize.GetLong()),
+		taskQueue: make(chan *influx.Point),
+	}
 	m := &metrics.Metrics{
 		metrics.Metric{Name: "metric-one", Value: "value-one", Index: true},
 		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
 	}
-	assert.Equal(t, ctlr.WriteRequestData(m).Error(), "no database name")
-	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "mydb")
+
+	// not doing anything with items put on this channel
+	// but it needs to exist so that we don't block forever
+	go func() {
+		<-ctlr.taskQueue
+	}()
+
 	assert.Nil(t, ctlr.WriteRequestData(m))
-	assert.Nil(t, ctlr.WriteRequestData(m))
+}
+
+func TestPrepareWrite(t *testing.T) {
+	m := &metrics.Metrics{
+		metrics.Metric{Name: "metric-one", Value: "value-one", Index: true},
+		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
+	}
+
+	tags, _ := getTags(m)
+	pt, _ := influx.NewPoint(viper.GetString(config.FlagAnalyticsInfluxMeasurement.GetLong()), tags, getFields(m), time.Now())
+	bp, _ := prepareWrite([]*influx.Point{pt})
+
+	assert.Equal(t, len(bp.Points()), 1)
+}
+
+func TestWrite(t *testing.T) {
+	defer viper.Reset()
+	ctlr := &InfluxController{Client: &mockClient{}}
+
+	m := &metrics.Metrics{
+		metrics.Metric{Name: "metric-one", Value: "value-one", Index: true},
+		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
+	}
+
+	tags, _ := getTags(m)
+	pt, _ := influx.NewPoint(viper.GetString(config.FlagAnalyticsInfluxMeasurement.GetLong()), tags, getFields(m), time.Now())
+	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "test_db")
+	bp, _ := prepareWrite([]*influx.Point{pt})
 	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "")
+	assert.Equal(t, ctlr.write(bp).Error(), "no database name")
+	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "test_db")
+	assert.Nil(t, ctlr.write(bp))
+	assert.Nil(t, ctlr.write(bp))
 	ctlr = &InfluxController{Client: nil}
-	assert.Equal(t, ctlr.WriteRequestData(m).Error(), "influxdb paniced while attempting to write")
+	assert.Equal(t, ctlr.write(bp).Error(), "influxdb paniced while attempting to write")
 }
 
 func TestNewInfluxdbController(t *testing.T) {
@@ -86,6 +132,41 @@ func TestNewInfluxdbController(t *testing.T) {
 	viper.SetDefault(config.FlagAnalyticsInfluxAddr.GetLong(), "http://foo.bar.com")
 	_, err = NewInfluxdbController()
 	assert.Nil(t, err)
+}
+
+func TestRun(t *testing.T) {
+	defer viper.Reset()
+
+	client := &mockClient{}
+	ctlr := &InfluxController{
+		Client:    client,
+		capacity:  2,
+		taskQueue: make(chan *influx.Point),
+	}
+
+	m := &metrics.Metrics{
+		metrics.Metric{Name: "metric-one", Value: "value-one", Index: true},
+		metrics.Metric{Name: "metric-two", Value: "value-two", Index: false},
+	}
+
+	tags, _ := getTags(m)
+	pt, _ := influx.NewPoint(viper.GetString(config.FlagAnalyticsInfluxMeasurement.GetLong()), tags, getFields(m), time.Now())
+	viper.SetDefault(config.FlagAnalyticsInfluxDb.GetLong(), "test_db")
+
+	go ctlr.Run()
+
+	assert.Equal(t, len(client.store), 0)
+	ctlr.taskQueue <- pt
+	time.Sleep(1 * time.Millisecond)
+	// buffer isn't full, shouldn't have written
+	client.mutex.RLock()
+	assert.Equal(t, len(client.store), 0)
+	client.mutex.RUnlock()
+	ctlr.taskQueue <- pt
+	time.Sleep(1 * time.Millisecond)
+	client.mutex.RLock()
+	assert.Equal(t, len(client.store), 1)
+	client.mutex.RUnlock()
 }
 
 func TestCreateDatabase(t *testing.T) {
