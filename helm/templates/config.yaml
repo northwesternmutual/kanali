@@ -16,6 +16,7 @@ data:
     influx_db = "kanali"
     influx_username = ""
     influx_password = ""
+    influx_buffer_size = 5
 
     [plugins]
     location = "/"
