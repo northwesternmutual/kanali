@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Allow for batching of InfluxDB writes.
 - Fixed [#83](https://github.com/northwesternmutual/kanali/issues/83).
 - Fixed bug that did not properly handle all config value types.
+- No longer indexing `http_method` InfluxDB field as it is not being utilized as a tag.
 
 ## [1.2.2] - 2017-11-02
 ### Changed

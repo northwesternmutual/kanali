@@ -52,7 +52,7 @@ func (h Handler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		m.Add(
 			metrics.Metric{Name: "total_time", Value: int(time.Now().Sub(t0) / time.Millisecond), Index: false},
-			metrics.Metric{Name: "http_method", Value: r.Method, Index: true},
+			metrics.Metric{Name: "http_method", Value: r.Method, Index: false},
 			metrics.Metric{Name: "http_uri", Value: utils.ComputeURLPath(r.URL), Index: false},
 			metrics.Metric{Name: "client_ip", Value: strings.Split(r.RemoteAddr, ":")[0], Index: false},
 		)
