@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/northwesternmutual/kanali/metrics"
 	"github.com/northwesternmutual/kanali/spec"
 	"github.com/northwesternmutual/kanali/tracer"
@@ -57,7 +58,7 @@ func (step WriteResponseStep) Do(ctx context.Context, proxy *spec.APIProxy, m *m
 	w.WriteHeader(resp.StatusCode)
 
 	if _, err := io.Copy(w, resp.Body); err != nil {
-		return err
+		logrus.Warnf("error copying data to http response: %s", err.Error())
 	}
 
 	return nil

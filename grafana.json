@@ -2,11 +2,18 @@
   "__inputs": [
     {
       "name": "DS_KANALI",
-      "label": "kanali",
-      "description": "",
+      "label": "Datasource",
+      "description": "name of datasource",
       "type": "datasource",
       "pluginId": "influxdb",
       "pluginName": "InfluxDB"
+    },
+    {
+      "name": "VAR_ENV",
+      "label": "Environment",
+      "description": "name of environment",
+      "type": "constant",
+      "value": "LOCAL"
     }
   ],
   "__requires": [
@@ -173,7 +180,7 @@
               "measurement": "request_details",
               "orderByTime": "ASC",
               "policy": "default",
-              "query": "SELECT count(\"clientIP\") FROM \"request_details\" WHERE \"proxyName\" =~ /^$proxyName$/ AND \"responseCode\" = '401' AND \"keyName\" =~ /^$keyName$/ AND \"method\" =~ /^$httpMethod$/ AND $timeFilter GROUP BY time($__interval) fill(0)",
+              "query": "SELECT count(\"clientIP\") FROM \"request_details\" WHERE \"proxyName\" =~ /^$proxyName$/ AND \"responseCode\" = '401' AND \"keyName\" =~ /^$keyName$/ AND $timeFilter GROUP BY time($__interval) fill(0)",
               "rawQuery": false,
               "refId": "B",
               "resultFormat": "time_series",
@@ -2009,6 +2016,6 @@
     ]
   },
   "timezone": "browser",
-  "title": "Kanali",
+  "title": "Kanali ${VAR_ENV}",
   "version": 1
 }

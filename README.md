@@ -36,7 +36,7 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 
 ```sh
 $ git clone git@github.com:northwesternmutual/kanali.git && cd kanali
-$ minikube start
+$ minikube start --kubernetes-version v1.7.5
 $ ./scripts/install.sh # wait until all pods are in running state
 $ kubectl apply -f ./examples/exampleOne.yaml
 $ curl $(minikube service kanali --url --format="https://{{.IP}}:{{.Port}}")/api/v1/example-one
@@ -129,13 +129,17 @@ $ kanali [command] [flags]
 ```sh
 start
     --analytics.influx_addr string                InfluxDB address. Address should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port'. (default "http://monitoring-influxdb.kube-system.svc.cluster.local:8086")
+    --analytics.influx_buffer_size int            InfluxDB buffer size. Request metrics will be written to InfluxDB when this buffer is full. (default 10)
     --analytics.influx_db string                  InfluxDB database name (default "k8s")
+    --analytics.influx_measurement string          InfluxDB measurement to be used for Kanali request metrics. (default "request_details")
+    --analytics.influx_password string            InfluxDB password
+    --analytics.influx_username string            InfluxDB username
     --plugins.apiKey.decryption_key_file string   Path to valid PEM-encoded private key that matches the public key used to encrypt API keys.
     --plugins.location string                     Location of custom plugins shared object (.so) files. (default "/")
     --process.log_level string                    Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'. (default "info")
     --proxy.enable_cluster_ip                     Enables to use of cluster ip as opposed to Kubernetes DNS for upstream routing.
     --proxy.enable_mock_responses                 Enables Kanali's mock responses feature. Read the documentation for more information.
-    --proxy.header_mask_Value string              Sets the Value to be used when omitting header Values. (default "ommitted")
+    --proxy.header_mask_Value string              Sets the Value to be used when omitting header Values. (default "omitted")
     --proxy.mask_header_keys stringSlice          Specify which headers to mask
     --proxy.tls_common_name_validation            Should common name validate as part of an SSL handshake. (default true)
     --proxy.upstream_timeout string               Set length of upstream timeout. Defaults to none (default "0h0m10s")
@@ -145,7 +149,7 @@ start
     --server.proxy_protocol                       Maintain the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header.
     --tls.ca_file string                          Path to x509 certificate authority bundle for mutual TLS.
     --tls.cert_file string                        Path to x509 certificate for HTTPS servers.
-    --tls.key_file string                         Path to x509 private key matching --tls-cert-file.
+    --tls.key_file string                         Path to x509 private key matching --tls.cert_file.
     --tracing.jaeger_agent_url string             Endpoint to the Jaeger agent (default "jaeger-all-in-one-agent.default.svc.cluster.local")
     --tracing.jaeger_server_url string            Endpoint to the Jaeger server (default "jaeger-all-in-one-agent.default.svc.cluster.local")
 
