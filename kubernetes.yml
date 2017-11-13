@@ -56,7 +56,7 @@ spec:
       containers:
       - name: kanali
         imagePullPolicy: IfNotPresent
-        image: northwesternmutual/kanali:v1.2.1
+        image: northwesternmutual/kanali:v1.2.3
         command:
         - /kanali
         - start
@@ -111,6 +111,7 @@ data:
     influx_db = "kanali"
     influx_username = ""
     influx_password = ""
+    influx_buffer_size = 5
 
     [plugins]
     location = "/"
