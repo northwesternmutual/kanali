@@ -11,10 +11,11 @@ git-hack.sh
 debug
 launch.json
 settings.json
-kanali.wiki/
 *.so
 *.pem
 *.log
 LICENSE_*
 .cover/
 *.html
+torch.svg
+/kanali

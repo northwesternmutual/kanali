@@ -121,7 +121,7 @@ func handleNewTrafficPoint(data []byte) {
 		return
 	}
 
-	if err := store.TrafficStore.Set(*tp); err != nil {
+	if err := store.TrafficStore.Set(tp); err != nil {
 		logger.Error(err.Error())
 	}
 

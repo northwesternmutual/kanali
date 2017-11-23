@@ -27,3 +27,5 @@ type ApiKeyBindingStoreExpansion interface{}
 type ApiProxyStoreExpansion interface{}
 
 type MockTargetStoreExpansion interface{}
+
+type TrafficStoreExpansion interface{}

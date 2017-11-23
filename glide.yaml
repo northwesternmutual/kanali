@@ -1,6 +1,5 @@
 package: github.com/northwesternmutual/kanali
 import:
-- package: github.com/NYTimes/gziphandler
 - package: github.com/PuerkitoBio/purell
 - package: github.com/spf13/cobra
 - package: github.com/spf13/pflag

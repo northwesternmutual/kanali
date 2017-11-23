@@ -23,11 +23,10 @@ package v2
 import (
 	"testing"
 
+	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-  "github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 )
-
 
 func TestApiKeyBindingStore(t *testing.T) {
 	_, ok := ApiKeyBindingStore().(ApiKeyBindingStoreInterface)
@@ -37,63 +36,62 @@ func TestApiKeyBindingStore(t *testing.T) {
 func TestApiKeyBindingStoreSet(t *testing.T) {
 	defer ApiKeyBindingStore().Clear()
 
-  testSubpathOne := getTestSubpaths("/foo", true)
-  testSubpathTwo := getTestSubpaths("/foo/bar", true, "GET", "DELETE")
+	testSubpathOne := getTestSubpaths("/foo", true)
+	testSubpathTwo := getTestSubpaths("/foo/bar", true, "GET", "DELETE")
 
-  testKeyOne := getTestKey("example-one", v2.Rule{Granular: v2.GranularProxy{Verbs: []string{"POST", "PUT"}}},
-    testSubpathOne,
-    testSubpathTwo,
-  )
+	testKeyOne := getTestKey("example-one", v2.Rule{Granular: v2.GranularProxy{Verbs: []string{"POST", "PUT"}}},
+		testSubpathOne,
+		testSubpathTwo,
+	)
 
-  testApiKeyBindingOne := getTestApiKeyBinding("example-one", "foo", testKeyOne)
+	testApiKeyBindingOne := getTestApiKeyBinding("example-one", "foo", testKeyOne)
 
-  ApiKeyBindingStore().Set(testApiKeyBindingOne)
+	ApiKeyBindingStore().Set(testApiKeyBindingOne)
 
-  assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]))
-  assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]))
-  assert.Equal(t, testKeyOne, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].key)
-  assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children))
-  assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].children))
-  assert.Equal(t, &testSubpathOne, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].value)
-  assert.Equal(t, &testSubpathTwo, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].children["bar"].value)
+	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]))
+	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]))
+	assert.Equal(t, testKeyOne, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].key)
+	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children))
+	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].children))
+	assert.Equal(t, &testSubpathOne, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].value)
+	assert.Equal(t, &testSubpathTwo, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].children["bar"].value)
 }
 
 func TestApiKeyBindingStoreClear(t *testing.T) {
-  defer ApiKeyBindingStore().Clear()
+	defer ApiKeyBindingStore().Clear()
 
-  assert.Equal(t, 0, len(apiKeyBindingStore.apiKeyBindingMap))
+	assert.Equal(t, 0, len(apiKeyBindingStore.apiKeyBindingMap))
 
-  testSubpathOne := getTestSubpaths("/foo", true)
-  testKeyOne := getTestKey("example-one", v2.Rule{Granular: v2.GranularProxy{Verbs: []string{"POST", "PUT"}}}, testSubpathOne)
-  testApiKeyBindingOne := getTestApiKeyBinding("example-one", "foo", testKeyOne)
+	testSubpathOne := getTestSubpaths("/foo", true)
+	testKeyOne := getTestKey("example-one", v2.Rule{Granular: v2.GranularProxy{Verbs: []string{"POST", "PUT"}}}, testSubpathOne)
+	testApiKeyBindingOne := getTestApiKeyBinding("example-one", "foo", testKeyOne)
 
-  ApiKeyBindingStore().Set(testApiKeyBindingOne)
+	ApiKeyBindingStore().Set(testApiKeyBindingOne)
 
-  assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap))
-  ApiKeyBindingStore().Clear()
-  assert.Equal(t, 0, len(apiKeyBindingStore.apiKeyBindingMap))
+	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap))
+	ApiKeyBindingStore().Clear()
+	assert.Equal(t, 0, len(apiKeyBindingStore.apiKeyBindingMap))
 }
 
-
 func TestAPIKeyBindingUpdate(t *testing.T) {
-  defer ApiKeyBindingStore().Clear()
+	defer ApiKeyBindingStore().Clear()
 
-  testSubpathOne := getTestSubpaths("/foo", true)
-  testSubpathTwo := getTestSubpaths("/foo/bar", true, "GET", "DELETE")
+	testSubpathOne := getTestSubpaths("/foo", true)
+	testSubpathTwo := getTestSubpaths("/foo/bar", true, "GET", "DELETE")
 
-  testKeyOneOld := getTestKey("example-one", v2.Rule{Granular: v2.GranularProxy{Verbs: []string{"POST", "PUT"}}},
-    testSubpathOne,
-    testSubpathTwo,
-  )
-  testKeyOneNew := getTestKey("example-one", v2.Rule{Granular: v2.GranularProxy{Verbs: []string{"POST", "PUT"}}},
-    testSubpathTwo,
-  )
+	testKeyOneOld := getTestKey("example-one", v2.Rule{Granular: v2.GranularProxy{Verbs: []string{"POST", "PUT"}}},
+		testSubpathOne,
+		testSubpathTwo,
+	)
+	testKeyOneNew := getTestKey("example-one", v2.Rule{Granular: v2.GranularProxy{Verbs: []string{"POST", "PUT"}}},
+		testSubpathTwo,
+	)
 
-  testApiKeyBindingOneOld := getTestApiKeyBinding("example-one", "foo", testKeyOne)
-  testApiKeyBindingOneNew := getTestApiKeyBinding("example-one", "foo", testKeyOneNew)
+	testApiKeyBindingOneOld := getTestApiKeyBinding("example-one", "foo", testKeyOneOld)
+	testApiKeyBindingOneNew := getTestApiKeyBinding("example-one", "foo", testKeyOneNew)
 
-  ApiKeyBindingStore().Set(testApiKeyBindingOneOld)
-  ApiKeyBindingStore().Update(testApiKeyBindingOneOld, testApiKeyBindingOneNew)
+	ApiKeyBindingStore().Set(testApiKeyBindingOneOld)
+	ApiKeyBindingStore().Update(testApiKeyBindingOneOld, testApiKeyBindingOneNew)
 }
 
 // func TestAPIKeyBindingIsEmpty(t *testing.T) {
@@ -275,38 +273,38 @@ func TestAPIKeyBindingUpdate(t *testing.T) {
 // }
 
 func getTestKey(name string, rule v2.Rule, subpaths ...v2.Path) v2.Key {
-  return v2.Key{
-    Name: name,
-    DefaultRule: rule,
-    Subpaths: subpaths,
-  }
+	return v2.Key{
+		Name:        name,
+		DefaultRule: rule,
+		Subpaths:    subpaths,
+	}
 }
 
 func getTestSubpaths(path string, global bool, methods ...string) v2.Path {
-  var rule v2.Rule
+	var rule v2.Rule
 
-  if global {
-    rule.Global = true
-  } else {
-    rule.Granular = v2.GranularProxy{
-      Verbs: methods,
-    }
-  }
+	if global {
+		rule.Global = true
+	} else {
+		rule.Granular = v2.GranularProxy{
+			Verbs: methods,
+		}
+	}
 
-  return v2.Path{
-    Path: path,
-    Rule: rule,
-  }
+	return v2.Path{
+		Path: path,
+		Rule: rule,
+	}
 }
 
 func getTestApiKeyBinding(name, namespace string, keys ...v2.Key) *v2.ApiKeyBinding {
 	return &v2.ApiKeyBinding{
-    ObjectMeta: metav1.ObjectMeta{
-      Name:      name,
-      Namespace: namespace,
-    },
-    Spec: v2.ApiKeyBindingSpec{
-      Keys: keys,
-    },
-  }
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: v2.ApiKeyBindingSpec{
+			Keys: keys,
+		},
+	}
 }

@@ -21,8 +21,8 @@
 package v2
 
 import (
+	"errors"
 	"strings"
-  "errors"
 	"sync"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"

@@ -28,8 +28,17 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 )
 
-// MockTargetFactory is factory that implements a concurrency safe store for Kanali MockTarget resources
-type MockTargetFactory struct {
+type MockTargetStoreInterface interface {
+	Set(mockTarget *v2.MockTarget) error
+	Update(old, new *v2.MockTarget) error
+	Get(namespace, name, path, method string) *v2.Route
+	Delete(mockTarget *v2.MockTarget)
+	Clear()
+	IsEmpty() bool
+	MockTargetStoreExpansion
+}
+
+type mockTargetFactory struct {
 	mutex        sync.RWMutex
 	mockRespTree map[string]map[string]*routeNode
 }
@@ -40,14 +49,16 @@ type routeNode struct {
 }
 
 var (
-	// MockTargetStore holds all discovered MockTarget resources in an efficient data structure.
-	// It should not be mutated directly!
-	MockTargetStore = &MockTargetFactory{sync.RWMutex{}, map[string]map[string]*routeNode{}}
+	mockTargetStore = &mockTargetFactory{sync.RWMutex{}, map[string]map[string]*routeNode{}}
 )
+
+func MockTargetStore() MockTargetStoreInterface {
+	return mockTargetStore
+}
 
 // Clear will remove all MockTarget resources
 // O(n), n => number of namespaces respresented by the current MockTarget resources
-func (s *MockTargetFactory) Clear() {
+func (s *mockTargetFactory) Clear() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	for k := range s.mockRespTree {
@@ -59,34 +70,23 @@ func (s *MockTargetFactory) Clear() {
 // O(n * m),
 //   n => number of Route resources in the MockTarget resource
 //   m => number of path segments in the Route path
-func (s *MockTargetFactory) Update(old, new interface{}) error {
+func (s *mockTargetFactory) Update(old, new *v2.MockTarget) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	if _, oldOk := old.(v2.MockTarget); !oldOk {
-		return errors.New("old MockTarget not expected type")
-	}
-	newMt, newOk := new.(v2.MockTarget)
-	if !newOk {
-		return errors.New("new MockTarget not expected type")
-	}
-	return s.set(newMt)
+	return s.set(new)
 }
 
 // Set adds a MockTarget resource
 // O(n * m),
 //   n => number of Route resources in the MockTarget resource
 //   m => number of path segments in the Route path
-func (s *MockTargetFactory) Set(obj interface{}) error {
+func (s *mockTargetFactory) Set(mt *v2.MockTarget) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	mt, ok := obj.(v2.MockTarget)
-	if !ok {
-		return errors.New("MockTarget was not expected type")
-	}
 	return s.set(mt)
 }
 
-func (s *MockTargetFactory) set(mt v2.MockTarget) error {
+func (s *mockTargetFactory) set(mt *v2.MockTarget) error {
 	if _, ok := s.mockRespTree[mt.ObjectMeta.Namespace]; !ok {
 		s.mockRespTree[mt.ObjectMeta.Namespace] = map[string]*routeNode{}
 	}
@@ -101,7 +101,7 @@ func (s *MockTargetFactory) set(mt v2.MockTarget) error {
 	return nil
 }
 
-func generateRouteTree(mt v2.MockTarget) *routeNode {
+func generateRouteTree(mt *v2.MockTarget) *routeNode {
 	root := &routeNode{}
 
 	for _, route := range mt.Spec.Routes {
@@ -135,33 +135,13 @@ func (n *routeNode) doSetRoute(pathSegments []string, route v2.Route) {
 //   3. target path
 //   4. http method
 // O(n), n => number of path segments in Route path
-func (s *MockTargetFactory) Get(params ...interface{}) (interface{}, error) {
+func (s *mockTargetFactory) Get(namespace, name, path, method string) *v2.Route {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	if len(params) != 4 {
-		return nil, errors.New("not enough arguments")
-	}
-	namespace, ok := params[0].(string)
-	if !ok {
-		return nil, errors.New("namespace not expected type")
-	}
-	name, ok := params[1].(string)
-	if !ok {
-		return nil, errors.New("name not expected type")
-	}
-	path, ok := params[2].(string)
-	if !ok {
-		return nil, errors.New("path not expected type")
-	}
-	method, ok := params[3].(string)
-	if !ok {
-		return nil, errors.New("method not expected type")
-	}
-
-	return s.get(namespace, name, path, method), nil
+	return s.get(namespace, name, path, method)
 }
 
-func (s *MockTargetFactory) get(namespace, name, path, method string) interface{} {
+func (s *mockTargetFactory) get(namespace, name, path, method string) *v2.Route {
 	root, ok := s.mockRespTree[namespace][name]
 	if !ok {
 		return nil
@@ -204,26 +184,21 @@ func (n *routeNode) doGetRoute(path string) *v2.Route {
 
 // Delete will remove a MockTarget resource
 // O(1)
-func (s *MockTargetFactory) Delete(obj interface{}) (interface{}, error) {
+func (s *mockTargetFactory) Delete(mt *v2.MockTarget) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	mt, ok := obj.(v2.MockTarget)
-	if !ok {
-		return nil, errors.New("MockTarget was not expected type")
-	}
 	if _, ok := s.mockRespTree[mt.ObjectMeta.Namespace][mt.ObjectMeta.Name]; !ok {
-		return nil, nil
+		return
 	}
 	delete(s.mockRespTree[mt.ObjectMeta.Namespace], mt.ObjectMeta.Name)
 	if len(s.mockRespTree[mt.ObjectMeta.Namespace]) == 0 {
 		delete(s.mockRespTree, mt.ObjectMeta.Namespace)
 	}
-	return nil, nil
 }
 
 // IsEmpty reports whether the MockTargetStore is empty
 // O(1)
-func (s *MockTargetFactory) IsEmpty() bool {
+func (s *mockTargetFactory) IsEmpty() bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	return len(s.mockRespTree) == 0

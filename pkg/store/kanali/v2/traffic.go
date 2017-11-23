@@ -30,24 +30,32 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 )
 
-type trafficByAPIKey map[string][]time.Time
-type trafficByAPIProxy map[string]trafficByAPIKey
-type trafficByNamespace map[string]trafficByAPIProxy
+type TrafficStoreInterface interface {
+	Set(tp *TrafficPoint)
+	Clear()
+	IsEmpty() bool
+	TrafficStoreExpansion
+}
 
-// TrafficFactory is factory that implements a concurrency safe store for Kanali traffic
-type TrafficFactory struct {
+type trafficByApiKey map[string][]time.Time
+type trafficByApiProxy map[string]trafficByApiKey
+type trafficByNamespace map[string]trafficByApiProxy
+
+type trafficFactory struct {
 	mutex      sync.RWMutex
 	trafficMap trafficByNamespace
 }
 
 var (
-	// TrafficStore holds all API traffic that Kanali has discovered
-	// in a cluster. It should not be mutated directly!
-	TrafficStore = &TrafficFactory{sync.RWMutex{}, make(trafficByNamespace)}
+	trafficStore = &trafficFactory{sync.RWMutex{}, make(trafficByNamespace)}
 )
 
+func TrafficStore() TrafficStoreInterface {
+	return trafficStore
+}
+
 // Clear will remove all entries from the traffic store
-func (s *TrafficFactory) Clear() {
+func (s *trafficFactory) Clear() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	for k := range s.trafficMap {
@@ -56,39 +64,34 @@ func (s *TrafficFactory) Clear() {
 }
 
 // Set takes a traffic point and either adds it to the store
-func (s *TrafficFactory) Set(obj interface{}) error {
+func (s *trafficFactory) Set(tp *TrafficPoint) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	return s.doSet(obj)
+	s.doSet(tp)
 }
 
-func (s *TrafficFactory) doSet(obj interface{}) error {
-	tp, ok := obj.(TrafficPoint)
-	if !ok {
-		return errors.New("parameter not of type TrafficPoint")
-	}
+func (s *trafficFactory) doSet(tp *TrafficPoint) {
 	if _, ok := s.trafficMap[tp.Namespace]; !ok {
-		s.trafficMap[tp.Namespace] = make(trafficByAPIProxy)
+		s.trafficMap[tp.Namespace] = make(trafficByApiProxy)
 	}
 	if _, ok := s.trafficMap[tp.Namespace][tp.ProxyName]; !ok {
-		s.trafficMap[tp.Namespace][tp.ProxyName] = make(trafficByAPIKey)
+		s.trafficMap[tp.Namespace][tp.ProxyName] = make(trafficByApiKey)
 	}
 	if _, ok := s.trafficMap[tp.Namespace][tp.ProxyName][tp.KeyName]; !ok {
 		s.trafficMap[tp.Namespace][tp.ProxyName][tp.KeyName] = make([]time.Time, 0)
 	}
 	s.trafficMap[tp.Namespace][tp.ProxyName][tp.KeyName] = append(s.trafficMap[tp.Namespace][tp.ProxyName][tp.KeyName], time.Unix(0, tp.Time))
-	return nil
 }
 
 // IsEmpty reports whether the traffic store is empty
-func (s *TrafficFactory) IsEmpty() bool {
+func (s *trafficFactory) IsEmpty() bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	return len(s.trafficMap) == 0
 }
 
 // IsQuotaViolated will see whether a quota limit has been reached
-func (s *TrafficFactory) IsQuotaViolated(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string) bool {
+func (s *trafficFactory) IsQuotaViolated(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	for _, key := range binding.Spec.Keys {
@@ -108,7 +111,7 @@ func (s *TrafficFactory) IsQuotaViolated(proxy v2.ApiProxy, binding v2.ApiKeyBin
 }
 
 // IsRateLimitViolated wee see whether a rate limit has been reached
-func (s *TrafficFactory) IsRateLimitViolated(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string, currTime time.Time) bool {
+func (s *trafficFactory) IsRateLimitViolated(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string, currTime time.Time) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	for _, key := range binding.Spec.Keys {
@@ -131,7 +134,7 @@ func (s *TrafficFactory) IsRateLimitViolated(proxy v2.ApiProxy, binding v2.ApiKe
 }
 
 // Contains reports whether the traffic store has any traffic for a given proxy/name combination
-func (s *TrafficFactory) contains(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string) bool {
+func (s *trafficFactory) contains(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	if _, ok := s.trafficMap[binding.ObjectMeta.Namespace]; !ok {
@@ -144,30 +147,6 @@ func (s *TrafficFactory) contains(proxy v2.ApiProxy, binding v2.ApiKeyBinding, k
 		return false
 	}
 	return true
-}
-
-// Delete removes all traffic for a given namespace, proxy, and key combination
-// TODO
-func (s *TrafficFactory) Delete(obj interface{}) (interface{}, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return nil, nil
-}
-
-// Update is not implemnted for the TrafficFactory
-// TODO
-func (s *TrafficFactory) Update(old, new interface{}) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return nil
-}
-
-// Get retrieves a set of traffic points for a unique namespace/proxy/key combination
-// TODO
-func (s *TrafficFactory) Get(params ...interface{}) (interface{}, error) {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	return nil, nil
 }
 
 func getTrafficVolume(arr []time.Time, unit string, currTime time.Time, low, high int) int {
