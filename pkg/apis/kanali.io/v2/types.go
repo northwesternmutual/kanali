@@ -188,7 +188,6 @@ type ApiKeyBindingSpec struct {
 // Key defines a unique key with permissions
 type Key struct {
 	Name        string `json:"name"`
-	Quota       int    `json:"quota,omitempty"`
 	Rate        Rate   `json:"rate,omitempty"`
 	DefaultRule Rule   `json:"defaultRule,omitempty"`
 	Subpaths    []Path `json:"subpaths,omitempty"`

@@ -75,7 +75,7 @@ func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
 		logger.Error(err.Error())
 		return
 	}
-	store.ApiKeyStore.Set(*key)
+	store.ApiKeyStore().Set(key)
 	logger.Debug(fmt.Sprintf("added ApiKey %s", key.ObjectMeta.Name))
 }
 
@@ -99,7 +99,7 @@ func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
 		logger.Error(err.Error())
 		return
 	}
-	store.ApiKeyStore.Update(*oldKey, *newKey)
+	store.ApiKeyStore().Update(oldKey, newKey)
 	logger.Debug(fmt.Sprintf("updated ApiKey %s", newKey.ObjectMeta.Name))
 }
 
@@ -114,9 +114,7 @@ func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
 		logger.Error(err.Error())
 		return
 	}
-	result, _ := store.ApiKeyStore.Delete(*key)
-	if result != nil {
-		result := result.(v2.ApiKey)
+	if result := store.ApiKeyStore().Delete(key); result != nil {
 		logger.Debug(fmt.Sprintf("deleted ApiKey %s", result.ObjectMeta.Name))
 	}
 }

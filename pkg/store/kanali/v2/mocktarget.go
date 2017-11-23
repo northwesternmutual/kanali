@@ -32,7 +32,7 @@ type MockTargetStoreInterface interface {
 	Set(mockTarget *v2.MockTarget) error
 	Update(old, new *v2.MockTarget) error
 	Get(namespace, name, path, method string) *v2.Route
-	Delete(mockTarget *v2.MockTarget)
+	Delete(mockTarget *v2.MockTarget) bool
 	Clear()
 	IsEmpty() bool
 	MockTargetStoreExpansion
@@ -184,16 +184,17 @@ func (n *routeNode) doGetRoute(path string) *v2.Route {
 
 // Delete will remove a MockTarget resource
 // O(1)
-func (s *mockTargetFactory) Delete(mt *v2.MockTarget) {
+func (s *mockTargetFactory) Delete(mt *v2.MockTarget) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	if _, ok := s.mockRespTree[mt.ObjectMeta.Namespace][mt.ObjectMeta.Name]; !ok {
-		return
+	_, ok := s.mockRespTree[mt.ObjectMeta.Namespace][mt.ObjectMeta.Name]
+  if ok {
+    delete(s.mockRespTree[mt.ObjectMeta.Namespace], mt.ObjectMeta.Name)
+  	if len(s.mockRespTree[mt.ObjectMeta.Namespace]) == 0 {
+  		delete(s.mockRespTree, mt.ObjectMeta.Namespace)
+  	}
 	}
-	delete(s.mockRespTree[mt.ObjectMeta.Namespace], mt.ObjectMeta.Name)
-	if len(s.mockRespTree[mt.ObjectMeta.Namespace]) == 0 {
-		delete(s.mockRespTree, mt.ObjectMeta.Namespace)
-	}
+	return ok
 }
 
 // IsEmpty reports whether the MockTargetStore is empty

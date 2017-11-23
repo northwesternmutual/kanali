@@ -121,10 +121,7 @@ func handleNewTrafficPoint(data []byte) {
 		return
 	}
 
-	if err := store.TrafficStore.Set(tp); err != nil {
-		logger.Error(err.Error())
-	}
-
+	store.TrafficStore().Set(tp)
 	logger.Debug("traffic point received and processed")
 
 }

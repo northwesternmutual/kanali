@@ -63,7 +63,7 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
 		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 		return
 	}
-	store.ApiKeyBindingStore.Set(*binding)
+	store.ApiKeyBindingStore().Set(binding)
 	logger.Debug(fmt.Sprintf("added ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace))
 }
 
@@ -79,7 +79,7 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new in
 		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 		return
 	}
-	store.ApiKeyBindingStore.Update(*newBinding, *oldBinding)
+	store.ApiKeyBindingStore().Update(newBinding, oldBinding)
 	logger.Debug(fmt.Sprintf("updated ApiKeyBinding %s in %s namespace", newBinding.ObjectMeta.Name, newBinding.ObjectMeta.Namespace))
 }
 
@@ -90,9 +90,7 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
 		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 		return
 	}
-	result, _ := store.ApiKeyBindingStore.Delete(*binding)
-	if result != nil {
-		result := result.(v2.ApiKeyBinding)
-		logger.Debug(fmt.Sprintf("deleted ApiKeyBinding %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
-	}
+	if err := store.ApiKeyBindingStore().Delete(binding); err != nil {
+    logger.Debug(fmt.Sprintf("deleted ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace))
+  }
 }

@@ -81,11 +81,8 @@ func (ctlr *ApiProxyController) apiProxyUpdate(old interface{}, new interface{})
 		logger.Error("received malformed ApiProxy from k8s apiserver")
 		return
 	}
-	if err := store.ApiProxyStore().Update(oldProxy, newProxy); err != nil {
-		logger.Error(err.Error())
-	} else {
-		logger.Debug(fmt.Sprintf("updated ApiProxy %s in %s namespace", newProxy.ObjectMeta.Name, newProxy.ObjectMeta.Namespace))
-	}
+  store.ApiProxyStore().Update(oldProxy, newProxy)
+  logger.Debug(fmt.Sprintf("updated ApiProxy %s in %s namespace", newProxy.ObjectMeta.Name, newProxy.ObjectMeta.Namespace))
 }
 
 func (ctlr *ApiProxyController) apiProxyDelete(obj interface{}) {
@@ -96,7 +93,7 @@ func (ctlr *ApiProxyController) apiProxyDelete(obj interface{}) {
 		logger.Error("received malformed ApiProxy from k8s apiserver")
 		return
 	}
-	if result, _ := store.ApiProxyStore().Delete(proxy); result != nil {
+	if result:= store.ApiProxyStore().Delete(proxy); result != nil {
 		logger.Debug(fmt.Sprintf("deleted ApiProxy %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
 	}
 }

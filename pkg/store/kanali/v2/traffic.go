@@ -21,7 +21,6 @@
 package v2
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -34,6 +33,7 @@ type TrafficStoreInterface interface {
 	Set(tp *TrafficPoint)
 	Clear()
 	IsEmpty() bool
+  IsRateLimitViolated(proxy *v2.ApiProxy, binding *v2.ApiKeyBinding, keyName string, currTime time.Time) bool
 	TrafficStoreExpansion
 }
 
@@ -90,63 +90,55 @@ func (s *trafficFactory) IsEmpty() bool {
 	return len(s.trafficMap) == 0
 }
 
-// IsQuotaViolated will see whether a quota limit has been reached
-func (s *trafficFactory) IsQuotaViolated(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string) bool {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	for _, key := range binding.Spec.Keys {
-		if key.Name != keyName {
-			continue
-		}
-		if key.Quota == 0 {
-			return false
-		}
-		result := s.contains(proxy, binding, keyName)
-		if !result {
-			return false
-		}
-		return len(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]) >= key.Quota
-	}
-	return true
-}
+// // IsQuotaViolated will see whether a quota limit has been reached
+// func (s *trafficFactory) IsQuotaViolated(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string) bool {
+// 	s.mutex.RLock()
+// 	defer s.mutex.RUnlock()
+// 	for _, key := range binding.Spec.Keys {
+// 		if key.Name != keyName {
+// 			continue
+// 		}
+// 		if key.Quota == 0 {
+// 			return false
+// 		}
+// 		result := s.contains(proxy, binding, keyName)
+// 		if !result {
+// 			return false
+// 		}
+// 		return len(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]) >= key.Quota
+// 	}
+// 	return true
+// }
 
 // IsRateLimitViolated wee see whether a rate limit has been reached
-func (s *trafficFactory) IsRateLimitViolated(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string, currTime time.Time) bool {
+func (s *trafficFactory) IsRateLimitViolated(proxy *v2.ApiProxy, binding *v2.ApiKeyBinding, keyName string, currTime time.Time) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	for _, key := range binding.Spec.Keys {
 		if key.Name != keyName {
 			continue
 		}
-		if key.Rate == (v2.Rate{}) {
-			return false
-		}
-		if key.Rate.Amount == 0 {
+		if key.Rate.Amount < 1 {
 			return false
 		}
 		result := s.contains(proxy, binding, keyName)
 		if !result {
 			return false
 		}
+    if key.Rate.Unit == "" { // quota
+      return len(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]) >= key.Rate.Amount
+    }
 		return getTrafficVolume(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName], key.Rate.Unit, currTime, 0, len(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName])) >= key.Rate.Amount
 	}
 	return true
 }
 
 // Contains reports whether the traffic store has any traffic for a given proxy/name combination
-func (s *trafficFactory) contains(proxy v2.ApiProxy, binding v2.ApiKeyBinding, keyName string) bool {
+func (s *trafficFactory) contains(proxy *v2.ApiProxy, binding *v2.ApiKeyBinding, keyName string) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	if _, ok := s.trafficMap[binding.ObjectMeta.Namespace]; !ok {
-		return false
-	}
-	if _, ok := s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name]; !ok {
-		return false
-	}
-	if _, ok := s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]; !ok {
-		return false
-	}
-	return true
+	_, ok := s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]
+	return ok
 }
 
 func getTrafficVolume(arr []time.Time, unit string, currTime time.Time, low, high int) int {
@@ -184,12 +176,4 @@ func compareTime(t1, t2 time.Time) int {
 		return -1
 	}
 	return 1
-}
-
-func decodeKanaliGram(gram, delimiter string) (string, string, string, error) {
-	arr := strings.Split(gram, delimiter)
-	if len(arr) != 3 {
-		return "", "", "", errors.New("kgram must have 3")
-	}
-	return arr[0], arr[1], arr[2], nil
 }

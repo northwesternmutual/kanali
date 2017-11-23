@@ -48,7 +48,6 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -108,22 +107,11 @@ func (step mockTargetStep) do(ctx context.Context, proxy *v2.ApiProxy, k8sCoreCl
 	if !mockTargetDefined(proxy) || !mockTargetEnabled(proxy) {
 		return nil
 	}
-
-	logger := logging.WithContext(ctx)
-
+  
 	targetPath := utils.ComputeTargetPath(proxy.Spec.Source.Path, proxy.Spec.Target.Path, utils.ComputeURLPath(r.URL))
 
-	untypedMr, err := store.MockTargetStore.Get(proxy.ObjectMeta.Namespace, proxy.Spec.Target.Backend.Mock.MockTargetName, targetPath, r.Method)
-	if err != nil {
-		logger.Error(err.Error())
-		return &kanaliErrors.StatusError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving mock target")}
-	}
-	if untypedMr == nil {
-		return &kanaliErrors.StatusError{Code: http.StatusNotFound, Err: errors.New("mock target not found")}
-	}
-	mr, ok := untypedMr.(v2.Route)
-	if !ok {
-		logger.Error("mock target response not expected type")
+	mr := store.MockTargetStore().Get(proxy.ObjectMeta.Namespace, proxy.Spec.Target.Backend.Mock.MockTargetName, targetPath, r.Method)
+	if mr == nil {
 		return &kanaliErrors.StatusError{Code: http.StatusNotFound, Err: errors.New("mock target not found")}
 	}
 
@@ -518,12 +506,8 @@ func (step validateProxyStep) getName() string {
 // Do executes the logic of the ValidateProxyStep step
 func (step validateProxyStep) do(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
 
-	typedProxy, err := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
-	if err != nil || typedProxy == nil {
-		if err != nil {
-			logging.WithContext(ctx).Error("error retrieving proxy", zap.String("msg", err.Error()))
-		}
-
+	typedProxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
+	if typedProxy == nil {
 		trace.SetTag(tags.KanaliProxyName, "unknown")
 		trace.SetTag(tags.KanaliProxyNamespace, "unknown")
 

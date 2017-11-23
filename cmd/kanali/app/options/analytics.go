@@ -37,7 +37,7 @@ var (
 		Long:  "analytics.influx_addr",
 		Short: "",
 		Value: "http://monitoring-influxdb.kube-system.svc.cluster.local:8086",
-		Usage: "InfluxDB address. Address should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port'.",
+		Usage: "InfluxDB address. Should be of the form 'http://host:port' or 'http://[ipv6-host%zone]:port'.",
 	}
 	// FlagAnalyticsInfluxDb specifies the name of the InfluxDB database
 	FlagAnalyticsInfluxDb = flags.Flag{

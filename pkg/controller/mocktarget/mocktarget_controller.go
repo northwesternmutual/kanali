@@ -63,7 +63,7 @@ func (ctlr *MockTargetController) mockTargetAdd(obj interface{}) {
 	if !ok {
 		logger.Error("received malformed MockTarget from k8s apiserver")
 	} else {
-		store.MockTargetStore.Set(*target)
+		store.MockTargetStore().Set(target)
 		logger.Debug(fmt.Sprintf("added MockTarget %s in %s namespace", target.ObjectMeta.Name, target.ObjectMeta.Namespace))
 	}
 }
@@ -81,7 +81,7 @@ func (ctlr *MockTargetController) mockTargetUpdate(old interface{}, new interfac
 		logger.Error("received malformed MockTarget from k8s apiserver")
 		return
 	}
-	if err := store.MockTargetStore.Update(*oldTarget, *newTarget); err != nil {
+	if err := store.MockTargetStore().Update(oldTarget, newTarget); err != nil {
 		logger.Error(err.Error())
 	} else {
 		logger.Debug(fmt.Sprintf("updated MockTarget %s in %s namespace", newTarget.ObjectMeta.Name, newTarget.ObjectMeta.Namespace))
@@ -96,8 +96,7 @@ func (ctlr *MockTargetController) mockTargetDelete(obj interface{}) {
 		logger.Error("received malformed MockTarget from k8s apiserver")
 		return
 	}
-	if result, _ := store.MockTargetStore.Delete(*target); result != nil {
-		result := result.(*v2.MockTarget)
-		logger.Debug(fmt.Sprintf("deleted MockTarget %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
+	if result := store.MockTargetStore().Delete(target); result {
+		logger.Debug(fmt.Sprintf("deleted MockTarget %s in %s namespace", target.ObjectMeta.Name, target.ObjectMeta.Namespace))
 	}
 }
