@@ -43,13 +43,14 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func Run(ctx context.Context) error {
 
 	logger := logging.WithContext(ctx)
 
-	config, err := rest.InClusterConfig()
+	config, err := getRestConfig()
 	if err != nil {
 		return err
 	}
@@ -129,6 +130,15 @@ func Run(ctx context.Context) error {
 	// will always returns a non-nil error
 	return startHTTP(ctx, getHTTPHandler(influxCtlr, k8sFactory.Core()))
 
+}
+
+func getRestConfig() (*rest.Config, error) {
+	if len(viper.GetString(options.FlagKubernetesKubeConfig.GetLong())) > 0 {
+		// user has specified a path to their own kubeconfig file so we'll use that
+		return clientcmd.BuildConfigFromFlags("", viper.GetString(options.FlagKubernetesKubeConfig.GetLong()))
+	}
+	// use the in cluster config as the user has not specified their own
+	return rest.InClusterConfig()
 }
 
 func loadDecryptionKey(location string) (*rsa.PrivateKey, error) {

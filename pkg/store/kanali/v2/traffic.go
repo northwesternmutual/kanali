@@ -33,7 +33,7 @@ type TrafficStoreInterface interface {
 	Set(tp *TrafficPoint)
 	Clear()
 	IsEmpty() bool
-  IsRateLimitViolated(proxy *v2.ApiProxy, binding *v2.ApiKeyBinding, keyName string, currTime time.Time) bool
+	IsRateLimitViolated(proxy *v2.ApiProxy, binding *v2.ApiKeyBinding, keyName string, currTime time.Time) bool
 	TrafficStoreExpansion
 }
 
@@ -125,9 +125,9 @@ func (s *trafficFactory) IsRateLimitViolated(proxy *v2.ApiProxy, binding *v2.Api
 		if !result {
 			return false
 		}
-    if key.Rate.Unit == "" { // quota
-      return len(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]) >= key.Rate.Amount
-    }
+		if key.Rate.Unit == "" { // quota
+			return len(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]) >= key.Rate.Amount
+		}
 		return getTrafficVolume(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName], key.Rate.Unit, currTime, 0, len(s.trafficMap[binding.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName])) >= key.Rate.Amount
 	}
 	return true

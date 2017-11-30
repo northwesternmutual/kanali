@@ -45,20 +45,24 @@ func NewTrafficController() (*TrafficController, error) {
 
 	clientv3.SetLogger(zapgrpc.NewLogger(logging.WithContext(nil)))
 
-	tlsInfo := transport.TLSInfo{
-		CertFile:      viper.GetString(options.FlagEtcdCertFile.GetLong()),
-		KeyFile:       viper.GetString(options.FlagEtcdKeyFile.GetLong()),
-		TrustedCAFile: viper.GetString(options.FlagEtcdCaFile.GetLong()),
-	}
-	tlsConfig, err := tlsInfo.ClientConfig()
-	if err != nil {
-		return nil, err
+	etcdConfig := clientv3.Config{
+		Endpoints: viper.GetStringSlice(options.FlagEtcdEndpoints.GetLong()),
 	}
 
-	etcdClient, err := clientv3.New(clientv3.Config{
-		Endpoints: viper.GetStringSlice(options.FlagEtcdEndpoints.GetLong()),
-		TLS:       tlsConfig,
-	})
+	if isTLSDefined() {
+		tlsInfo := transport.TLSInfo{
+			CertFile:      viper.GetString(options.FlagEtcdCertFile.GetLong()),
+			KeyFile:       viper.GetString(options.FlagEtcdKeyFile.GetLong()),
+			TrustedCAFile: viper.GetString(options.FlagEtcdCaFile.GetLong()),
+		}
+		tlsConfig, err := tlsInfo.ClientConfig()
+		if err != nil {
+			return nil, err
+		}
+		etcdConfig.TLS = tlsConfig
+	}
+
+	etcdClient, err := clientv3.New(etcdConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +71,10 @@ func NewTrafficController() (*TrafficController, error) {
 		Client: etcdClient,
 	}, nil
 
+}
+
+func isTLSDefined() bool {
+	return len(viper.GetString(options.FlagEtcdCertFile.GetLong())) > 0 && len(viper.GetString(options.FlagEtcdKeyFile.GetLong())) > 0
 }
 
 // ReportTraffic reports a new traffic point to etcd

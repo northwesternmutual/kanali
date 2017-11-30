@@ -188,11 +188,11 @@ func (s *mockTargetFactory) Delete(mt *v2.MockTarget) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	_, ok := s.mockRespTree[mt.ObjectMeta.Namespace][mt.ObjectMeta.Name]
-  if ok {
-    delete(s.mockRespTree[mt.ObjectMeta.Namespace], mt.ObjectMeta.Name)
-  	if len(s.mockRespTree[mt.ObjectMeta.Namespace]) == 0 {
-  		delete(s.mockRespTree, mt.ObjectMeta.Namespace)
-  	}
+	if ok {
+		delete(s.mockRespTree[mt.ObjectMeta.Namespace], mt.ObjectMeta.Name)
+		if len(s.mockRespTree[mt.ObjectMeta.Namespace]) == 0 {
+			delete(s.mockRespTree, mt.ObjectMeta.Namespace)
+		}
 	}
 	return ok
 }

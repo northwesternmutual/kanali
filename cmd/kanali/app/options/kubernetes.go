@@ -36,6 +36,6 @@ var (
 		Long:  "kubernetes.kubeconfig",
 		Short: "",
 		Value: "",
-		Usage: "Path to kubeconfig file if outside of a cluster.",
+		Usage: "Absolute path to kubeconfig file if outside of a cluster.",
 	}
 )

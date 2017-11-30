@@ -48,7 +48,7 @@ var startCmd = &cobra.Command{
 	Long:  `start kanali`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := app.Run(context.Background()); err != nil {
-			panic(err)
+			logging.WithContext(nil).Fatal(err.Error())
 		}
 	},
 }
@@ -73,7 +73,7 @@ func init() {
 	viper.ReadInConfig()
 
 	if err := options.KanaliOptions.AddAll(startCmd); err != nil {
-		panic(err)
+		logging.WithContext(nil).Fatal(err.Error())
 	}
 
 	rootCmd.AddCommand(versionCmd)
@@ -85,6 +85,6 @@ func init() {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	if err := rootCmd.Execute(); err != nil {
-		panic(err)
+		logging.WithContext(nil).Fatal(err.Error())
 	}
 }

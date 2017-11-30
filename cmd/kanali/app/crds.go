@@ -34,7 +34,7 @@ import (
 
 const (
 	kanaliGroupName = "kanali.io"
-	version         = "v2alpha1"
+	version         = "v2"
 )
 
 var (
@@ -56,13 +56,13 @@ var (
 
 var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("apikeys.%s", kanaliGroupName),
+		Name: fmt.Sprintf("apikeies.%s", kanaliGroupName),
 	},
 	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
 		Group:   kanaliGroupName,
 		Version: version,
 		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-			Plural:   "apikeys",
+			Plural:   "apikeies",
 			Singular: "apikey",
 			ShortNames: []string{
 				"ak",
@@ -118,10 +118,10 @@ var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 												Type:        "string",
 												Enum: []apiextensionsv1beta1.JSON{
 													{
-														Raw: []byte(`"active"`),
+														Raw: []byte(`"Active"`),
 													},
 													{
-														Raw: []byte(`"inactive"`),
+														Raw: []byte(`"Inactive"`),
 													},
 												},
 											},
@@ -276,7 +276,7 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 						Pattern:     httpPathRegex,
 						MinLength:   int64Ptr(1),
 						Default: &apiextensionsv1beta1.JSON{
-							Raw: []byte("/"),
+							Raw: []byte(""),
 						},
 					},
 					"wholeNumber": {
@@ -662,7 +662,7 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 						Pattern:     httpPathRegex,
 						MinLength:   int64Ptr(1),
 						Default: &apiextensionsv1beta1.JSON{
-							Raw: []byte("/"),
+							Raw: []byte(""),
 						},
 					},
 				},
@@ -698,7 +698,7 @@ func createCRDs(i apiextensionsv1beta1client.ApiextensionsV1beta1Interface) erro
 	for _, crd := range crds {
 		_, err := i.CustomResourceDefinitions().Create(crd)
 		if err != nil && !k8sErrors.IsAlreadyExists(err) {
-			return fmt.Errorf("Failed to create CRD: %v", err)
+			return fmt.Errorf("failed to create CRD %s: %v", crd.ObjectMeta.Name, err)
 		}
 
 		err = wait.Poll(500*time.Millisecond, 60*time.Second, func() (bool, error) {

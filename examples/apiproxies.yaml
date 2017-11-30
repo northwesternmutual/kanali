@@ -1,0 +1,92 @@
+---
+
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
+  name: example-endpoint-backend
+  namespace: default
+spec:
+  source:
+    path: /example-endpoint-backend
+  target:
+    path: /
+    backend:
+      endpoint: https://httpbin.org/get
+  plugins:
+  - name: apiKey
+    version: v1.3.0
+    config:
+      binding: example-apikeybinding
+
+---
+
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
+  name: example-mocktarget-backend
+  namespace: default
+spec:
+  source:
+    path: /example-mocktarget-backend
+  target:
+    path: /
+    backend:
+      mock:
+        mockTargetName: example-mocktarget
+  plugins:
+  - name: apiKey
+    version: v1.3.0
+    config:
+      binding: example-apikeybinding
+
+---
+
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
+  name: example-static-service-backend
+  namespace: default
+spec:
+  source:
+    path: /example-static-service-backend
+  target:
+    path: /
+    backend:
+      service:
+        name: example-application
+        port: 443
+    ssl:
+      secretName: example-tls-certs
+  plugins:
+  - name: apiKey
+    version: v1.3.0
+    config:
+      binding: example-apikeybinding
+
+---
+
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
+  name: example-dynamic-service-backend
+  namespace: default
+spec:
+  source:
+    path: /example-dynamic-service-backend
+  target:
+    path: /
+    backend:
+      service:
+        port: 443
+        labels:
+        - name: application-name
+          value: example-application
+          name: release
+          header: deployment
+    ssl:
+      secretName: example-tls-certs
+  plugins:
+  - name: apiKey
+    version: v1.3.0
+    config:
+      binding: example-apikeybinding

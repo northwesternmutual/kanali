@@ -1,0 +1,31 @@
+---
+
+apiVersion: kanali.io/v2
+kind: ApiKeyBinding
+metadata:
+  name: example-apikeybinding
+  namespace: default
+spec:
+  keys:
+  - name: example-apikey-one
+    rate:
+      amount: 4
+    defaultRule:
+      global: true
+  - name: example-apikey-two
+    rate:
+      unit: Minute
+      amount: 4
+    defaultRule:
+      granular:
+        verbs:
+        - GET
+  - name: example-apikey-three
+    defaultRule:
+      global: false
+    subpaths:
+    - path: /limited
+      rule:
+        granular:
+          verbs:
+          - GET

@@ -26,13 +26,14 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
+	tags "github.com/northwesternmutual/kanali/pkg/tags"
+	"go.uber.org/zap"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -76,7 +77,9 @@ func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
 		return
 	}
 	store.ApiKeyStore().Set(key)
-	logger.Debug(fmt.Sprintf("added ApiKey %s", key.ObjectMeta.Name))
+	logger.With(
+		zap.String(tags.KanaliApiKeyName, key.ObjectMeta.Name),
+	).Debug("added ApiKey")
 }
 
 func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
@@ -100,7 +103,9 @@ func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
 		return
 	}
 	store.ApiKeyStore().Update(oldKey, newKey)
-	logger.Debug(fmt.Sprintf("updated ApiKey %s", newKey.ObjectMeta.Name))
+	logger.With(
+		zap.String(tags.KanaliApiKeyName, newKey.ObjectMeta.Name),
+	).Debug("updated ApiKey")
 }
 
 func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
@@ -115,7 +120,9 @@ func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
 		return
 	}
 	if result := store.ApiKeyStore().Delete(key); result != nil {
-		logger.Debug(fmt.Sprintf("deleted ApiKey %s", result.ObjectMeta.Name))
+		logger.With(
+			zap.String(tags.KanaliApiKeyName, result.ObjectMeta.Name),
+		).Debug("deleted ApiKey")
 	}
 }
 

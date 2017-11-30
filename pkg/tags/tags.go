@@ -25,9 +25,15 @@ const (
 	Error = "error"
 
 	// KanaliProxyName is the opentracing tag name that represents an APIProxy name
-	KanaliProxyName = "kanali.proxy.name"
+	KanaliProxyName = "kanali.apiproxy.name"
 	// KanaliProxyNamespace is the opentracing tag name that represents an APIProxy namespace
-	KanaliProxyNamespace = "kanali.proxy.namespace"
+	KanaliProxyNamespace = "kanali.apiproxy.namespace"
+	// KanaliApiKeyName is the opentracing tag name that represents an ApiKey name
+	KanaliApiKeyName = "kanali.apikey.name"
+  // KanaliApiKeyBindingName is the opentracing tag name that represents an ApiKeyBinding name
+	KanaliApiKeyBindingName = "kanali.apikeybinding.name"
+	// KanaliApiKeyBindingNamespace is the opentracing tag name that represents an ApiKeyBinding namespace
+	KanaliApiKeyBindingNamespace = "kanali.apikeybinding.namespace"
 
 	// HTTPRequest is the opentracing tag name that represents the existence on an HTTP request
 	HTTPRequest = "http.request"

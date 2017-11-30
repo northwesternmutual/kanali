@@ -25,8 +25,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCompareTime(t *testing.T) {
@@ -136,15 +136,15 @@ func TestGetTrafficVolume(t *testing.T) {
 func TestTrafficStoreIsEmpty(t *testing.T) {
 	defer TrafficStore().Clear()
 
-  assert.True(t, TrafficStore().IsEmpty())
-  TrafficStore().Set(getTestTrafficPoint())
-  assert.False(t, TrafficStore().IsEmpty())
-  TrafficStore().Clear()
-  assert.True(t, TrafficStore().IsEmpty())
+	assert.True(t, TrafficStore().IsEmpty())
+	TrafficStore().Set(getTestTrafficPoint())
+	assert.False(t, TrafficStore().IsEmpty())
+	TrafficStore().Clear()
+	assert.True(t, TrafficStore().IsEmpty())
 }
 
 func TestTrafficStoreSet(t *testing.T) {
-  defer TrafficStore().Clear()
+	defer TrafficStore().Clear()
 
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
 	TrafficStore().Set(&TrafficPoint{currTime.UnixNano(), "namespace-one", "proxy-one", "key-one"})
@@ -158,40 +158,40 @@ func TestTrafficStoreSet(t *testing.T) {
 }
 
 func TestTrafficStoreClear(t *testing.T) {
-  defer TrafficStore().Clear()
+	defer TrafficStore().Clear()
 
 	TrafficStore().Clear()
 	TrafficStore().Set(getTestTrafficPoint())
-  assert.Equal(t, 1, len(trafficStore.trafficMap))
+	assert.Equal(t, 1, len(trafficStore.trafficMap))
 	TrafficStore().Clear()
 	assert.Equal(t, 0, len(trafficStore.trafficMap))
 }
 
 func TestIsRateLimitViolated(t *testing.T) {
-  defer TrafficStore().Clear()
+	defer TrafficStore().Clear()
 
 	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:54.10 -0000 CST 2017")
 
-  testApiProxyOne := getTestApiProxy("proxy-one", "namespace-one", "/", "/")
+	testApiProxyOne := getTestApiProxy("proxy-one", "namespace-one", "/", "/")
 
-  testSubpathOne := getTestSubpaths("/foo", true)
-  testSubpathTwo := getTestSubpaths("/foo/bar", false, "GET", "POST")
+	testSubpathOne := getTestSubpaths("/foo", true)
+	testSubpathTwo := getTestSubpaths("/foo/bar", false, "GET", "POST")
 
-  testKeyOne := getTestKey("key-one", v2.Rule{Global: true},
-    testSubpathOne,
-    testSubpathTwo,
-  )
+	testKeyOne := getTestKey("key-one", v2.Rule{Global: true},
+		testSubpathOne,
+		testSubpathTwo,
+	)
 
-  testApiKeyBindingOne := getTestApiKeyBinding("abc123", "namespace-one", testKeyOne)
+	testApiKeyBindingOne := getTestApiKeyBinding("abc123", "namespace-one", testKeyOne)
 
-  testApiKeyBindingOne.Spec.Keys[0].Rate = v2.Rate{0, "minute"}
+	testApiKeyBindingOne.Spec.Keys[0].Rate = v2.Rate{0, "minute"}
 	assert.False(t, TrafficStore().IsRateLimitViolated(testApiProxyOne, testApiKeyBindingOne, "key-one", currTime))
 
 	testApiKeyBindingOne.Spec.Keys[0].Rate = v2.Rate{3, ""}
 	assert.False(t, TrafficStore().IsRateLimitViolated(testApiProxyOne, testApiKeyBindingOne, "key-one", currTime))
 
-  testApiKeyBindingOne.Spec.Keys[0].Rate = v2.Rate{3, "minute"}
-  assert.False(t, TrafficStore().IsRateLimitViolated(testApiProxyOne, testApiKeyBindingOne, "key-one", currTime))
+	testApiKeyBindingOne.Spec.Keys[0].Rate = v2.Rate{3, "minute"}
+	assert.False(t, TrafficStore().IsRateLimitViolated(testApiProxyOne, testApiKeyBindingOne, "key-one", currTime))
 
 	tmpTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 3:05:04.14 -0000 CST 2017")
 	TrafficStore().Set(&TrafficPoint{tmpTime.UnixNano(), "namespace-one", "proxy-one", "key-one"})
@@ -205,8 +205,8 @@ func TestIsRateLimitViolated(t *testing.T) {
 	TrafficStore().Set(&TrafficPoint{tmpTime.UnixNano(), "namespace-one", "proxy-one", "key-one"})
 	assert.True(t, TrafficStore().IsRateLimitViolated(testApiProxyOne, testApiKeyBindingOne, "key-one", currTime))
 
-  testApiKeyBindingOne.Spec.Keys[0].Rate = v2.Rate{3, ""}
-  assert.True(t, TrafficStore().IsRateLimitViolated(testApiProxyOne, testApiKeyBindingOne, "key-one", currTime))
+	testApiKeyBindingOne.Spec.Keys[0].Rate = v2.Rate{3, ""}
+	assert.True(t, TrafficStore().IsRateLimitViolated(testApiProxyOne, testApiKeyBindingOne, "key-one", currTime))
 
 	testApiKeyBindingOne.Spec.Keys[0].Rate = v2.Rate{}
 	assert.False(t, TrafficStore().IsRateLimitViolated(testApiProxyOne, testApiKeyBindingOne, "key-one", currTime))
@@ -215,12 +215,12 @@ func TestIsRateLimitViolated(t *testing.T) {
 }
 
 func getTestTrafficPoint() *TrafficPoint {
-  currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
+	currTime, _ := time.Parse("Mon Jan 2 15:04:05.00 -0700 MST 2006", "Sun Jun 12 2:05:00.00 -0000 CST 2017")
 
-  return &TrafficPoint{
-    Time: currTime.UnixNano(),
-    Namespace: "foo",
-    ProxyName: "proxy-one",
-    KeyName: "key-one",
-  }
+	return &TrafficPoint{
+		Time:      currTime.UnixNano(),
+		Namespace: "foo",
+		ProxyName: "proxy-one",
+		KeyName:   "key-one",
+	}
 }

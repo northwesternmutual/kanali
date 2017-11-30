@@ -16,7 +16,7 @@ influx_password = ""
 location = "/"
 
 [plugins.apiKey]
-decryption_key_file = "/etc/kanali/key.pem"
+decryption_key_file = ""
 header_key = "apikey"
 
 [tls]
@@ -37,7 +37,7 @@ log_level = "debug"
 cert_file = ""
 key_file = ""
 ca_file = ""
-endpoints = "http://localhost:23790"
+endpoints = "http://127.0.0.1:2379"
 prefix = "kanali"
 
 [proxy]

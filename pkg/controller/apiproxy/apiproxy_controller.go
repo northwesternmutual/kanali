@@ -21,13 +21,14 @@
 package apiproxy
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
+	tags "github.com/northwesternmutual/kanali/pkg/tags"
+	"go.uber.org/zap"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -61,10 +62,13 @@ func (ctlr *ApiProxyController) apiProxyAdd(obj interface{}) {
 	defer logger.Sync()
 	proxy, ok := obj.(*v2.ApiProxy)
 	if !ok {
-		logger.Error("received malformed APIProxy from k8s apiserver")
+		logger.Error("received malformed ApiProxy from k8s apiserver")
 	} else {
 		store.ApiProxyStore().Set(proxy)
-		logger.Debug(fmt.Sprintf("added ApiProxy %s in %s namespace", proxy.ObjectMeta.Name, proxy.ObjectMeta.Namespace))
+		logger.With(
+			zap.String(tags.KanaliProxyName, proxy.ObjectMeta.Name),
+			zap.String(tags.KanaliProxyNamespace, proxy.ObjectMeta.Namespace),
+		).Debug("added ApiProxy")
 	}
 }
 
@@ -81,8 +85,11 @@ func (ctlr *ApiProxyController) apiProxyUpdate(old interface{}, new interface{})
 		logger.Error("received malformed ApiProxy from k8s apiserver")
 		return
 	}
-  store.ApiProxyStore().Update(oldProxy, newProxy)
-  logger.Debug(fmt.Sprintf("updated ApiProxy %s in %s namespace", newProxy.ObjectMeta.Name, newProxy.ObjectMeta.Namespace))
+	store.ApiProxyStore().Update(oldProxy, newProxy)
+	logger.With(
+		zap.String(tags.KanaliProxyName, newProxy.ObjectMeta.Name),
+		zap.String(tags.KanaliProxyNamespace, newProxy.ObjectMeta.Namespace),
+	).Debug("updated ApiProxy")
 }
 
 func (ctlr *ApiProxyController) apiProxyDelete(obj interface{}) {
@@ -93,7 +100,10 @@ func (ctlr *ApiProxyController) apiProxyDelete(obj interface{}) {
 		logger.Error("received malformed ApiProxy from k8s apiserver")
 		return
 	}
-	if result:= store.ApiProxyStore().Delete(proxy); result != nil {
-		logger.Debug(fmt.Sprintf("deleted ApiProxy %s in %s namespace", result.ObjectMeta.Name, result.ObjectMeta.Namespace))
+	if result := store.ApiProxyStore().Delete(proxy); result != nil {
+		logger.With(
+			zap.String(tags.KanaliProxyName, proxy.ObjectMeta.Name),
+			zap.String(tags.KanaliProxyNamespace, proxy.ObjectMeta.Namespace),
+		).Debug("deleted ApiProxy")
 	}
 }

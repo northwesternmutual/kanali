@@ -29,7 +29,7 @@ import (
 )
 
 // SchemeGroupVersion is group version used to register these objects
-var SchemeGroupVersion = schema.GroupVersion{Group: kanaliio.GroupName, Version: "v2alpha1"}
+var SchemeGroupVersion = schema.GroupVersion{Group: kanaliio.GroupName, Version: "v2"}
 
 // Resource takes an unqualified resource and returns a Group qualified GroupResource
 func Resource(resource string) schema.GroupResource {

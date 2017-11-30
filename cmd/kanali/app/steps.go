@@ -107,7 +107,7 @@ func (step mockTargetStep) do(ctx context.Context, proxy *v2.ApiProxy, k8sCoreCl
 	if !mockTargetDefined(proxy) || !mockTargetEnabled(proxy) {
 		return nil
 	}
-  
+
 	targetPath := utils.ComputeTargetPath(proxy.Spec.Source.Path, proxy.Spec.Target.Path, utils.ComputeURLPath(r.URL))
 
 	mr := store.MockTargetStore().Get(proxy.ObjectMeta.Namespace, proxy.Spec.Target.Backend.Mock.MockTargetName, targetPath, r.Method)

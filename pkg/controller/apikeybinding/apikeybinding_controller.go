@@ -21,10 +21,11 @@
 package apikeybinding
 
 import (
-	"fmt"
 	"time"
 
+  "go.uber.org/zap"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+  tags "github.com/northwesternmutual/kanali/pkg/tags"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
@@ -64,7 +65,10 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
 		return
 	}
 	store.ApiKeyBindingStore().Set(binding)
-	logger.Debug(fmt.Sprintf("added ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace))
+  logger.With(
+    zap.String(tags.KanaliApiKeyBindingName, binding.ObjectMeta.Name),
+    zap.String(tags.KanaliApiKeyBindingNamespace, binding.ObjectMeta.Namespace),
+  ).Debug("added ApiKeyBinding")
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new interface{}) {
@@ -80,7 +84,10 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new in
 		return
 	}
 	store.ApiKeyBindingStore().Update(newBinding, oldBinding)
-	logger.Debug(fmt.Sprintf("updated ApiKeyBinding %s in %s namespace", newBinding.ObjectMeta.Name, newBinding.ObjectMeta.Namespace))
+  logger.With(
+    zap.String(tags.KanaliApiKeyBindingName, newBinding.ObjectMeta.Name),
+    zap.String(tags.KanaliApiKeyBindingNamespace, newBinding.ObjectMeta.Namespace),
+  ).Debug("updated ApiKeyBinding")
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
@@ -91,6 +98,9 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
 		return
 	}
 	if err := store.ApiKeyBindingStore().Delete(binding); err != nil {
-    logger.Debug(fmt.Sprintf("deleted ApiKeyBinding %s in %s namespace", binding.ObjectMeta.Name, binding.ObjectMeta.Namespace))
-  }
+    logger.With(
+      zap.String(tags.KanaliApiKeyBindingName, binding.ObjectMeta.Name),
+      zap.String(tags.KanaliApiKeyBindingNamespace, binding.ObjectMeta.Namespace),
+    ).Debug("deleted ApiKeyBinding")
+	}
 }
