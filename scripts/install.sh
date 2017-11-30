@@ -15,6 +15,9 @@ echo -e "${LIGHT_BLUE}Step 3: Patch RBAC for Helm${NC}"
 
 echo -e "${LIGHT_BLUE}Step 4: Install Kanali, Grafana, InfluxDB, and Jaeger (may take a few minutes)${NC}"
 
+# add repositories
+helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
+
 while sleep 1
 do
     helm install ./helm --name kanali &>/dev/null && break || continue

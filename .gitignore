@@ -19,3 +19,7 @@ LICENSE_*
 *.html
 torch.svg
 /kanali
+
+# helm
+helm/charts/
+helm/requirements.lock

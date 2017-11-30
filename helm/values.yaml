@@ -1,12 +1,18 @@
+# Default values for kanali.
 
-imageRegistry: northwesternmutual
+# Begin: Override values on the Grafana, InfluxDB, and Jaeger subcharts to customize for Kanali
+grafana:
+  # overwrite grafana values
 
-dockerImageTag: v1.2.0
+influxdb:
+  # overwrite influxdb values
 
-pullPolicy: Always
+jaeger:
+  tags:
+    cassandra: false
+    elasticsearch: true
 
-decryptKeySecretName: kanali-key-decription
-
-kanaliConfigName: kanali-config
-
-tlsSecretName: kanali
+kanali:
+  image: northwesternmutual/kanali
+  tag: v1.2.3
+  pullPolicy: Always

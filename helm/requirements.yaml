@@ -2,11 +2,17 @@
 
 dependencies:
 - name: influxdb
-  version: 0.4.1
-  repository: https://github.com/kubernetes/charts/tree/master/stable/influxdb
+  version: 0.6.1
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  tags:
+  - influxdb
 - name: grafana
-  version: 0.3.6
-  repository: https://github.com/kubernetes/charts/tree/master/stable/grafana
+  version: 0.5.0
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  tags:
+  - grafana
 - name: jaeger
-  version: 1.0.0
-  repository: file://./charts/jaeger
+  version: 0.2.0
+  repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+  tags:
+  - jaeger
