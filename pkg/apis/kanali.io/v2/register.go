@@ -59,6 +59,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&ApiProxyList{},
 		&ApiKeyBinding{},
 		&ApiKeyBindingList{},
+    &MockTarget{},
+    &MockTargetList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

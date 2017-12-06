@@ -37,6 +37,7 @@ import (
 	"strings"
 	"time"
 
+  "go.uber.org/zap"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	kanaliErrors "github.com/northwesternmutual/kanali/pkg/errors"
@@ -59,41 +60,9 @@ const (
 	pluginSymbolName = "Plugin"
 )
 
-type flow []step
-
-type step interface {
-	getName() string
-	do(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, metrics *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error
-}
-
 // httpClient allows for mocking an http client to assist in testing
 type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
-}
-
-func (f *flow) add(steps ...step) {
-	for _, s := range steps {
-		*f = append(*f, s)
-	}
-}
-
-func (f *flow) play(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, metrics *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-	logger := logging.WithContext(ctx)
-
-	for _, step := range *f {
-		logger.Debug(fmt.Sprintf("playing step %s", step.getName()))
-		err := step.do(ctx, proxy, k8sCoreClient, metrics, w, r, resp, trace)
-		if err == nil {
-			continue
-		}
-		trace.SetTag(tags.Error, true)
-		trace.LogKV(
-			"event", tags.Error,
-			"error.message", err.Error(),
-		)
-		return err
-	}
-	return nil
 }
 
 type mockTargetStep struct{}
@@ -293,7 +262,7 @@ func (step proxyPassStep) getName() string {
 
 func (step proxyPassStep) do(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, span opentracing.Span) error {
 
-	targetRequest, err := createTargetRequest(proxy, k8sCoreClient, r)
+	targetRequest, err := createTargetRequest(ctx, proxy, k8sCoreClient, r)
 	if err != nil {
 		return err
 	}
@@ -313,12 +282,12 @@ func (step proxyPassStep) do(ctx context.Context, proxy *v2.ApiProxy, k8sCoreCli
 
 }
 
-func createTargetRequest(proxy *v2.ApiProxy, k8sCoreClient core.Interface, originalRequest *http.Request) (*http.Request, error) {
+func createTargetRequest(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, originalRequest *http.Request) (*http.Request, error) {
 	targetRequest := &http.Request{}
 	*targetRequest = *originalRequest
 	targetRequest.RequestURI = ""
 
-	u, err := getTargetURL(proxy, k8sCoreClient, originalRequest)
+	u, err := getTargetURL(ctx, proxy, k8sCoreClient, originalRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -348,6 +317,15 @@ func createTargetClient(proxy *v2.ApiProxy, k8sCoreClient core.Interface, origin
 }
 
 func configureTargetTLS(proxy *v2.ApiProxy, k8sCoreClient core.Interface, originalRequest *http.Request) (*http.Transport, error) {
+
+  // if len(proxy.Spec.Target.Backend.Endpoint) > 0 { // Endpoint backend is being used
+  //   tlsConfig := &tls.Config{}
+  //   caCertPool := x509.NewCertPool()
+  //   tlsConfig.RootCAs = caCertPool
+  //   tlsConfig.InsecureSkipVerify = true
+  // 	tlsConfig.BuildNameToCertificate()
+  // 	return &http.Transport{TLSClientConfig: tlsConfig}, nil
+  // }
 
 	secret, err := k8sCoreClient.V1().Secrets().Lister().Secrets(proxy.ObjectMeta.Namespace).Get(proxy.Spec.Target.SSL.SecretName)
 	if err != nil {
@@ -429,14 +407,21 @@ func preformTargetProxy(ctx context.Context, client httpClient, request *http.Re
 
 	hydrateSpanFromRequest(request, sp)
 
+  logger.With(
+    zap.String(tags.HTTPRequestURLScheme, request.URL.Scheme),
+    zap.String(tags.HTTPRequestURLHost, request.URL.Host),
+    zap.String(tags.HTTPRequestURLPath, request.URL.Path),
+  ).Info("upstream request")
+
 	t0 := time.Now()
 	resp, err := client.Do(request)
+  t1 := time.Now()
 	if err != nil {
 		return nil, kanaliErrors.StatusError{Code: http.StatusInternalServerError, Err: err}
 	}
 
 	m.Add(
-		metrics.Metric{Name: "total_target_time", Value: int(time.Now().Sub(t0) / time.Millisecond), Index: false},
+		metrics.Metric{Name: "total_target_time", Value: int(t1.Sub(t0) / time.Millisecond), Index: false},
 	)
 
 	hydrateSpanFromResponse(resp, sp)
@@ -444,34 +429,54 @@ func preformTargetProxy(ctx context.Context, client httpClient, request *http.Re
 	return resp, nil
 }
 
-func getTargetURL(proxy *v2.ApiProxy, k8sCoreClient core.Interface, originalRequest *http.Request) (*url.URL, error) {
+func getTargetURL(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, originalRequest *http.Request) (*url.URL, error) {
 
-	scheme := "http"
+  scheme, host := "", ""
+  logger := logging.WithContext(ctx)
 
-	if len(proxy.Spec.Target.SSL.SecretName) > 0 {
-		scheme += "s"
-	}
+  if len(proxy.Spec.Target.Backend.Endpoint) > 0 { // Endpoint backend is configured
 
-	services, err := k8sCoreClient.V1().Services().Lister().Services(proxy.ObjectMeta.Namespace).List(labels.SelectorFromSet(getServiceLabelSet(proxy, originalRequest.Header)))
-	if err != nil || len(services) == 0 {
-		return nil, kanaliErrors.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
-	}
+    url, err := url.Parse(proxy.Spec.Target.Backend.Endpoint)
+    if err != nil {
+      logger.Error(err.Error())
+      return nil, kanaliErrors.StatusError{Code: http.StatusInternalServerError, Err: errors.New("error parsing upstream url")}
+    }
+    scheme = url.Scheme
+    host = url.Host
 
-	uri := fmt.Sprintf("%s.%s.svc.cluster.local",
-		services[0].ObjectMeta.Name,
-		proxy.ObjectMeta.Namespace,
-	)
+  } else { // Service backend is configured
+    if len(proxy.Spec.Target.SSL.SecretName) > 0 {
+  		scheme = "https"
+  	} else {
+      scheme = "http"
+    }
 
-	if viper.GetBool(options.FlagProxyEnableClusterIP.GetLong()) {
-		uri = services[0].Spec.ClusterIP
-	}
+  	services, err := k8sCoreClient.V1().Services().Lister().Services(proxy.ObjectMeta.Namespace).List(labels.SelectorFromSet(getServiceLabelSet(proxy, originalRequest.Header)))
+    if err != nil {
+      logger.Error(err.Error())
+    }
+    if err != nil || len(services) == 0 {
+  		return nil, kanaliErrors.StatusError{Code: http.StatusNotFound, Err: errors.New("no matching services")}
+  	}
+
+  	uri := fmt.Sprintf("%s.%s.svc.cluster.local",
+  		services[0].ObjectMeta.Name,
+  		proxy.ObjectMeta.Namespace,
+  	)
+
+  	if viper.GetBool(options.FlagProxyEnableClusterIP.GetLong()) {
+  		uri = services[0].Spec.ClusterIP
+  	}
+
+    host = fmt.Sprintf("%s:%d",
+			uri,
+			proxy.Spec.Target.Backend.Service.Port,
+		)
+  }
 
 	return &url.URL{
 		Scheme: scheme,
-		Host: fmt.Sprintf("%s:%d",
-			uri,
-			proxy.Spec.Target.Backend.Service.Port,
-		),
+		Host: host,
 		Path:       utils.ComputeTargetPath(proxy.Spec.Source.Path, proxy.Spec.Target.Path, originalRequest.URL.EscapedPath()),
 		RawPath:    utils.ComputeTargetPath(proxy.Spec.Source.Path, proxy.Spec.Target.Path, originalRequest.URL.EscapedPath()),
 		ForceQuery: originalRequest.URL.ForceQuery,

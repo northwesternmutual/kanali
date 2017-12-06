@@ -6,12 +6,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- Adding `ClusterRole` in `scripts/install.sh` so that install works with latest Minikube releases.
-- Adding contextual and performant logging using zap.
+- Contextual and performant logging using zap.
+- New `MockTarget` resource.
 ### Changed
-- Using `client-go@v4.0.0` for Kubernetes client.
+- Using `client-go@v5.0.0` for Kubernetes client.
 - Using `CRDs` to replace the deprecated `TPRs`.
+- Modified `ApiProxy` resource
+- Modified `ApiKeyBinding` resource
+- Modified `ApiKey` resource
+
+## [1.2.3] - 2017-11-12
+### Changed
+- Allow for batching of InfluxDB writes.
+- Fixed [#83](https://github.com/northwesternmutual/kanali/issues/83).
+- Fixed bug that did not properly handle all config value types.
+- No longer indexing `http_method` InfluxDB field as it is not being utilized as a tag.
+
+## [1.2.2] - 2017-11-02
+### Changed
+- Support regular expressions for ApiKeyBinding key subpaths.
+
+## [1.2.1] - 2017-10-13
+### Added
+- Adding `ClusterRole` in `scripts/install.sh` so that install works with latest Minikube releases.
+### Changed
+- Upstream URLs will now be properly encoded/decoded.
 - Improved test coverage.
+### Removed
+- Gzip support. Kanali will be a transparent proxy.
 
 ## [1.2.0] - 2017-09-24
 ### Added

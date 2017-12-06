@@ -41,7 +41,7 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 
 ```sh
 $ git clone git@github.com:northwesternmutual/kanali.git && cd kanali
-$ minikube start
+$ minikube start --feature-gates CustomResourceValidation=true
 $ ./scripts/install.sh # wait until all pods are in running state
 $ kubectl apply -f ./examples/exampleOne.yaml
 $ curl $(minikube service kanali --url --format="https://{{.IP}}:{{.Port}}")/api/v1/example-one
@@ -88,11 +88,11 @@ The following legend will be used for the following matrices:
 
 ### CustomResourceDefinitions
 
-|             | kanali.io/v1 | kanali.io/v2alpha1 |
-|-------------|--------------|--------------------|
-| kanali 1.0  | ✓            | x                  |
-| kanali 2.0  | x            | ✓                  |
-| kanali HEAD | x            | ✓                  |
+|             | kanali.io/v1 | kanali.io/v2 |
+|-------------|--------------|--------------|
+| kanali 1.0  | ✓            | x            |
+| kanali 2.0  | x            | ✓            |
+| kanali HEAD | x            | ✓            |
 
 `✓` Kanali is fully compatible with this version of the `kanali.io` API group. Every field in the spec potentially modifies behavior.  
 `†` Kanali is compatible with this version of the `kanali.io` API group. There are fields that were either added or removed. Their existence will not cause errors and their values, if set, will not modify behavior.   

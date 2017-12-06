@@ -18,18 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package app
+package v2
 
 import (
-	"errors"
 	"fmt"
-	"time"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	apiextensionsv1beta1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
-	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (
@@ -54,6 +49,22 @@ var (
 	semanticVersionRegex  = `^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$`
 )
 
+func ApiKeyCRD() *apiextensionsv1beta1.CustomResourceDefinition {
+  return apiKeyCRD
+}
+
+func ApiProxyCRD() *apiextensionsv1beta1.CustomResourceDefinition {
+  return apiProxyCRD
+}
+
+func ApiKeyBindingCRD() *apiextensionsv1beta1.CustomResourceDefinition {
+  return apiKeyBindingCRD
+}
+
+func MockTargetCRD() *apiextensionsv1beta1.CustomResourceDefinition {
+  return mockTargetCRD
+}
+
 var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: fmt.Sprintf("apikeies.%s", kanaliGroupName),
@@ -77,23 +88,16 @@ var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 				Required: []string{
 					"spec",
 				},
-				AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-					Allows: false,
-				},
 				Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 					"spec": {
 						Description: "ApiKey resource body",
 						Required: []string{
 							"revisions",
 						},
-						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-							Allows: false,
-						},
 						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 							"revisions": {
 								Description: "represents the list of active and inactive API key revisions",
 								Type:        "array",
-								UniqueItems: true,
 								MinLength:   int64Ptr(1),
 								Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
 									Schema: &apiextensionsv1beta1.JSONSchemaProps{
@@ -102,9 +106,6 @@ var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										Required: []string{
 											"data",
 											"status",
-										},
-										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-											Allows: false,
 										},
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"data": {
@@ -166,23 +167,16 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 				Required: []string{
 					"spec",
 				},
-				AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-					Allows: false,
-				},
 				Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 					"spec": {
 						Description: "ApiKeyBinding resource body",
 						Required: []string{
 							"keys",
 						},
-						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-							Allows: false,
-						},
 						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 							"keys": {
 								Description: "list of ApiKey resources granted permissions",
 								Type:        "array",
-								UniqueItems: true,
 								MinLength:   int64Ptr(1),
 								Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
 									Schema: &apiextensionsv1beta1.JSONSchemaProps{
@@ -191,20 +185,94 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										Required: []string{
 											"name",
 										},
-										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-											Allows: false,
-										},
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"name": {
-												Ref: stringPtr("#/definitions/name"),
+                        Description: "valid qualified Kubernetes name",
+            						Type:        "string",
+            						MinLength:   int64Ptr(1),
+            						MaxLength:   int64Ptr(63),
+            						Pattern:     k8sQualifiedNameRegex,
 											},
 											"defaultRule": {
-												Ref: stringPtr("#/definitions/rule"),
+                        Description: "defines http method that an ApiKey has access to",
+                        Type:        "object",
+                        OneOf: []apiextensionsv1beta1.JSONSchemaProps{
+                          {
+                            Description: "global access",
+                            Type:        "object",
+                            Required: []string{
+                              "global",
+                            },
+                            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+                              "global": {
+                                Description: "does ApiKey have access to all http methods",
+                                Type:        "boolean",
+                              },
+                            },
+                          },
+                          {
+                            Description: "fine grained http verb access",
+                            Type:        "object",
+                            Required: []string{
+                              "granular",
+                            },
+                            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+                              "granular": {
+                                Description: "fine grained http verb access",
+                                Type:        "object",
+                                Required: []string{
+                                  "verbs",
+                                },
+                                Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+                                  "verbs": {
+                                    Description: "list of http methods that ApiKey has access to",
+                                    Type:        "array",
+                                    MinLength:   int64Ptr(1),
+                                    Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+                                      Schema: &apiextensionsv1beta1.JSONSchemaProps{
+                                        Description: "valid htp methods",
+                                        Type:        "string",
+                                        Enum: []apiextensionsv1beta1.JSON{
+                                          {
+                                            Raw: []byte(`"GET"`),
+                                          },
+                                          {
+                                            Raw: []byte(`"HEAD"`),
+                                          },
+                                          {
+                                            Raw: []byte(`"POST"`),
+                                          },
+                                          {
+                                            Raw: []byte(`"PUT"`),
+                                          },
+                                          {
+                                            Raw: []byte(`"PATCH"`),
+                                          },
+                                          {
+                                            Raw: []byte(`"DELETE"`),
+                                          },
+                                          {
+                                            Raw: []byte(`"CONNECT"`),
+                                          },
+                                          {
+                                            Raw: []byte(`"OPTIONS"`),
+                                          },
+                                          {
+                                            Raw: []byte(`"TRACE"`),
+                                          },
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
 											},
 											"subpaths": {
 												Description: "list of subpaths defining fine grained permissions",
 												Type:        "array",
-												UniqueItems: true,
 												MinLength:   int64Ptr(1),
 												Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
 													Schema: &apiextensionsv1beta1.JSONSchemaProps{
@@ -213,30 +281,105 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 															"path",
 															"rule",
 														},
-														AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-															Allows: false,
-														},
 														Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 															"path": {
-																Ref: stringPtr("#/definitions/path"),
+                                Description: "http path",
+                    						Type:        "string",
+                    						Pattern:     httpPathRegex,
+                    						MinLength:   int64Ptr(1),
+                    						Default: &apiextensionsv1beta1.JSON{
+                    							Raw: []byte(""),
+                    						},
 															},
 															"rule": {
-																Ref: stringPtr("#/definitions/rule"),
+                                Description: "defines http method that an ApiKey has access to",
+                                Type:        "object",
+                                OneOf: []apiextensionsv1beta1.JSONSchemaProps{
+                                  {
+                                    Description: "global access",
+                                    Type:        "object",
+                                    Required: []string{
+                                      "global",
+                                    },
+                                    Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+                                      "global": {
+                                        Description: "does ApiKey have access to all http methods",
+                                        Type:        "boolean",
+                                      },
+                                    },
+                                  },
+                                  {
+                                    Description: "fine grained http verb access",
+                                    Type:        "object",
+                                    Required: []string{
+                                      "granular",
+                                    },
+                                    Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+                                      "granular": {
+                                        Description: "fine grained http verb access",
+                                        Type:        "object",
+                                        Required: []string{
+                                          "verbs",
+                                        },
+                                        Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+                                          "verbs": {
+                                            Description: "list of http methods that ApiKey has access to",
+                                            Type:        "array",
+                                            MinLength:   int64Ptr(1),
+                                            Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+                                              Schema: &apiextensionsv1beta1.JSONSchemaProps{
+                                                Description: "valid htp methods",
+                                                Type:        "string",
+                                                Enum: []apiextensionsv1beta1.JSON{
+                                                  {
+                                                    Raw: []byte(`"GET"`),
+                                                  },
+                                                  {
+                                                    Raw: []byte(`"HEAD"`),
+                                                  },
+                                                  {
+                                                    Raw: []byte(`"POST"`),
+                                                  },
+                                                  {
+                                                    Raw: []byte(`"PUT"`),
+                                                  },
+                                                  {
+                                                    Raw: []byte(`"PATCH"`),
+                                                  },
+                                                  {
+                                                    Raw: []byte(`"DELETE"`),
+                                                  },
+                                                  {
+                                                    Raw: []byte(`"CONNECT"`),
+                                                  },
+                                                  {
+                                                    Raw: []byte(`"OPTIONS"`),
+                                                  },
+                                                  {
+                                                    Raw: []byte(`"TRACE"`),
+                                                  },
+                                                },
+                                              },
+                                            },
+                                          },
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
 															},
 														},
 													},
 												},
-											},
-											"quota": {
-												Description: "number of requests authorized for this ApiKey",
-												Ref:         stringPtr("#/definitions/wholeNumber"),
 											},
 											"rate": {
 												Description: "number of requests an ApiKey can make over an interval",
 												Type:        "object",
 												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 													"amount": {
-														Ref: stringPtr("#/definitions/wholeNumber"),
+                            Type:       "integer",
+                						Minimum:    float64Ptr(1),
+                						MultipleOf: float64Ptr(1),
 													},
 													"unit": {
 														Description: "valid intervals",
@@ -250,116 +393,6 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 															},
 															{
 																Raw: []byte(`"HOUR"`),
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				Definitions: map[string]apiextensionsv1beta1.JSONSchemaProps{
-					"name": {
-						Description: "valid qualified Kubernetes name",
-						Type:        "string",
-						MinLength:   int64Ptr(1),
-						MaxLength:   int64Ptr(63),
-						Pattern:     k8sQualifiedNameRegex,
-					},
-					"path": {
-						Description: "http path",
-						Type:        "string",
-						Pattern:     httpPathRegex,
-						MinLength:   int64Ptr(1),
-						Default: &apiextensionsv1beta1.JSON{
-							Raw: []byte(""),
-						},
-					},
-					"wholeNumber": {
-						Type:       "integer",
-						Minimum:    float64Ptr(1),
-						MultipleOf: float64Ptr(1),
-					},
-					"rule": {
-						Description: "defines http method that an ApiKey has access to",
-						Type:        "object",
-						OneOf: []apiextensionsv1beta1.JSONSchemaProps{
-							{
-								Description: "global access",
-								Type:        "object",
-								AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-									Allows: false,
-								},
-								Required: []string{
-									"global",
-								},
-								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-									"global": {
-										Description: "does ApiKey have access to all http methods",
-										Type:        "boolean",
-									},
-								},
-							},
-							{
-								Description: "fine grained http verb access",
-								Type:        "object",
-								AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-									Allows: false,
-								},
-								Required: []string{
-									"granular",
-								},
-								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-									"granular": {
-										Description: "fine grained http verb access",
-										Type:        "object",
-										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-											Allows: false,
-										},
-										Required: []string{
-											"verbs",
-										},
-										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-											"verbs": {
-												Description: "list of http methods that ApiKey has access to",
-												Type:        "array",
-												UniqueItems: true,
-												MinLength:   int64Ptr(1),
-												Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
-													Schema: &apiextensionsv1beta1.JSONSchemaProps{
-														Description: "valid htp methods",
-														Type:        "string",
-														Enum: []apiextensionsv1beta1.JSON{
-															{
-																Raw: []byte(`"GET"`),
-															},
-															{
-																Raw: []byte(`"HEAD"`),
-															},
-															{
-																Raw: []byte(`"POST"`),
-															},
-															{
-																Raw: []byte(`"PUT"`),
-															},
-															{
-																Raw: []byte(`"PATCH"`),
-															},
-															{
-																Raw: []byte(`"DELETE"`),
-															},
-															{
-																Raw: []byte(`"CONNECT"`),
-															},
-															{
-																Raw: []byte(`"OPTIONS"`),
-															},
-															{
-																Raw: []byte(`"TRACE"`),
 															},
 														},
 													},
@@ -400,9 +433,6 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 				Required: []string{
 					"spec",
 				},
-				AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-					Allows: false,
-				},
 				Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 					"spec": {
 						Description: "ApiProxy resource body",
@@ -410,21 +440,21 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 							"source",
 							"target",
 						},
-						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-							Allows: false,
-						},
 						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 							"source": {
 								Description: "unique incoming http path and virtual host combination",
 								Required: []string{
 									"path",
 								},
-								AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-									Allows: false,
-								},
 								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 									"path": {
-										Ref: stringPtr("#/definitions/path"),
+                    Description: "http path",
+        						Type:        "string",
+        						Pattern:     httpPathRegex,
+        						MinLength:   int64Ptr(1),
+        						Default: &apiextensionsv1beta1.JSON{
+        							Raw: []byte(""),
+        						},
 									},
 									"virtualHost": {
 										Description: "http hostname",
@@ -437,12 +467,15 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 								Required: []string{
 									"backend",
 								},
-								AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-									Allows: false,
-								},
 								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 									"path": {
-										Ref: stringPtr("#/definitions/path"),
+                    Description: "http path",
+        						Type:        "string",
+        						Pattern:     httpPathRegex,
+        						MinLength:   int64Ptr(1),
+        						Default: &apiextensionsv1beta1.JSON{
+        							Raw: []byte(""),
+        						},
 									},
 									"mock": {
 										Description: "name of ConfigMap defining a valid mock response for this ApiProxy",
@@ -450,12 +483,13 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										Required: []string{
 											"configMapName",
 										},
-										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-											Allows: false,
-										},
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"configMapName": {
-												Ref: stringPtr("#/definitions/name"),
+                        Description: "valid qualified Kubernetes name",
+            						Type:        "string",
+            						MinLength:   int64Ptr(1),
+            						MaxLength:   int64Ptr(63),
+            						Pattern:     k8sQualifiedNameRegex,
 											},
 										},
 									},
@@ -467,9 +501,6 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 												Type:        "object",
 												Required: []string{
 													"endpoint",
-												},
-												AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-													Allows: false,
 												},
 												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 													"endpoint": {
@@ -485,9 +516,6 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 												Required: []string{
 													"service",
 												},
-												AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-													Allows: false,
-												},
 												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 													"service": {
 														Description: "dynamic or static Kubernetes service",
@@ -500,15 +528,19 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																	"name",
 																	"port",
 																},
-																AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-																	Allows: false,
-																},
 																Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 																	"name": {
-																		Ref: stringPtr("#/definitions/name"),
+                                    Description: "valid qualified Kubernetes name",
+                        						Type:        "string",
+                        						MinLength:   int64Ptr(1),
+                        						MaxLength:   int64Ptr(63),
+                        						Pattern:     k8sQualifiedNameRegex,
 																	},
 																	"port": {
-																		Ref: stringPtr("#/definitions/port"),
+                                    Description: "tcp port",
+                        						Type:        "integer",
+                        						Minimum:     float64Ptr(0),
+                        						Maximum:     float64Ptr(65535),
 																	},
 																},
 															},
@@ -519,17 +551,16 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																	"labels",
 																	"port",
 																},
-																AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-																	Allows: false,
-																},
 																Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 																	"port": {
-																		Ref: stringPtr("#/definitions/port"),
+                                    Description: "tcp port",
+                        						Type:        "integer",
+                        						Minimum:     float64Ptr(0),
+                        						Maximum:     float64Ptr(65535),
 																	},
 																	"labels": {
 																		Description: "list of Kubernetes service metadata labels to be matched against",
 																		Type:        "array",
-																		UniqueItems: true,
 																		Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
 																			Schema: &apiextensionsv1beta1.JSONSchemaProps{
 																				Description: "statically or dynamically defined label",
@@ -541,12 +572,13 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																							"name",
 																							"value",
 																						},
-																						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-																							Allows: false,
-																						},
 																						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 																							"name": {
-																								Ref: stringPtr("#/definitions/name"),
+                                                Description: "valid qualified Kubernetes name",
+                                    						Type:        "string",
+                                    						MinLength:   int64Ptr(1),
+                                    						MaxLength:   int64Ptr(63),
+                                    						Pattern:     k8sQualifiedNameRegex,
 																							},
 																							"value": {
 																								Description: "service metadata label value",
@@ -562,12 +594,13 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																							"name",
 																							"header",
 																						},
-																						AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-																							Allows: false,
-																						},
 																						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 																							"name": {
-																								Ref: stringPtr("#/definitions/name"),
+                                                Description: "valid qualified Kubernetes name",
+                                    						Type:        "string",
+                                    						MinLength:   int64Ptr(1),
+                                    						MaxLength:   int64Ptr(63),
+                                    						Pattern:     k8sQualifiedNameRegex,
 																							},
 																							"header": {
 																								Description: "http header name",
@@ -595,12 +628,13 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										Required: []string{
 											"secretName",
 										},
-										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-											Allows: false,
-										},
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"secretName": {
-												Ref: stringPtr("#/definitions/name"),
+                        Description: "valid qualified Kubernetes name",
+            						Type:        "string",
+            						MinLength:   int64Ptr(1),
+            						MaxLength:   int64Ptr(63),
+            						Pattern:     k8sQualifiedNameRegex,
 											},
 										},
 									},
@@ -609,15 +643,11 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 							"plugins": {
 								Description: "list of plugins to be executed on each request",
 								Type:        "array",
-								UniqueItems: true,
 								Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
 									Schema: &apiextensionsv1beta1.JSONSchemaProps{
 										Description: "unique plugin item",
 										Required: []string{
 											"name",
-										},
-										AdditionalProperties: &apiextensionsv1beta1.JSONSchemaPropsOrBool{
-											Allows: false,
 										},
 										Type: "object",
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
@@ -639,30 +669,6 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 									},
 								},
 							},
-						},
-					},
-				},
-				Definitions: map[string]apiextensionsv1beta1.JSONSchemaProps{
-					"name": {
-						Description: "valid qualified Kubernetes name",
-						Type:        "string",
-						MinLength:   int64Ptr(1),
-						MaxLength:   int64Ptr(63),
-						Pattern:     k8sQualifiedNameRegex,
-					},
-					"port": {
-						Description: "tcp port",
-						Type:        "integer",
-						Minimum:     float64Ptr(0),
-						Maximum:     float64Ptr(65535),
-					},
-					"path": {
-						Description: "http path",
-						Type:        "string",
-						Pattern:     httpPathRegex,
-						MinLength:   int64Ptr(1),
-						Default: &apiextensionsv1beta1.JSON{
-							Raw: []byte(""),
 						},
 					},
 				},
@@ -690,46 +696,6 @@ var mockTargetCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 		Scope:      apiextensionsv1beta1.NamespaceScoped,
 		Validation: &apiextensionsv1beta1.CustomResourceValidation{},
 	},
-}
-
-func createCRDs(i apiextensionsv1beta1client.ApiextensionsV1beta1Interface) error {
-	crds := []*apiextensionsv1beta1.CustomResourceDefinition{apiProxyCRD, apiKeyBindingCRD, apiKeyCRD, mockTargetCRD}
-
-	for _, crd := range crds {
-		_, err := i.CustomResourceDefinitions().Create(crd)
-		if err != nil && !k8sErrors.IsAlreadyExists(err) {
-			return fmt.Errorf("failed to create CRD %s: %v", crd.ObjectMeta.Name, err)
-		}
-
-		err = wait.Poll(500*time.Millisecond, 60*time.Second, func() (bool, error) {
-			crd, err = i.CustomResourceDefinitions().Get(crd.ObjectMeta.Name, metav1.GetOptions{})
-			if err != nil {
-				return false, err
-			}
-			for _, cond := range crd.Status.Conditions {
-				switch cond.Type {
-				case apiextensionsv1beta1.Established:
-					if cond.Status == apiextensionsv1beta1.ConditionTrue {
-						return true, err
-					}
-				case apiextensionsv1beta1.NamesAccepted:
-					if cond.Status == apiextensionsv1beta1.ConditionFalse {
-						return false, errors.New(cond.Reason)
-					}
-				}
-			}
-			return false, err
-		})
-		if err != nil {
-			deleteErr := i.CustomResourceDefinitions().Delete(crd.ObjectMeta.Name, nil)
-			if deleteErr != nil {
-				return deleteErr
-			}
-			return err
-		}
-	}
-
-	return nil
 }
 
 func int64Ptr(f int64) *int64 {

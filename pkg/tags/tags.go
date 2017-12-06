@@ -47,6 +47,8 @@ const (
 	// HTTPRequestHeaders is the opentracing tag name that represents an HTTP request headers
 	HTTPRequestHeaders = "http.request.headers"
 
+  // HTTPRequestURLScheme is the opentracing tag name that represents an HTTP scheme
+	HTTPRequestURLScheme = "http.request.url.scheme"
 	// HTTPRequestURLPath is the opentracing tag name that represents an HTTP URL path
 	HTTPRequestURLPath = "http.request.url.path"
 	// HTTPRequestURLHost is the opentracing tag name that represents an HTTP URL host

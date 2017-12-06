@@ -105,8 +105,7 @@ func shouldServeInsecurely() bool {
 }
 
 func (h httpHandler) serveHTTP(w http.ResponseWriter, r *http.Request) {
-	httpContext := context.Background()
-	rqCtx := logging.NewContext(httpContext, zap.Stringer("correlation_id", uuid.NewV4()))
+	rqCtx := logging.NewContext(context.Background(), zap.Stringer("correlation_id", uuid.NewV4()))
 	logger := logging.WithContext(rqCtx)
 
 	t0 := time.Now()
@@ -141,7 +140,7 @@ func (h httpHandler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 	hydrateSpanFromRequest(r, sp)
 
-	err := h.httpHandlerFunc(httpContext, &v2.ApiProxy{}, h.k8sCoreClient, m, w, r, sp)
+	err := h.httpHandlerFunc(rqCtx, &v2.ApiProxy{}, h.k8sCoreClient, m, w, r, sp)
 	if err == nil {
 		return
 	}

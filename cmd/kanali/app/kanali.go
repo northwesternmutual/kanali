@@ -38,6 +38,8 @@ import (
 	logging "github.com/northwesternmutual/kanali/pkg/logging"
 	traffic "github.com/northwesternmutual/kanali/pkg/traffic"
 	opentracing "github.com/opentracing/opentracing-go"
+  v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
+  "github.com/northwesternmutual/kanali/pkg/crds"
 	"github.com/spf13/viper"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/informers"
@@ -60,7 +62,12 @@ func Run(ctx context.Context) error {
 		return err
 	}
 
-	if err := createCRDs(crdClientset.ApiextensionsV1beta1()); err != nil {
+	if err := crds.Create(crdClientset.ApiextensionsV1beta1(),
+    v2CRDs.ApiProxyCRD(),
+    v2CRDs.ApiKeyCRD(),
+    v2CRDs.ApiKeyBindingCRD(),
+    v2CRDs.MockTargetCRD(),
+  ); err != nil {
 		logger.Fatal(err.Error())
 		return err
 	}

@@ -3,6 +3,21 @@
 apiVersion: kanali.io/v2
 kind: ApiProxy
 metadata:
+  name: example-basic-endpoint-backend
+  namespace: default
+spec:
+  source:
+    path: /example-basic-endpoint-backend
+  target:
+    path: /
+    backend:
+      endpoint: https://httpbin.org
+
+---
+
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
   name: example-endpoint-backend
   namespace: default
 spec:
