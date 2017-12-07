@@ -1,0 +1,16 @@
+site_name: Kanali Documentation
+theme:
+  name: material
+  palette:
+    primary: grey
+  logo: images/logo.svg
+  favicon: images/favicon.ico
+repo_name: 'northwesternmutual/kanali'
+repo_url: 'https://github.com/northwesternmutual/kanali'
+pages:
+  - 'Introduction': 'index.md'
+  - 'Getting Started' : 'getting_started.md'
+  - 'Architecture' : 'architecture.md'
+  - 'Deployment' : 'deployment.md'
+  - 'Roadmap' : 'roadmap.md'
+  - 'News' : 'news.md'

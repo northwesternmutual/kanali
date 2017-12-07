@@ -16,7 +16,6 @@ settings.json
 *.log
 LICENSE_*
 .cover/
-*.html
 torch.svg
 /kanali
 

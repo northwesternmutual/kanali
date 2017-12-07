@@ -16,3 +16,8 @@ dependencies:
   repository: https://kubernetes-charts-incubator.storage.googleapis.com/
   tags:
   - jaeger
+- name: etcd
+  version: 0.3.5
+  repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+  tags:
+  - etcd

@@ -7,6 +7,9 @@ grafana:
 influxdb:
   # overwrite influxdb values
 
+etcd:
+  # overwrite influxdb values
+
 jaeger:
   tags:
     cassandra: false
