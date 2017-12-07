@@ -31,7 +31,7 @@ import (
 type ApiKeyBindingStoreInterface interface {
 	Set(apiKeyBinding *v2.ApiKeyBinding)
 	Update(old, new *v2.ApiKeyBinding)
-	Get(namespace, binding, key, target string) *v2.Rule
+	Get(namespace, binding, key, target string) (*v2.Rule, v2.Rate)
 	Delete(apiKeyBinding *v2.ApiKeyBinding) error
 	Clear()
 	IsEmpty() bool
@@ -127,15 +127,15 @@ func (s *apiKeyBindingFactory) set(apiKeyBinding *v2.ApiKeyBinding) {
 //   3. api key name
 //   4. target path
 // O(n), n => number of path segments in target path
-func (s *apiKeyBindingFactory) Get(namespace, binding, key, target string) *v2.Rule {
+func (s *apiKeyBindingFactory) Get(namespace, binding, key, target string) (*v2.Rule, v2.Rate) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
 	result, ok := s.apiKeyBindingMap[namespace][binding][key]
 	if !ok {
-		return nil
+		return nil, v2.Rate{}
 	}
-	return result.getHighestPriorityRule(target)
+	return result.getHighestPriorityRule(target), result.key.Rate
 }
 
 // Delete will remove an ApiKeyBinding
