@@ -36,9 +36,12 @@ import (
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	kanaliErrors "github.com/northwesternmutual/kanali/pkg/errors"
+	"github.com/northwesternmutual/kanali/pkg/flow"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	"github.com/northwesternmutual/kanali/pkg/metrics"
-	tags "github.com/northwesternmutual/kanali/pkg/tags"
+	"github.com/northwesternmutual/kanali/pkg/steps"
+	"github.com/northwesternmutual/kanali/pkg/tags"
+	"github.com/northwesternmutual/kanali/pkg/tracer"
 	"github.com/northwesternmutual/kanali/pkg/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 	uuid "github.com/satori/go.uuid"
@@ -138,7 +141,7 @@ func (h httpHandler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	))
 	defer sp.Finish()
 
-	hydrateSpanFromRequest(r, sp)
+	tracer.HydrateSpanFromRequest(r, sp)
 
 	err := h.httpHandlerFunc(rqCtx, &v2.ApiProxy{}, h.k8sCoreClient, m, w, r, sp)
 	if err == nil {
@@ -176,18 +179,18 @@ func (h httpHandler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 
 func getHTTPHandlerFunc(k8sCoreClient core.Interface) httpHandlerFunc {
 	return func(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, m *metrics.Metrics, w http.ResponseWriter, r *http.Request, trace opentracing.Span) error {
-		f := &flow{}
+		f := flow.New()
 
-		f.add(
-			validateProxyStep{},
-			pluginsOnRequestStep{},
-			mockTargetStep{},
-			proxyPassStep{},
-			pluginsOnResponseStep{},
-			writeResponseStep{},
+		f.Add(
+			steps.NewValidateProxyStep(),
+			steps.NewPluginsOnRequestStep(),
+			steps.NewMockTargetStep(),
+			steps.NewProxyPassStep(),
+			steps.NewPluginsOnResponseStep(),
+			steps.NewWriteResponseStep(),
 		)
 
-		return f.play(ctx, proxy, k8sCoreClient, m, w, r, &http.Response{}, trace)
+		return f.Play(ctx, proxy, k8sCoreClient, m, w, r, &http.Response{}, trace)
 	}
 }
 

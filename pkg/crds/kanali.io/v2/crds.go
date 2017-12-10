@@ -50,19 +50,19 @@ var (
 )
 
 func ApiKeyCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-  return apiKeyCRD
+	return apiKeyCRD
 }
 
 func ApiProxyCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-  return apiProxyCRD
+	return apiProxyCRD
 }
 
 func ApiKeyBindingCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-  return apiKeyBindingCRD
+	return apiKeyBindingCRD
 }
 
 func MockTargetCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-  return mockTargetCRD
+	return mockTargetCRD
 }
 
 var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
@@ -187,88 +187,88 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										},
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"name": {
-                        Description: "valid qualified Kubernetes name",
-            						Type:        "string",
-            						MinLength:   int64Ptr(1),
-            						MaxLength:   int64Ptr(63),
-            						Pattern:     k8sQualifiedNameRegex,
+												Description: "valid qualified Kubernetes name",
+												Type:        "string",
+												MinLength:   int64Ptr(1),
+												MaxLength:   int64Ptr(63),
+												Pattern:     k8sQualifiedNameRegex,
 											},
 											"defaultRule": {
-                        Description: "defines http method that an ApiKey has access to",
-                        Type:        "object",
-                        OneOf: []apiextensionsv1beta1.JSONSchemaProps{
-                          {
-                            Description: "global access",
-                            Type:        "object",
-                            Required: []string{
-                              "global",
-                            },
-                            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                              "global": {
-                                Description: "does ApiKey have access to all http methods",
-                                Type:        "boolean",
-                              },
-                            },
-                          },
-                          {
-                            Description: "fine grained http verb access",
-                            Type:        "object",
-                            Required: []string{
-                              "granular",
-                            },
-                            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                              "granular": {
-                                Description: "fine grained http verb access",
-                                Type:        "object",
-                                Required: []string{
-                                  "verbs",
-                                },
-                                Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                                  "verbs": {
-                                    Description: "list of http methods that ApiKey has access to",
-                                    Type:        "array",
-                                    MinLength:   int64Ptr(1),
-                                    Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
-                                      Schema: &apiextensionsv1beta1.JSONSchemaProps{
-                                        Description: "valid htp methods",
-                                        Type:        "string",
-                                        Enum: []apiextensionsv1beta1.JSON{
-                                          {
-                                            Raw: []byte(`"GET"`),
-                                          },
-                                          {
-                                            Raw: []byte(`"HEAD"`),
-                                          },
-                                          {
-                                            Raw: []byte(`"POST"`),
-                                          },
-                                          {
-                                            Raw: []byte(`"PUT"`),
-                                          },
-                                          {
-                                            Raw: []byte(`"PATCH"`),
-                                          },
-                                          {
-                                            Raw: []byte(`"DELETE"`),
-                                          },
-                                          {
-                                            Raw: []byte(`"CONNECT"`),
-                                          },
-                                          {
-                                            Raw: []byte(`"OPTIONS"`),
-                                          },
-                                          {
-                                            Raw: []byte(`"TRACE"`),
-                                          },
-                                        },
-                                      },
-                                    },
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
+												Description: "defines http method that an ApiKey has access to",
+												Type:        "object",
+												OneOf: []apiextensionsv1beta1.JSONSchemaProps{
+													{
+														Description: "global access",
+														Type:        "object",
+														Required: []string{
+															"global",
+														},
+														Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+															"global": {
+																Description: "does ApiKey have access to all http methods",
+																Type:        "boolean",
+															},
+														},
+													},
+													{
+														Description: "fine grained http verb access",
+														Type:        "object",
+														Required: []string{
+															"granular",
+														},
+														Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+															"granular": {
+																Description: "fine grained http verb access",
+																Type:        "object",
+																Required: []string{
+																	"verbs",
+																},
+																Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+																	"verbs": {
+																		Description: "list of http methods that ApiKey has access to",
+																		Type:        "array",
+																		MinLength:   int64Ptr(1),
+																		Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+																			Schema: &apiextensionsv1beta1.JSONSchemaProps{
+																				Description: "valid htp methods",
+																				Type:        "string",
+																				Enum: []apiextensionsv1beta1.JSON{
+																					{
+																						Raw: []byte(`"GET"`),
+																					},
+																					{
+																						Raw: []byte(`"HEAD"`),
+																					},
+																					{
+																						Raw: []byte(`"POST"`),
+																					},
+																					{
+																						Raw: []byte(`"PUT"`),
+																					},
+																					{
+																						Raw: []byte(`"PATCH"`),
+																					},
+																					{
+																						Raw: []byte(`"DELETE"`),
+																					},
+																					{
+																						Raw: []byte(`"CONNECT"`),
+																					},
+																					{
+																						Raw: []byte(`"OPTIONS"`),
+																					},
+																					{
+																						Raw: []byte(`"TRACE"`),
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
 											},
 											"subpaths": {
 												Description: "list of subpaths defining fine grained permissions",
@@ -283,90 +283,90 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 														},
 														Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 															"path": {
-                                Description: "http path",
-                    						Type:        "string",
-                    						Pattern:     httpPathRegex,
-                    						MinLength:   int64Ptr(1),
-                    						Default: &apiextensionsv1beta1.JSON{
-                    							Raw: []byte(""),
-                    						},
+																Description: "http path",
+																Type:        "string",
+																Pattern:     httpPathRegex,
+																MinLength:   int64Ptr(1),
+																Default: &apiextensionsv1beta1.JSON{
+																	Raw: []byte(""),
+																},
 															},
 															"rule": {
-                                Description: "defines http method that an ApiKey has access to",
-                                Type:        "object",
-                                OneOf: []apiextensionsv1beta1.JSONSchemaProps{
-                                  {
-                                    Description: "global access",
-                                    Type:        "object",
-                                    Required: []string{
-                                      "global",
-                                    },
-                                    Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                                      "global": {
-                                        Description: "does ApiKey have access to all http methods",
-                                        Type:        "boolean",
-                                      },
-                                    },
-                                  },
-                                  {
-                                    Description: "fine grained http verb access",
-                                    Type:        "object",
-                                    Required: []string{
-                                      "granular",
-                                    },
-                                    Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                                      "granular": {
-                                        Description: "fine grained http verb access",
-                                        Type:        "object",
-                                        Required: []string{
-                                          "verbs",
-                                        },
-                                        Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                                          "verbs": {
-                                            Description: "list of http methods that ApiKey has access to",
-                                            Type:        "array",
-                                            MinLength:   int64Ptr(1),
-                                            Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
-                                              Schema: &apiextensionsv1beta1.JSONSchemaProps{
-                                                Description: "valid htp methods",
-                                                Type:        "string",
-                                                Enum: []apiextensionsv1beta1.JSON{
-                                                  {
-                                                    Raw: []byte(`"GET"`),
-                                                  },
-                                                  {
-                                                    Raw: []byte(`"HEAD"`),
-                                                  },
-                                                  {
-                                                    Raw: []byte(`"POST"`),
-                                                  },
-                                                  {
-                                                    Raw: []byte(`"PUT"`),
-                                                  },
-                                                  {
-                                                    Raw: []byte(`"PATCH"`),
-                                                  },
-                                                  {
-                                                    Raw: []byte(`"DELETE"`),
-                                                  },
-                                                  {
-                                                    Raw: []byte(`"CONNECT"`),
-                                                  },
-                                                  {
-                                                    Raw: []byte(`"OPTIONS"`),
-                                                  },
-                                                  {
-                                                    Raw: []byte(`"TRACE"`),
-                                                  },
-                                                },
-                                              },
-                                            },
-                                          },
-                                        },
-                                      },
-                                    },
-                                  },
-                                },
+																Description: "defines http method that an ApiKey has access to",
+																Type:        "object",
+																OneOf: []apiextensionsv1beta1.JSONSchemaProps{
+																	{
+																		Description: "global access",
+																		Type:        "object",
+																		Required: []string{
+																			"global",
+																		},
+																		Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+																			"global": {
+																				Description: "does ApiKey have access to all http methods",
+																				Type:        "boolean",
+																			},
+																		},
+																	},
+																	{
+																		Description: "fine grained http verb access",
+																		Type:        "object",
+																		Required: []string{
+																			"granular",
+																		},
+																		Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+																			"granular": {
+																				Description: "fine grained http verb access",
+																				Type:        "object",
+																				Required: []string{
+																					"verbs",
+																				},
+																				Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+																					"verbs": {
+																						Description: "list of http methods that ApiKey has access to",
+																						Type:        "array",
+																						MinLength:   int64Ptr(1),
+																						Items: &apiextensionsv1beta1.JSONSchemaPropsOrArray{
+																							Schema: &apiextensionsv1beta1.JSONSchemaProps{
+																								Description: "valid htp methods",
+																								Type:        "string",
+																								Enum: []apiextensionsv1beta1.JSON{
+																									{
+																										Raw: []byte(`"GET"`),
+																									},
+																									{
+																										Raw: []byte(`"HEAD"`),
+																									},
+																									{
+																										Raw: []byte(`"POST"`),
+																									},
+																									{
+																										Raw: []byte(`"PUT"`),
+																									},
+																									{
+																										Raw: []byte(`"PATCH"`),
+																									},
+																									{
+																										Raw: []byte(`"DELETE"`),
+																									},
+																									{
+																										Raw: []byte(`"CONNECT"`),
+																									},
+																									{
+																										Raw: []byte(`"OPTIONS"`),
+																									},
+																									{
+																										Raw: []byte(`"TRACE"`),
+																									},
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
 															},
 														},
 													},
@@ -377,9 +377,9 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 												Type:        "object",
 												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 													"amount": {
-                            Type:       "integer",
-                						Minimum:    float64Ptr(1),
-                						MultipleOf: float64Ptr(1),
+														Type:       "integer",
+														Minimum:    float64Ptr(1),
+														MultipleOf: float64Ptr(1),
 													},
 													"unit": {
 														Description: "valid intervals",
@@ -448,13 +448,13 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 								},
 								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 									"path": {
-                    Description: "http path",
-        						Type:        "string",
-        						Pattern:     httpPathRegex,
-        						MinLength:   int64Ptr(1),
-        						Default: &apiextensionsv1beta1.JSON{
-        							Raw: []byte(""),
-        						},
+										Description: "http path",
+										Type:        "string",
+										Pattern:     httpPathRegex,
+										MinLength:   int64Ptr(1),
+										Default: &apiextensionsv1beta1.JSON{
+											Raw: []byte(""),
+										},
 									},
 									"virtualHost": {
 										Description: "http hostname",
@@ -469,13 +469,13 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 								},
 								Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 									"path": {
-                    Description: "http path",
-        						Type:        "string",
-        						Pattern:     httpPathRegex,
-        						MinLength:   int64Ptr(1),
-        						Default: &apiextensionsv1beta1.JSON{
-        							Raw: []byte(""),
-        						},
+										Description: "http path",
+										Type:        "string",
+										Pattern:     httpPathRegex,
+										MinLength:   int64Ptr(1),
+										Default: &apiextensionsv1beta1.JSON{
+											Raw: []byte(""),
+										},
 									},
 									"mock": {
 										Description: "name of ConfigMap defining a valid mock response for this ApiProxy",
@@ -485,11 +485,11 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										},
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"configMapName": {
-                        Description: "valid qualified Kubernetes name",
-            						Type:        "string",
-            						MinLength:   int64Ptr(1),
-            						MaxLength:   int64Ptr(63),
-            						Pattern:     k8sQualifiedNameRegex,
+												Description: "valid qualified Kubernetes name",
+												Type:        "string",
+												MinLength:   int64Ptr(1),
+												MaxLength:   int64Ptr(63),
+												Pattern:     k8sQualifiedNameRegex,
 											},
 										},
 									},
@@ -530,17 +530,17 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																},
 																Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 																	"name": {
-                                    Description: "valid qualified Kubernetes name",
-                        						Type:        "string",
-                        						MinLength:   int64Ptr(1),
-                        						MaxLength:   int64Ptr(63),
-                        						Pattern:     k8sQualifiedNameRegex,
+																		Description: "valid qualified Kubernetes name",
+																		Type:        "string",
+																		MinLength:   int64Ptr(1),
+																		MaxLength:   int64Ptr(63),
+																		Pattern:     k8sQualifiedNameRegex,
 																	},
 																	"port": {
-                                    Description: "tcp port",
-                        						Type:        "integer",
-                        						Minimum:     float64Ptr(0),
-                        						Maximum:     float64Ptr(65535),
+																		Description: "tcp port",
+																		Type:        "integer",
+																		Minimum:     float64Ptr(0),
+																		Maximum:     float64Ptr(65535),
 																	},
 																},
 															},
@@ -553,10 +553,10 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																},
 																Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 																	"port": {
-                                    Description: "tcp port",
-                        						Type:        "integer",
-                        						Minimum:     float64Ptr(0),
-                        						Maximum:     float64Ptr(65535),
+																		Description: "tcp port",
+																		Type:        "integer",
+																		Minimum:     float64Ptr(0),
+																		Maximum:     float64Ptr(65535),
 																	},
 																	"labels": {
 																		Description: "list of Kubernetes service metadata labels to be matched against",
@@ -574,11 +574,11 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																						},
 																						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 																							"name": {
-                                                Description: "valid qualified Kubernetes name",
-                                    						Type:        "string",
-                                    						MinLength:   int64Ptr(1),
-                                    						MaxLength:   int64Ptr(63),
-                                    						Pattern:     k8sQualifiedNameRegex,
+																								Description: "valid qualified Kubernetes name",
+																								Type:        "string",
+																								MinLength:   int64Ptr(1),
+																								MaxLength:   int64Ptr(63),
+																								Pattern:     k8sQualifiedNameRegex,
 																							},
 																							"value": {
 																								Description: "service metadata label value",
@@ -596,11 +596,11 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																						},
 																						Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 																							"name": {
-                                                Description: "valid qualified Kubernetes name",
-                                    						Type:        "string",
-                                    						MinLength:   int64Ptr(1),
-                                    						MaxLength:   int64Ptr(63),
-                                    						Pattern:     k8sQualifiedNameRegex,
+																								Description: "valid qualified Kubernetes name",
+																								Type:        "string",
+																								MinLength:   int64Ptr(1),
+																								MaxLength:   int64Ptr(63),
+																								Pattern:     k8sQualifiedNameRegex,
 																							},
 																							"header": {
 																								Description: "http header name",
@@ -630,11 +630,11 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										},
 										Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 											"secretName": {
-                        Description: "valid qualified Kubernetes name",
-            						Type:        "string",
-            						MinLength:   int64Ptr(1),
-            						MaxLength:   int64Ptr(63),
-            						Pattern:     k8sQualifiedNameRegex,
+												Description: "valid qualified Kubernetes name",
+												Type:        "string",
+												MinLength:   int64Ptr(1),
+												MaxLength:   int64Ptr(63),
+												Pattern:     k8sQualifiedNameRegex,
 											},
 										},
 									},

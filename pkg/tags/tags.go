@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package pkg
+package tags
 
 const (
 	// Error is the opentracing tag name that represents an error
@@ -30,7 +30,7 @@ const (
 	KanaliProxyNamespace = "kanali.apiproxy.namespace"
 	// KanaliApiKeyName is the opentracing tag name that represents an ApiKey name
 	KanaliApiKeyName = "kanali.apikey.name"
-  // KanaliApiKeyBindingName is the opentracing tag name that represents an ApiKeyBinding name
+	// KanaliApiKeyBindingName is the opentracing tag name that represents an ApiKeyBinding name
 	KanaliApiKeyBindingName = "kanali.apikeybinding.name"
 	// KanaliApiKeyBindingNamespace is the opentracing tag name that represents an ApiKeyBinding namespace
 	KanaliApiKeyBindingNamespace = "kanali.apikeybinding.namespace"
@@ -47,7 +47,7 @@ const (
 	// HTTPRequestHeaders is the opentracing tag name that represents an HTTP request headers
 	HTTPRequestHeaders = "http.request.headers"
 
-  // HTTPRequestURLScheme is the opentracing tag name that represents an HTTP scheme
+	// HTTPRequestURLScheme is the opentracing tag name that represents an HTTP scheme
 	HTTPRequestURLScheme = "http.request.url.scheme"
 	// HTTPRequestURLPath is the opentracing tag name that represents an HTTP URL path
 	HTTPRequestURLPath = "http.request.url.path"

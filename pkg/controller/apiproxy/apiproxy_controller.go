@@ -27,7 +27,7 @@ import (
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
-	tags "github.com/northwesternmutual/kanali/pkg/tags"
+	"github.com/northwesternmutual/kanali/pkg/tags"
 	"go.uber.org/zap"
 	"k8s.io/client-go/tools/cache"
 )

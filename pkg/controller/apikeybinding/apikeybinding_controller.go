@@ -23,12 +23,12 @@ package apikeybinding
 import (
 	"time"
 
-  "go.uber.org/zap"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-  tags "github.com/northwesternmutual/kanali/pkg/tags"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
+	"github.com/northwesternmutual/kanali/pkg/tags"
+	"go.uber.org/zap"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -65,10 +65,10 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
 		return
 	}
 	store.ApiKeyBindingStore().Set(binding)
-  logger.With(
-    zap.String(tags.KanaliApiKeyBindingName, binding.ObjectMeta.Name),
-    zap.String(tags.KanaliApiKeyBindingNamespace, binding.ObjectMeta.Namespace),
-  ).Debug("added ApiKeyBinding")
+	logger.With(
+		zap.String(tags.KanaliApiKeyBindingName, binding.ObjectMeta.Name),
+		zap.String(tags.KanaliApiKeyBindingNamespace, binding.ObjectMeta.Namespace),
+	).Debug("added ApiKeyBinding")
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new interface{}) {
@@ -84,10 +84,10 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new in
 		return
 	}
 	store.ApiKeyBindingStore().Update(newBinding, oldBinding)
-  logger.With(
-    zap.String(tags.KanaliApiKeyBindingName, newBinding.ObjectMeta.Name),
-    zap.String(tags.KanaliApiKeyBindingNamespace, newBinding.ObjectMeta.Namespace),
-  ).Debug("updated ApiKeyBinding")
+	logger.With(
+		zap.String(tags.KanaliApiKeyBindingName, newBinding.ObjectMeta.Name),
+		zap.String(tags.KanaliApiKeyBindingNamespace, newBinding.ObjectMeta.Namespace),
+	).Debug("updated ApiKeyBinding")
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
@@ -98,9 +98,9 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
 		return
 	}
 	if err := store.ApiKeyBindingStore().Delete(binding); err != nil {
-    logger.With(
-      zap.String(tags.KanaliApiKeyBindingName, binding.ObjectMeta.Name),
-      zap.String(tags.KanaliApiKeyBindingNamespace, binding.ObjectMeta.Namespace),
-    ).Debug("deleted ApiKeyBinding")
+		logger.With(
+			zap.String(tags.KanaliApiKeyBindingName, binding.ObjectMeta.Name),
+			zap.String(tags.KanaliApiKeyBindingNamespace, binding.ObjectMeta.Namespace),
+		).Debug("deleted ApiKeyBinding")
 	}
 }

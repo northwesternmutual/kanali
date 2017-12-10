@@ -95,20 +95,20 @@ func (s *trafficFactory) IsRateLimitViolated(proxy *v2.ApiProxy, rate v2.Rate, k
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
-  if rate != (v2.Rate{}) {
-    return false
-  }
-  if rate.Amount < 1 {
-    return false
-  }
-  _, ok := s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]
-  if !ok {
-    return false
-  }
-  if rate.Unit == "" { // quota
-    return len(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]) >= rate.Amount
-  }
-  return getTrafficVolume(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName], rate.Unit, currTime, 0, len(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName])) >= rate.Amount
+	if rate != (v2.Rate{}) {
+		return false
+	}
+	if rate.Amount < 1 {
+		return false
+	}
+	_, ok := s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]
+	if !ok {
+		return false
+	}
+	if rate.Unit == "" { // quota
+		return len(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]) >= rate.Amount
+	}
+	return getTrafficVolume(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName], rate.Unit, currTime, 0, len(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName])) >= rate.Amount
 }
 
 func getTrafficVolume(arr []time.Time, unit string, currTime time.Time, low, high int) int {

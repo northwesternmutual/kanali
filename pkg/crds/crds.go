@@ -1,15 +1,15 @@
 package crds
 
 import (
-  "errors"
-  "fmt"
-  "time"
+	"errors"
+	"fmt"
+	"time"
 
-  k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsv1beta1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-  apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	apiextensionsv1beta1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 )
 
 func Create(i apiextensionsv1beta1client.ApiextensionsV1beta1Interface, crds ...*apiextensionsv1beta1.CustomResourceDefinition) error {
