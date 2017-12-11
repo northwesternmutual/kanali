@@ -5,7 +5,7 @@ LIGHT_GREEN='\033[1;32m'
 NC='\033[0m'
 
 echo -e "${LIGHT_BLUE}Step 1: Verify that Helm is installed${NC}"
-which helm > /dev/null || $(curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh | bash)
+which helm > /dev/null || $(curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh && chmod 700 get_helm.sh && ./get_helm.sh)
 
 echo -e "${LIGHT_BLUE}Step 2: Deploy Helm"
 helm init > /dev/null

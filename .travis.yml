@@ -50,10 +50,12 @@ before_script:
 - if [ "$E2E_TEST" == true ]; then minikube update-context ; fi
 # Wait for Kubernetes to be up and ready.
 - if [ "$E2E_TEST" == true ]; then JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done ; fi
+# Install Kanali and its dependencies
 - if [ "$E2E_TEST" == true ]; then ./scripts/install.sh ; fi
 
 script:
 - if [ "$TESTS" == true ]; then make test_ci ; fi
+- if [ "$E2E_TEST" == true ]; then kubectl get pods ; fi
 - if [ "$E2E_TEST" == true ]; then make e2e_test ; fi
 
 # after_success:

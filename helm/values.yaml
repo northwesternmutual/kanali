@@ -18,6 +18,6 @@ jaeger:
     elasticsearch: true
 
 kanali:
-  image: fbgrecojr/kanali
+  image: northwesternmutual/kanali
   tag: integration
   pullPolicy: Always
