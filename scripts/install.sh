@@ -19,6 +19,9 @@ helm init > /dev/null
 # add helm repositories for dependencies
 helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/ > /dev/null
 
+# wait for the tiller pod to be reader
+kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
+
 # while sleep 1
 # do
 #     helm install ./helm --name kanali &>/dev/null && break || continue

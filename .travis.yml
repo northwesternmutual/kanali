@@ -36,7 +36,9 @@ before_install:
 - docker --version
 
 install:
-- if [ "$TESTS" == true ]; then make install_ci ; fi
+# install dependencies
+- make install_ci
+- if [ "$E2E_TEST" == true ]; then make binary ; fi
 - if [ "$E2E_TEST" == true ]; then docker build -t northwesternmutual/kanali:integration . ; fi
 
 before_script:
@@ -47,7 +49,6 @@ before_script:
 
 script:
 - if [ "$TESTS" == true ]; then make test_ci ; fi
-- if [ "$E2E_TEST" == true ]; then kubectl get pods ; fi
 - if [ "$E2E_TEST" == true ]; then make e2e_test ; fi
 
 # after_success:
