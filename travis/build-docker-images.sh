@@ -9,7 +9,7 @@ fi
 
 export DOCKER_REPO="northwesternmutual/kanali"
 export DOCKER_TAG=$COMMIT
-docker build -e VERSION=$DOCKER_TAG -t $DOCKER_REPO:$DOCKER_TAG .
+docker build --build-arg VERSION=$DOCKER_TAG -t $DOCKER_REPO:$DOCKER_TAG .
 bash ./travis/upload-to-docker.sh
 
 # if [[ $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
