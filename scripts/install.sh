@@ -27,7 +27,7 @@ kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
 helm dep up ./helm
 
 # start kanali and dependencies
-helm install ./helm --name kanali --set kanali.tag=$COMMIT
+helm install ./helm --name kanali --set kanali.tag=${COMMIT:-latest}
 
 # wait for deployments to be ready
 kubectl rollout status -w deployment/kube-dns --namespace=kube-system
