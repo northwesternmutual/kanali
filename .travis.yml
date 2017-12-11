@@ -11,7 +11,7 @@ matrix:
   - go: 1.9
     env:
     - INTEGRATION_TEST=true
-    - K8S_VERSION=1.8.0
+    - K8S_VERSION=v1.8.0
 
 services:
 - docker
