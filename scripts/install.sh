@@ -5,21 +5,21 @@ which helm > /dev/null
 # install helm if not present
 if [ $? != 0 ]; then
    echo "installing helm"
-   curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh > /dev/null
-   chmod 700 get_helm.sh > /dev/null
-   ./get_helm.sh > /dev/null
+   curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
+   chmod 700 get_helm.sh
+   ./get_helm.sh
 fi
 
 # deploy tiller
-helm init > /dev/null
+helm init
 
 # add necessary rbac permissions for helm
-./scripts/helm-rbac.sh > /dev/null
+./scripts/helm-rbac.sh
 
 # add helm repositories for dependencies
-helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/ > /dev/null
+helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
 
-# wait for the tiller pod to be reader
+# wait for the tiller deployment to be ready
 kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
 
 # while sleep 1
@@ -28,9 +28,16 @@ kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
 # done
 
 # install dependencies
-helm dep up ./helm > /dev/null
+helm dep up ./helm
 
 # start kanali and dependencies
-helm install ./helm --name kanali > /dev/null
+helm install ./helm --name kanali
+
+kubectl get pods --all-namespaces
+
+# wait for deployments to be ready
+kubectl rollout status -w deployment/kube-dns --namespace=kube-system
+kubectl rollout status -w deployment/etcd --namespace=default
+kubectl rollout status -w deployment/kanali --namespace=default
 
 kubectl get pods --all-namespaces
