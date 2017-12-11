@@ -9,6 +9,7 @@ fi
 
 export DOCKER_REPO="northwesternmutual/kanali"
 export DOCKER_TAG=$COMMIT
+echo $DOCKER_TAG
 docker build --build-arg VERSION=$DOCKER_TAG -t $DOCKER_REPO:$DOCKER_TAG .
 bash ./travis/upload-to-docker.sh
 
