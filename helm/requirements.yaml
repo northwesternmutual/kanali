@@ -4,20 +4,21 @@ dependencies:
 - name: influxdb
   version: 0.6.1
   repository: https://kubernetes-charts.storage.googleapis.com/
+  condition: grafana.enabled
   tags:
   - influxdb
 - name: grafana
   version: 0.5.0
   repository: https://kubernetes-charts.storage.googleapis.com/
+  condition: grafana.enabled
   tags:
   - grafana
 - name: jaeger
   version: 0.2.0
   repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+  condition: jaeger.enabled
   tags:
   - jaeger
 - name: etcd
-  version: 0.3.5
-  repository: https://kubernetes-charts-incubator.storage.googleapis.com/
-  tags:
-  - etcd
+  version: 0.0.1
+  repository: file://./charts/etcd

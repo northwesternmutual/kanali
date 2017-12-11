@@ -10,7 +10,7 @@ matrix:
     - COVERAGE=true
   - go: 1.9
     env:
-    - INTEGRATION_TEST=true
+    - E2E_TEST=true
     - K8S_VERSION=v1.8.0
 
 services:
@@ -27,26 +27,34 @@ env:
   # Docker password
   - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
 
+before_install:
+- curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+- sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu
+  $(lsb_release -cs) stable"
+- sudo apt-get update
+- sudo apt-get -y install docker-ce
+- docker --version
+
 install:
-- make install_ci
-- if [ "$INTEGRATION_TEST" == true ]; then make binary ; fi
-- if [ "$INTEGRATION_TEST" == true ]; then make docker ; fi
+- if [ "$TESTS" == true ]; then make install_ci ; fi
+- if [ "$E2E_TEST" == true ]; then docker build -t northwesternmutual/kanali:integration . ; fi
 
 before_script:
 # Download kubectl, which is a requirement for using minikube.
-- if [ "$INTEGRATION_TEST" == true ]; then curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/ ; fi
+- if [ "$E2E_TEST" == true ]; then curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/ ; fi
 # Download minikube.
-- if [ "$INTEGRATION_TEST" == true ]; then curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/ ; fi
+- if [ "$E2E_TEST" == true ]; then curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/ ; fi
 # Start minikube
-- if [ "$INTEGRATION_TEST" == true ]; then sudo minikube start --vm-driver=none --feature-gates CustomResourceValidation=true --kubernetes-version ${K8S_VERSION} ; fi
+- if [ "$E2E_TEST" == true ]; then sudo minikube start --vm-driver=none --feature-gates CustomResourceValidation=true --kubernetes-version ${K8S_VERSION} ; fi
 # Fix the kubectl context, as it's often stale.
-- if [ "$INTEGRATION_TEST" == true ]; then minikube update-context ; fi
+- if [ "$E2E_TEST" == true ]; then minikube update-context ; fi
 # Wait for Kubernetes to be up and ready.
-- if [ "$INTEGRATION_TEST" == true ]; then JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done ; fi
+- if [ "$E2E_TEST" == true ]; then JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done ; fi
+- if [ "$E2E_TEST" == true ]; then ./scripts/install.sh ; fi
 
 script:
 - if [ "$TESTS" == true ]; then make test_ci ; fi
-- if [ "$INTEGRATION_TEST" == true ]; then kubectl get pods ; fi
+- if [ "$E2E_TEST" == true ]; then make e2e_test ; fi
 
 # after_success:
 # - if [ "$COVERAGE" == true ]; then travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true ; else echo 'skipping coverage'; fi

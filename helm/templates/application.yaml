@@ -30,7 +30,7 @@ spec:
       containers:
       - name: kanali
         imagePullPolicy: {{default "IfNotPresent" .Values.kanali.pullPolicy}}
-        image: {{.Values.kanali.image}:{{.Values.kanali.tag}}
+        image: {{.Values.kanali.image}}:{{.Values.kanali.tag}}
         command:
         - /kanali
         - start

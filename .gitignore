@@ -20,5 +20,5 @@ torch.svg
 /kanali
 
 # helm
-helm/charts/
+helm/charts/*.tgz
 helm/requirements.lock

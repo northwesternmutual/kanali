@@ -38,6 +38,13 @@ data:
     [process]
     log_level = "info"
 
+    [etcd]
+    cert_file = ""
+    key_file = ""
+    ca_file = ""
+    endpoints = "http://etcd.default.svc.cluster.local:2379"
+    prefix = "kanali"
+
     [proxy]
     enable_cluster_ip = true
     enable_mock_responses = true
@@ -50,3 +57,4 @@ data:
 
     [proxy.default_header_values]
     deployment = "production"
+    

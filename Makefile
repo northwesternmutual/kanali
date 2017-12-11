@@ -4,7 +4,8 @@ ALL_SRC := $(shell find . -name "*.go" | grep -v -e vendor \
         -e ".*/mocks.*")
 
 FILES = $(shell go list ./... | grep -v /vendor/)
-PACKAGES := $(shell glide novendor)
+ALL_PACKAGES := $(shell glide novendor)
+SRC_PACKAGES := $(shell glide novendor | grep -v -e test)
 
 BINARY=kanali
 RACE=-race
@@ -22,7 +23,7 @@ COLORIZE=sed ''/PASS/s//$(PASS)/'' | sed ''/FAIL/s//$(FAIL)/''
 
 .DEFAULT_GOAL: $(BINARY)
 
-$(BINARY): $(ALL_SRC) test fmt lint
+$(BINARY): $(ALL_SRC) unit_test fmt lint
 
 .PHONY: install
 install:
@@ -38,26 +39,24 @@ fmt:
 	$(GOFMT) -e -s -l -w $(ALL_SRC)
 	./scripts/updateLicenses.sh
 
-.PHONY: docker
-docker:
-	cp $(GOPATH)/bin/kanali .
-	docker build -t northwesternmutual/kanali:latest .
-	make clean
-
 .PHONY: cover
 cover:
-	./scripts/cover.sh $(shell go list $(PACKAGES))
+	./scripts/cover.sh $(shell go list $(ALL_PACKAGES))
 	go tool cover -html=cover.out -o cover.html
 
-.PHONY: test
-test:
-	bash -c "set -e; set -o pipefail; $(GOTEST) $(PACKAGES) | $(COLORIZE)"
+.PHONY: unit_test
+unit_test:
+	bash -c "set -e; set -o pipefail; $(GOTEST) $(SRC_PACKAGES) | $(COLORIZE)"
+
+.PHONY: e2e_test
+e2e_test:
+	bash -c "set -e; set -o pipefail; $(GOTEST) ./test/e2e | $(COLORIZE)"
 
 .PHONY: lint
 lint:
-	@$(GOVET) $(PACKAGES)
+	@$(GOVET) $(ALL_PACKAGES)
 	@cat /dev/null > $(LINT_LOG)
-	@$(foreach pkg, $(PACKAGES), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
+	@$(foreach pkg, $(ALL_PACKAGES), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
 	@[ ! -s "$(LINT_LOG)" ] || (echo "Lint Failures" | cat - $(LINT_LOG) && false)
 	@$(GOFMT) -e -s -l $(ALL_SRC) > $(FMT_LOG)
 	@[ ! -s "$(FMT_LOG)" ] || (echo "Go Fmt Failures, run 'make fmt'" | cat - $(FMT_LOG) && false)
@@ -71,7 +70,7 @@ install_ci: install
 
 .PHONY: test_ci
 test_ci:
-	@./scripts/cover.sh $(shell go list $(PACKAGES))
+	@./scripts/cover.sh $(shell go list $(ALL_PACKAGES))
 	make lint
 
 .PHONY: clean

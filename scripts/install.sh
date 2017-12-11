@@ -13,7 +13,7 @@ helm init > /dev/null
 echo -e "${LIGHT_BLUE}Step 3: Patch RBAC for Helm${NC}"
 ./scripts/helm-permissions.sh > /dev/null
 
-echo -e "${LIGHT_BLUE}Step 4: Install Kanali, Grafana, InfluxDB, and Jaeger (may take a few minutes)${NC}"
+echo -e "${LIGHT_BLUE}Step 4: Install Kanali, Etcd, Grafana, InfluxDB, and Jaeger (may take a few minutes)${NC}"
 
 # add repositories
 helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/

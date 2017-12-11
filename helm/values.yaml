@@ -3,19 +3,21 @@
 # Begin: Override values on the Grafana, InfluxDB, and Jaeger subcharts to customize for Kanali
 grafana:
   # overwrite grafana values
+  enabled: false
 
-influxdb:
+# influxdb:
   # overwrite influxdb values
 
-etcd:
+# etcd:
   # overwrite influxdb values
 
 jaeger:
+  enabled: false
   tags:
     cassandra: false
     elasticsearch: true
 
 kanali:
-  image: northwesternmutual/kanali
-  tag: v1.2.3
+  image: fbgrecojr/kanali
+  tag: integration
   pullPolicy: Always

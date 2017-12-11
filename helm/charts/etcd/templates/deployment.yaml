@@ -1,0 +1,24 @@
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: etcd
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: etcd
+    spec:
+      containers:
+      - name: etcd
+        imagePullPolicy: IfNotPresent
+        image: quay.io/coreos/etcd:v3.2
+        command:
+        - etcd
+        - grpc-proxy
+        - start
+        - --listen-addr=0.0.0.0:2379
+        ports:
+        - containerPort: 2379
