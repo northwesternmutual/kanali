@@ -19,5 +19,5 @@ jaeger:
 
 kanali:
   image: northwesternmutual/kanali
-  tag: integration
+  tag: latest
   pullPolicy: Always
