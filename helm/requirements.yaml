@@ -19,6 +19,3 @@ dependencies:
   condition: jaeger.enabled
   tags:
   - jaeger
-- name: etcd
-  version: 0.0.1
-  repository: file://./charts/etcd

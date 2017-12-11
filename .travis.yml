@@ -38,7 +38,6 @@ before_install:
 install:
 # install dependencies
 - make install_ci
-- if [ "$E2E_TEST" == true ]; then make binary ; fi
 - if [ "$E2E_TEST" == true ]; then docker build -t northwesternmutual/kanali:integration . ; fi
 
 before_script:

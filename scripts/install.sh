@@ -5,9 +5,9 @@ which helm > /dev/null
 # install helm if not present
 if [ $? != 0 ]; then
    echo "installing helm"
-   curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
-   chmod 700 get_helm.sh
-   ./get_helm.sh
+   curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh > /dev/null
+   chmod 700 get_helm.sh > /dev/null
+   ./get_helm.sh > /dev/null
 fi
 
 # deploy tiller
@@ -27,6 +27,10 @@ kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
 #     helm install ./helm --name kanali &>/dev/null && break || continue
 # done
 
-helm install ./helm --name kanali
+# install dependencies
+helm dep up ./helm > /dev/null
+
+# start kanali and dependencies
+helm install ./helm --name kanali > /dev/null
 
 kubectl get pods --all-namespaces
