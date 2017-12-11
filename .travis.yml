@@ -40,16 +40,8 @@ install:
 - if [ "$E2E_TEST" == true ]; then docker build -t northwesternmutual/kanali:integration . ; fi
 
 before_script:
-# Download kubectl, which is a requirement for using minikube.
-- if [ "$E2E_TEST" == true ]; then curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/ ; fi
-# Download minikube.
-- if [ "$E2E_TEST" == true ]; then curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/ ; fi
-# Start minikube
-- if [ "$E2E_TEST" == true ]; then sudo minikube start --vm-driver=none --feature-gates CustomResourceValidation=true --kubernetes-version ${K8S_VERSION} ; fi
-# Fix the kubectl context, as it's often stale.
-- if [ "$E2E_TEST" == true ]; then minikube update-context ; fi
-# Wait for Kubernetes to be up and ready.
-- if [ "$E2E_TEST" == true ]; then JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done ; fi
+# Bootstrap minikukbe
+- if [ "$E2E_TEST" == true ]; then ./scripts/minikube-bootstrap.sh ; fi
 # Install Kanali and its dependencies
 - if [ "$E2E_TEST" == true ]; then ./scripts/install.sh ; fi
 
