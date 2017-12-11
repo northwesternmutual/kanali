@@ -6,7 +6,6 @@ import:
   version: 1.0.0
 - package: github.com/spf13/viper
   version: v1.0.0
-- package: github.com/armon/go-proxyproto
 - package: github.com/influxdata/influxdb
   subpackages:
   - client/v2
@@ -14,6 +13,7 @@ import:
   version: 1.0.2
 - package: github.com/golang/protobuf/proto
 - package: github.com/coreos/etcd
+  version: v3.2.11
 - package: github.com/uber/jaeger-client-go
   version: 2.9.0
 - package: k8s.io/apiextensions-apiserver

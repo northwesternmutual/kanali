@@ -41,7 +41,7 @@ Kanali is an extremely efficient [Kubernetes](https://kubernetes.io/) ingress co
 
 ```sh
 $ git clone git@github.com:northwesternmutual/kanali.git && cd kanali
-$ minikube start --feature-gates CustomResourceValidation=true
+$ minikube start --feature-gates CustomResourceValidation=true --kubernetes-version v1.8.0
 $ ./scripts/install.sh # wait until all pods are in running state
 $ kubectl apply -f ./examples/exampleOne.yaml
 $ curl $(minikube service kanali --url --format="https://{{.IP}}:{{.Port}}")/api/v1/example-one

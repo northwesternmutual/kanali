@@ -23,7 +23,7 @@ package options
 import (
 	"time"
 
-	flags "github.com/northwesternmutual/kanali/pkg/flags"
+	"github.com/northwesternmutual/kanali/pkg/flags"
 )
 
 func init() {

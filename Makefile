@@ -6,6 +6,7 @@ ALL_SRC := $(shell find . -name "*.go" | grep -v -e vendor \
 FILES = $(shell go list ./... | grep -v /vendor/)
 PACKAGES := $(shell glide novendor)
 
+BINARY=kanali
 RACE=-race
 GOTEST=go test -v $(RACE)
 GOLINT=golint
@@ -36,6 +37,12 @@ binary:
 fmt:
 	$(GOFMT) -e -s -l -w $(ALL_SRC)
 	./scripts/updateLicenses.sh
+
+.PHONY: docker
+docker:
+	cp $(GOPATH)/bin/kanali .
+	docker build -t northwesternmutual/kanali:latest .
+	make clean
 
 .PHONY: cover
 cover:
