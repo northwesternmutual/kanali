@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# silently check if helm is installed
-which helm > /dev/null
+# check if helm is installed
+which helm
 # install helm if not present
 if [ $? != 0 ]; then
-   echo "installing helm"
    curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
    chmod 700 get_helm.sh
    ./get_helm.sh

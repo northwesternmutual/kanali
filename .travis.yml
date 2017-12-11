@@ -34,6 +34,7 @@ before_install:
 - sudo apt-get update
 - sudo apt-get -y install docker-ce
 - docker --version
+- docker run --rm -v /usr/local/bin:/target jpetazzo/nsenter
 
 install:
 # install dependencies
