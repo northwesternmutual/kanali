@@ -1,19 +1,17 @@
 #!/bin/bash
 
-echo "one"
-
 set -e
 
-echo "two"
-
 # check if helm is installed
-which helm
+which helm > /dev/null
 # install helm if not present
 if [ $? != 0 ]; then
-   curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
-   chmod 700 get_helm.sh
-   ./get_helm.sh
+  echo "hi"
+  curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
+  chmod 700 get_helm.sh
+  ./get_helm.sh
 fi
+echo "bye"
 
 # deploy tiller
 helm init
