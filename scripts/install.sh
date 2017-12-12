@@ -1,15 +1,18 @@
 #!/bin/bash
 
-set -e
-
 # check if helm is installed
 which helm
+
+set -e
+
 # install helm if not present
 if [ $? != 0 ]; then
+  echo "hi"
   curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
   chmod 700 get_helm.sh
   ./get_helm.sh
 fi
+echo "bye"
 
 # deploy tiller
 helm init
@@ -27,7 +30,7 @@ kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
 helm dep up ./helm
 
 # start kanali and dependencies
-helm install ./helm --name kanali --set kanali.tag=$COMMIT
+helm install ./helm --name kanali --set kanali.tag=${COMMIT:-latest}
 
 # wait for deployments to be ready
 kubectl rollout status -w deployment/kube-dns --namespace=kube-system
