@@ -1,6 +1,10 @@
 #!/bin/bash
 
+echo "one"
+
 set -e
+
+echo "two"
 
 # check if helm is installed
 which helm
