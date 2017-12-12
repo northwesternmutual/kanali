@@ -45,9 +45,9 @@ install:
 
 before_script:
 # Bootstrap minikukbe
-- if [ "$E2E_TEST" == true ]; then bash ./scripts/minikube-bootstrap.sh ; fi
+- if [ "$E2E_TEST" == true ]; then ./scripts/minikube-bootstrap.sh ; fi
 # Install Kanali and its dependencies
-- if [ "$E2E_TEST" == true ]; then bash ./scripts/install.sh ; fi
+- if [ "$E2E_TEST" == true ]; then ./scripts/install.sh ; fi
 
 script:
 - if [ "$TESTS" == true ]; then make test_ci ; fi
