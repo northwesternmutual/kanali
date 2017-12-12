@@ -14,7 +14,7 @@ RUN wget "https://github.com/Masterminds/glide/releases/download/v${GLIDE_VERSIO
 COPY glide.lock glide.yaml Makefile /go/src/github.com/northwesternmutual/kanali/
 RUN make install
 COPY ./ /go/src/github.com/northwesternmutual/kanali/
-RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` make binary ${VERSION}
+RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` make binary
 
 FROM debian:jessie-slim
 LABEL maintainer="frankgreco@northwesternmutual.com"
