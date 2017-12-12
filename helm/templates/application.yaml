@@ -36,6 +36,16 @@ spec:
         - start
         ports:
         - containerPort: 8443
+        readinessProbe:
+          tcpSocket:
+            port: 8443
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 8443
+          initialDelaySeconds: 15
+          periodSeconds: 20
         volumeMounts:
         - name: pki
           mountPath: /etc/pki

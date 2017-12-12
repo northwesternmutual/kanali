@@ -70,7 +70,7 @@ install_ci: install
 
 .PHONY: test_ci
 test_ci:
-	@./scripts/cover.sh $(shell go list $(ALL_PACKAGES))
+	@./scripts/cover.sh $(shell go list $(SRC_PACKAGES))
 	make lint
 
 .PHONY: clean
