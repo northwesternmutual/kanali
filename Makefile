@@ -32,7 +32,7 @@ install:
 
 .PHONY: binary
 binary:
-	CGO_ENABLED=1 ./scripts/binary.sh $(VERSION)
+	CGO_ENABLED=1 ./scripts/binary.sh $VERSION
 
 .PHONY: fmt
 fmt:
