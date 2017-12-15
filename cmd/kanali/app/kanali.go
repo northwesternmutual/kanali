@@ -99,7 +99,7 @@ func Run(ctx context.Context) error {
 
 	// TODO: handle case that ctx.Done() stop channel sends an item through
 
-	trafficCtlr, err := traffic.NewTrafficController()
+	trafficCtlr, err := traffic.NewController()
 	if err != nil {
 		return err
 	}

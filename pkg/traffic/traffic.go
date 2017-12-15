@@ -36,12 +36,12 @@ import (
 
 // EtcdController contains an etcd client
 // to be used when talking to etcd
-type TrafficController struct {
+type Controller struct {
 	Client *clientv3.Client
 }
 
-// NewTrafficController create a new traffic controller
-func NewTrafficController() (*TrafficController, error) {
+// NewController create a new traffic controller
+func NewController() (*Controller, error) {
 
 	clientv3.SetLogger(zapgrpc.NewLogger(logging.WithContext(nil)))
 
@@ -67,7 +67,7 @@ func NewTrafficController() (*TrafficController, error) {
 		return nil, err
 	}
 
-	return &TrafficController{
+	return &Controller{
 		Client: etcdClient,
 	}, nil
 
@@ -78,7 +78,7 @@ func isTLSDefined() bool {
 }
 
 // ReportTraffic reports a new traffic point to etcd
-func (ctlr *TrafficController) ReportTraffic(ctx context.Context, pt *store.TrafficPoint) {
+func (ctlr *Controller) ReportTraffic(ctx context.Context, pt *store.TrafficPoint) {
 
 	logger := logging.WithContext(ctx)
 
@@ -107,7 +107,7 @@ func (ctlr *TrafficController) ReportTraffic(ctx context.Context, pt *store.Traf
 }
 
 // MonitorTraffic watches for new traffic and adds to to the in memory traffic store
-func (ctlr *TrafficController) MonitorTraffic(ctx context.Context) {
+func (ctlr *Controller) MonitorTraffic(ctx context.Context) {
 
 	rch := ctlr.Client.Watch(ctx, options.FlagEtcdPrefix.GetLong())
 	for wresp := range rch {

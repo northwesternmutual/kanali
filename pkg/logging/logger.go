@@ -38,8 +38,7 @@ const (
 
 var logger *zap.Logger
 
-// Init instantiates a global logger that Kanali will use
-func Init(core zapcore.Core) {
+func initLogger(core zapcore.Core) {
 	if core != nil {
 		logger = zap.New(core)
 		return
@@ -72,6 +71,9 @@ func NewContext(ctx context.Context, fields ...zapcore.Field) context.Context {
 
 // WithContext returns a logger from the given context
 func WithContext(ctx context.Context) *zap.Logger {
+	if logger == nil {
+		initLogger(nil)
+	}
 	if ctx == nil {
 		return logger
 	}

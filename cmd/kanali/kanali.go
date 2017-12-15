@@ -78,8 +78,6 @@ func init() {
 
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(startCmd)
-
-	logging.Init(nil)
 }
 
 func main() {
