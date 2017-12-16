@@ -35,7 +35,6 @@ type ApiProxyStoreInterface interface {
 	Delete(apiProxy *v2.ApiProxy) *v2.ApiProxy
 	Clear()
 	IsEmpty() bool
-	ApiProxyStoreExpansion
 }
 
 type apiProxyFactory struct {

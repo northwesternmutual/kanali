@@ -33,7 +33,6 @@ type ApiKeyStoreInterface interface {
 	Delete(apiKey *v2.ApiKey) *v2.ApiKey
 	Clear()
 	IsEmpty() bool
-	ApiKeyStoreExpansion
 }
 
 type apiKeyFactory struct {

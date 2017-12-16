@@ -35,7 +35,6 @@ type MockTargetStoreInterface interface {
 	Delete(mockTarget *v2.MockTarget) bool
 	Clear()
 	IsEmpty() bool
-	MockTargetStoreExpansion
 }
 
 type mockTargetFactory struct {

@@ -24,10 +24,10 @@ import (
 	"context"
 	"os"
 
-	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+  "github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 )
 
 type loggerKeyType int

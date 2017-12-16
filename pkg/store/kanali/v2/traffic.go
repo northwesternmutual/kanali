@@ -33,8 +33,7 @@ type TrafficStoreInterface interface {
 	Set(tp *TrafficPoint)
 	Clear()
 	IsEmpty() bool
-	IsRateLimitViolated(proxy *v2.ApiProxy, rate v2.Rate, keyName string, currTime time.Time) bool
-	TrafficStoreExpansion
+	IsRateLimitViolated(proxy v2.ApiProxy, rate *v2.Rate, keyName string, currTime time.Time) bool
 }
 
 type trafficByApiKey map[string][]time.Time
@@ -91,11 +90,11 @@ func (s *trafficFactory) IsEmpty() bool {
 }
 
 // IsRateLimitViolated wee see whether a rate limit has been reached
-func (s *trafficFactory) IsRateLimitViolated(proxy *v2.ApiProxy, rate v2.Rate, keyName string, currTime time.Time) bool {
+func (s *trafficFactory) IsRateLimitViolated(proxy v2.ApiProxy, rate *v2.Rate, keyName string, currTime time.Time) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
-	if rate != (v2.Rate{}) {
+	if rate == nil {
 		return false
 	}
 	if rate.Amount < 1 {

@@ -77,8 +77,8 @@ func isTLSDefined() bool {
 	return len(viper.GetString(options.FlagEtcdCertFile.GetLong())) > 0 && len(viper.GetString(options.FlagEtcdKeyFile.GetLong())) > 0
 }
 
-// ReportTraffic reports a new traffic point to etcd
-func (ctlr *Controller) ReportTraffic(ctx context.Context, pt *store.TrafficPoint) {
+// Report reports a new traffic point to etcd
+func (ctlr *Controller) Report(ctx context.Context, pt *store.TrafficPoint) {
 
 	logger := logging.WithContext(ctx)
 
