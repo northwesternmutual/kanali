@@ -31,9 +31,7 @@ spec:
       - name: kanali
         imagePullPolicy: {{default "IfNotPresent" .Values.kanali.pullPolicy}}
         image: {{.Values.kanali.image}}:{{.Values.kanali.tag}}
-        command:
-        - /kanali
-        - start
+        command: ["/kanali", "start", "--plugins.apiKey.decryption_key_file", "/etc/pki/key.pem", "--etcd.endpoints", "http://etcd.default.svc.cluster.local:2379", "--tls.cert_file", "/etc/pki/tls.crt", "--tls.key_file", "/etc/pki/tls.key", "--server.port", "8443", "--plugins.location", "/plugins"]
         ports:
         - containerPort: 8443
         readinessProbe:
@@ -49,8 +47,20 @@ spec:
         volumeMounts:
         - name: pki
           mountPath: /etc/pki
+          readOnly: true
         - name: config
           mountPath: /etc/kanali
+        - name: plugins
+          mountPath: /plugins
+          readOnly: true
+      initContainers:
+      - name: kanali-plugin-apikey
+        image: fbgrecojr/kanali-plugin-apikey:local
+        imagePullPolicy: IfNotPresent
+        command: ["cp", "/apiKey_v2.0.0-rc.1.so", "/plugins/"]
+        volumeMounts:
+        - name: plugins
+          mountPath: /plugins
       volumes:
       - name: pki
         projected:
@@ -70,6 +80,8 @@ spec:
       - name: config
         configMap:
           name: kanali-config
+      - name: plugins
+        emptyDir: {}
 
 ---
 
@@ -102,8 +114,8 @@ metadata:
   name: kanali
   namespace: default
 spec:
-  maxReplicas: 8
-  minReplicas: 2
+  maxReplicas: 5
+  minReplicas: 1
   scaleTargetRef:
     apiVersion: v1
     kind: Deployment

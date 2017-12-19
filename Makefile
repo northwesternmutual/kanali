@@ -27,8 +27,8 @@ $(BINARY): $(ALL_SRC) unit_test fmt lint
 
 .PHONY: install
 install:
-	glide --version || go get github.com/Masterminds/glide
-	glide install
+	dep version || go get github.com/golang/dep/cmd/dep
+	dep ensure -v -vendor-only # assumes updated Gopkg.lock
 
 .PHONY: binary
 binary:

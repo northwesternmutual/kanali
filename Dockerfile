@@ -1,6 +1,7 @@
-ARG GO_VERSION=1.8.5
+ARG GO_VERSION=1.9.2
+ARG CENTOS_VERSION=7
 
-FROM golang:${GO_VERSION}-jessie AS BUILD
+FROM golang:${GO_VERSION} AS BUILD
 LABEL maintainer="frankgreco@northwesternmutual.com"
 LABEL version="${VERSION}"
 ARG VERSION=""
@@ -16,7 +17,7 @@ RUN make install
 COPY ./ /go/src/github.com/northwesternmutual/kanali/
 RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` make binary
 
-FROM debian:jessie-slim
+FROM centos:${CENTOS_VERSION}
 LABEL maintainer="frankgreco@northwesternmutual.com"
 LABEL version="${VERSION}"
 COPY --from=BUILD /go/bin/kanali /

@@ -18,6 +18,6 @@ jaeger:
     elasticsearch: true
 
 kanali:
-  image: northwesternmutual/kanali
-  tag: latest
-  pullPolicy: Always
+  image: fbgrecojr/kanali
+  tag: local
+  pullPolicy: IfNotPresent

@@ -26,6 +26,8 @@ import (
 	"runtime"
 	"strings"
 
+  _ "github.com/apache/thrift/lib/go/thrift"
+  // _ "google.golang.org/genproto/googleapis/api/annotations"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/logging"
@@ -70,7 +72,9 @@ func init() {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("kanali")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	viper.ReadInConfig()
+	if err := viper.ReadInConfig(); err != nil {
+    logging.WithContext(nil).Warn(err.Error())
+  }
 
 	if err := options.KanaliOptions.AddAll(startCmd); err != nil {
 		logging.WithContext(nil).Fatal(err.Error())

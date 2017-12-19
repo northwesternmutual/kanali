@@ -60,7 +60,9 @@ var (
 	FlagEtcdEndpoints = flags.Flag{
 		Long:  "etcd.endpoints",
 		Short: "",
-		Value: []string{},
+		Value: []string{
+      "http://127.0.0.1:2379",
+    },
 		Usage: "Comma delimited list of ETCD hosts.",
 	}
 	// FlagEtcdPrefix specifies the ETCD prefix.

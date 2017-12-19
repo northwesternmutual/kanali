@@ -18,7 +18,7 @@ data:
     influx_password = ""
 
     [plugins]
-    location = "/"
+    location = "/plugins"
 
     [plugins.apiKey]
     decryption_key_file = "/etc/pki/key.pem"
@@ -32,7 +32,6 @@ data:
     [server]
     port = 8443
     bind_address = "0.0.0.0"
-    peer_udp_port = 10001
     proxy_protocol = false
 
     [process]
@@ -57,4 +56,3 @@ data:
 
     [proxy.default_header_values]
     deployment = "production"
-    

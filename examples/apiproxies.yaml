@@ -12,6 +12,11 @@ spec:
     path: /
     backend:
       endpoint: https://httpbin.org
+  plugins:
+  - name: apiKey
+    version: v2.0.0-rc.1
+    config:
+      binding: example-apikeybinding
 
 ---
 
