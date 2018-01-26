@@ -25,7 +25,7 @@ import (
 )
 
 func init() {
-	KanaliOptions.Add(
+	KanaliGatewayOptions.Add(
 		FlagEtcdCertFile,
 		FlagEtcdKeyFile,
 		FlagEtcdCaFile,
@@ -61,8 +61,8 @@ var (
 		Long:  "etcd.endpoints",
 		Short: "",
 		Value: []string{
-      "http://127.0.0.1:2379",
-    },
+			"http://127.0.0.1:2379",
+		},
 		Usage: "Comma delimited list of ETCD hosts.",
 	}
 	// FlagEtcdPrefix specifies the ETCD prefix.

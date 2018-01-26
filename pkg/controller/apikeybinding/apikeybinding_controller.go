@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
+	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
@@ -66,8 +66,8 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
 	}
 	store.ApiKeyBindingStore().Set(binding)
 	logger.With(
-		zap.String(tags.KanaliApiKeyBindingName, binding.ObjectMeta.Name),
-		zap.String(tags.KanaliApiKeyBindingNamespace, binding.ObjectMeta.Namespace),
+		zap.String(tags.KanaliApiKeyBindingName, binding.GetName()),
+		zap.String(tags.KanaliApiKeyBindingNamespace, binding.GetNamespace()),
 	).Debug("added ApiKeyBinding")
 }
 
@@ -85,8 +85,8 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new in
 	}
 	store.ApiKeyBindingStore().Update(newBinding, oldBinding)
 	logger.With(
-		zap.String(tags.KanaliApiKeyBindingName, newBinding.ObjectMeta.Name),
-		zap.String(tags.KanaliApiKeyBindingNamespace, newBinding.ObjectMeta.Namespace),
+		zap.String(tags.KanaliApiKeyBindingName, newBinding.GetName()),
+		zap.String(tags.KanaliApiKeyBindingNamespace, newBinding.GetNamespace()),
 	).Debug("updated ApiKeyBinding")
 }
 
@@ -99,8 +99,8 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
 	}
 	if err := store.ApiKeyBindingStore().Delete(binding); err != nil {
 		logger.With(
-			zap.String(tags.KanaliApiKeyBindingName, binding.ObjectMeta.Name),
-			zap.String(tags.KanaliApiKeyBindingNamespace, binding.ObjectMeta.Namespace),
+			zap.String(tags.KanaliApiKeyBindingName, binding.GetName()),
+			zap.String(tags.KanaliApiKeyBindingNamespace, binding.GetNamespace()),
 		).Debug("deleted ApiKeyBinding")
 	}
 }

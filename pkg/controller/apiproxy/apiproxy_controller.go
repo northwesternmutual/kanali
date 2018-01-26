@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
+	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
@@ -66,8 +66,8 @@ func (ctlr *ApiProxyController) apiProxyAdd(obj interface{}) {
 	} else {
 		store.ApiProxyStore().Set(proxy)
 		logger.With(
-			zap.String(tags.KanaliProxyName, proxy.ObjectMeta.Name),
-			zap.String(tags.KanaliProxyNamespace, proxy.ObjectMeta.Namespace),
+			zap.String(tags.KanaliProxyName, proxy.GetName()),
+			zap.String(tags.KanaliProxyNamespace, proxy.GetNamespace()),
 		).Debug("added ApiProxy")
 	}
 }
@@ -87,8 +87,8 @@ func (ctlr *ApiProxyController) apiProxyUpdate(old interface{}, new interface{})
 	}
 	store.ApiProxyStore().Update(oldProxy, newProxy)
 	logger.With(
-		zap.String(tags.KanaliProxyName, newProxy.ObjectMeta.Name),
-		zap.String(tags.KanaliProxyNamespace, newProxy.ObjectMeta.Namespace),
+		zap.String(tags.KanaliProxyName, newProxy.GetName()),
+		zap.String(tags.KanaliProxyNamespace, newProxy.GetNamespace()),
 	).Debug("updated ApiProxy")
 }
 
@@ -102,8 +102,8 @@ func (ctlr *ApiProxyController) apiProxyDelete(obj interface{}) {
 	}
 	if result := store.ApiProxyStore().Delete(proxy); result != nil {
 		logger.With(
-			zap.String(tags.KanaliProxyName, proxy.ObjectMeta.Name),
-			zap.String(tags.KanaliProxyNamespace, proxy.ObjectMeta.Namespace),
+			zap.String(tags.KanaliProxyName, proxy.GetName()),
+			zap.String(tags.KanaliProxyNamespace, proxy.GetNamespace()),
 		).Debug("deleted ApiProxy")
 	}
 }

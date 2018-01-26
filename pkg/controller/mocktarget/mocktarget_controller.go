@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
+	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"k8s.io/client-go/tools/cache"
@@ -64,7 +64,7 @@ func (ctlr *MockTargetController) mockTargetAdd(obj interface{}) {
 		logger.Error("received malformed MockTarget from k8s apiserver")
 	} else {
 		store.MockTargetStore().Set(target)
-		logger.Debug(fmt.Sprintf("added MockTarget %s in %s namespace", target.ObjectMeta.Name, target.ObjectMeta.Namespace))
+		logger.Debug(fmt.Sprintf("added MockTarget %s in %s namespace", target.GetName(), target.GetNamespace()))
 	}
 }
 
@@ -84,7 +84,7 @@ func (ctlr *MockTargetController) mockTargetUpdate(old interface{}, new interfac
 	if err := store.MockTargetStore().Update(oldTarget, newTarget); err != nil {
 		logger.Error(err.Error())
 	} else {
-		logger.Debug(fmt.Sprintf("updated MockTarget %s in %s namespace", newTarget.ObjectMeta.Name, newTarget.ObjectMeta.Namespace))
+		logger.Debug(fmt.Sprintf("updated MockTarget %s in %s namespace", newTarget.GetName(), newTarget.GetNamespace()))
 	}
 }
 
@@ -97,6 +97,6 @@ func (ctlr *MockTargetController) mockTargetDelete(obj interface{}) {
 		return
 	}
 	if result := store.MockTargetStore().Delete(target); result {
-		logger.Debug(fmt.Sprintf("deleted MockTarget %s in %s namespace", target.ObjectMeta.Name, target.ObjectMeta.Namespace))
+		logger.Debug(fmt.Sprintf("deleted MockTarget %s in %s namespace", target.GetName(), target.GetNamespace()))
 	}
 }

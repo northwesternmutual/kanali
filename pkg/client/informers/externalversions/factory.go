@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,21 +23,25 @@
 package externalversions
 
 import (
-	versioned "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/internalinterfaces"
-	kanali "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali"
-	runtime "k8s.io/apimachinery/pkg/runtime"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	cache "k8s.io/client-go/tools/cache"
 	reflect "reflect"
 	sync "sync"
 	time "time"
+
+	versioned "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/internalinterfaces"
+	kanali_io "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 type sharedInformerFactory struct {
-	client        versioned.Interface
-	lock          sync.Mutex
-	defaultResync time.Duration
+	client           versioned.Interface
+	namespace        string
+	tweakListOptions internalinterfaces.TweakListOptionsFunc
+	lock             sync.Mutex
+	defaultResync    time.Duration
 
 	informers map[reflect.Type]cache.SharedIndexInformer
 	// startedInformers is used for tracking which informers have been started.
@@ -47,8 +51,17 @@ type sharedInformerFactory struct {
 
 // NewSharedInformerFactory constructs a new instance of sharedInformerFactory
 func NewSharedInformerFactory(client versioned.Interface, defaultResync time.Duration) SharedInformerFactory {
+	return NewFilteredSharedInformerFactory(client, defaultResync, v1.NamespaceAll, nil)
+}
+
+// NewFilteredSharedInformerFactory constructs a new instance of sharedInformerFactory.
+// Listers obtained via this SharedInformerFactory will be subject to the same filters
+// as specified here.
+func NewFilteredSharedInformerFactory(client versioned.Interface, defaultResync time.Duration, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) SharedInformerFactory {
 	return &sharedInformerFactory{
 		client:           client,
+		namespace:        namespace,
+		tweakListOptions: tweakListOptions,
 		defaultResync:    defaultResync,
 		informers:        make(map[reflect.Type]cache.SharedIndexInformer),
 		startedInformers: make(map[reflect.Type]bool),
@@ -114,9 +127,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Kanali() kanali.Interface
+	Kanali() kanali_io.Interface
 }
 
-func (f *sharedInformerFactory) Kanali() kanali.Interface {
-	return kanali.New(f)
+func (f *sharedInformerFactory) Kanali() kanali_io.Interface {
+	return kanali_io.New(f, f.namespace, f.tweakListOptions)
 }

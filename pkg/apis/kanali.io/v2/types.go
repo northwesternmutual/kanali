@@ -28,6 +28,7 @@ import (
 // +genclient:noStatus
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 
 // ApiKey describes an ApiKey
 type ApiKey struct {
@@ -49,6 +50,7 @@ type Revision struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 
 // ApiKeyList is a list of ApiKey resources
 type ApiKeyList struct {
@@ -60,6 +62,7 @@ type ApiKeyList struct {
 // +genclient
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 
 // MockTarget describes a MockTarget
 type MockTarget struct {
@@ -83,6 +86,7 @@ type Route struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 
 // MockTargetList is a list of MockTarget resources
 type MockTargetList struct {
@@ -94,6 +98,7 @@ type MockTargetList struct {
 // +genclient
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 
 // ApiProxy describe an ApiProxy
 type ApiProxy struct {
@@ -129,9 +134,14 @@ type Mock struct {
 
 // Backend describes an upstream server
 type Backend struct {
-	Endpoint string  `json:"endpoint,omitempty"`
+	Endpoint Endpoint  `json:"endpoint,omitempty"`
 	Mock     Mock    `json:"mock,omitempty"`
 	Service  Service `json:"service,omitempty"`
+}
+
+type Endpoint struct {
+  Scheme string `json:"scheme,omitempty"`
+  Host string `json:"host,omitempty"`
 }
 
 // Service describes a Kubernetes service
@@ -161,6 +171,7 @@ type Plugin struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 
 // ApiProxyList is a list of ApiProxy resources
 type ApiProxyList struct {
@@ -172,6 +183,7 @@ type ApiProxyList struct {
 // +genclient
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 
 // ApiKeyBinding describes an ApiKeyBinding
 type ApiKeyBinding struct {
@@ -217,6 +229,7 @@ type GranularProxy struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
 
 // ApiKeyBindingList represents a list of ApiKeyBinding resources
 type ApiKeyBindingList struct {

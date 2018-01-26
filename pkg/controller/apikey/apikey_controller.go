@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali/v2"
+	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
@@ -78,7 +78,7 @@ func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
 	}
 	store.ApiKeyStore().Set(key)
 	logger.With(
-		zap.String(tags.KanaliApiKeyName, key.ObjectMeta.Name),
+		zap.String(tags.KanaliApiKeyName, key.GetName()),
 	).Debug("added ApiKey")
 }
 
@@ -104,7 +104,7 @@ func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
 	}
 	store.ApiKeyStore().Update(oldKey, newKey)
 	logger.With(
-		zap.String(tags.KanaliApiKeyName, newKey.ObjectMeta.Name),
+		zap.String(tags.KanaliApiKeyName, newKey.GetName()),
 	).Debug("updated ApiKey")
 }
 
@@ -121,7 +121,7 @@ func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
 	}
 	if result := store.ApiKeyStore().Delete(key); result != nil {
 		logger.With(
-			zap.String(tags.KanaliApiKeyName, result.ObjectMeta.Name),
+			zap.String(tags.KanaliApiKeyName, result.GetName()),
 		).Debug("deleted ApiKey")
 	}
 }

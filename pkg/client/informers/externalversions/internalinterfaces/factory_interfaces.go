@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,12 @@
 package internalinterfaces
 
 import (
+	time "time"
+
 	versioned "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	cache "k8s.io/client-go/tools/cache"
-	time "time"
 )
 
 type NewInformerFunc func(versioned.Interface, time.Duration) cache.SharedIndexInformer
@@ -36,3 +38,5 @@ type SharedInformerFactory interface {
 	Start(stopCh <-chan struct{})
 	InformerFor(obj runtime.Object, newFunc NewInformerFunc) cache.SharedIndexInformer
 }
+
+type TweakListOptionsFunc func(*v1.ListOptions)

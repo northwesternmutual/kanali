@@ -76,7 +76,7 @@ func (s *apiProxyFactory) update(old, new *v2.ApiProxy) {
 	normalizeProxyPaths(new)
 	existing := s.get(new.Spec.Source.Path)
 	if existing != nil {
-		if new.ObjectMeta.Name != existing.ObjectMeta.Name || new.ObjectMeta.Namespace != existing.ObjectMeta.Namespace {
+		if new.GetName() != existing.GetName() || new.GetNamespace() != existing.GetNamespace() {
 			return
 		}
 	}

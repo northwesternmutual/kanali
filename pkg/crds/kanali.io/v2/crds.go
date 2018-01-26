@@ -23,12 +23,14 @@ package v2
 import (
 	"fmt"
 
+  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+
+  kanaliio "github.com/northwesternmutual/kanali/pkg/apis/kanali.io"
 )
 
 const (
-	kanaliGroupName = "kanali.io"
 	version         = "v2"
 )
 
@@ -49,31 +51,15 @@ var (
 	semanticVersionRegex  = `^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$`
 )
 
-func ApiKeyCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-	return apiKeyCRD
-}
-
-func ApiProxyCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-	return apiProxyCRD
-}
-
-func ApiKeyBindingCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-	return apiKeyBindingCRD
-}
-
-func MockTargetCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-	return mockTargetCRD
-}
-
-var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
+var ApiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("apikeies.%s", kanaliGroupName),
+		Name: fmt.Sprintf("apikeys.%s", kanaliio.GroupName),
 	},
 	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-		Group:   kanaliGroupName,
+		Group:   kanaliio.GroupName,
 		Version: version,
 		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-			Plural:   "apikeies",
+			Plural:   "apikeys",
 			Singular: "apikey",
 			ShortNames: []string{
 				"ak",
@@ -144,12 +130,12 @@ var apiKeyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	},
 }
 
-var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
+var ApiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("apikeybindings.%s", kanaliGroupName),
+		Name: fmt.Sprintf("apikeybindings.%s", kanaliio.GroupName),
 	},
 	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-		Group:   kanaliGroupName,
+		Group:   kanaliio.GroupName,
 		Version: version,
 		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 			Plural:   "apikeybindings",
@@ -410,12 +396,12 @@ var apiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	},
 }
 
-var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
+var ApiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("apiproxies.%s", kanaliGroupName),
+		Name: fmt.Sprintf("apiproxies.%s", kanaliio.GroupName),
 	},
 	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-		Group:   kanaliGroupName,
+		Group:   kanaliio.GroupName,
 		Version: version,
 		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 			Plural:   "apiproxies",
@@ -504,9 +490,31 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 												},
 												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 													"endpoint": {
-														Description: "valid http url",
-														Type:        "string",
-														Pattern:     httpURLRegex,
+														Description: "endpoint object",
+														Type:        "object",
+                            Required: []string{
+    													"scheme",
+                              "host",
+    												},
+                            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+                              "scheme": {
+                                Description: "http url scheme",
+                                Type:        "string",
+                                Enum: []apiextensionsv1beta1.JSON{
+    															{
+    																Raw: []byte(`"http"`),
+    															},
+    															{
+    																Raw: []byte(`"https"`),
+    															},
+    														},
+                              },
+                              "host": {
+                                Description: "http url host",
+                                Type:        "string",
+                                MinLength:   int64Ptr(1),
+                              },
+                            },
 													},
 												},
 											},
@@ -677,12 +685,12 @@ var apiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	},
 }
 
-var mockTargetCRD = &apiextensionsv1beta1.CustomResourceDefinition{
+var MockTargetCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("mocktargets.%s", kanaliGroupName),
+		Name: fmt.Sprintf("mocktargets.%s", kanaliio.GroupName),
 	},
 	Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-		Group:   kanaliGroupName,
+		Group:   kanaliio.GroupName,
 		Version: version,
 		Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 			Plural:   "mocktargets",

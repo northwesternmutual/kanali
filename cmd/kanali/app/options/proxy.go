@@ -27,7 +27,7 @@ import (
 )
 
 func init() {
-	KanaliOptions.Add(
+	KanaliGatewayOptions.Add(
 		FlagProxyEnableClusterIP,
 		FlagProxyHeaderMaskValue,
 		FlagProxyEnableMockResponses,

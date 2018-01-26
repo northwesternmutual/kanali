@@ -18,6 +18,7 @@ LICENSE_*
 .cover/
 torch.svg
 /kanali
+*.cpu
 
 # helm
 helm/charts/*.tgz

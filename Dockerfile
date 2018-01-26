@@ -5,20 +5,28 @@ FROM golang:${GO_VERSION} AS BUILD
 LABEL maintainer="frankgreco@northwesternmutual.com"
 LABEL version="${VERSION}"
 ARG VERSION=""
-ARG GLIDE_VERSION=0.12.3
 WORKDIR /go/src/github.com/northwesternmutual/kanali/
-RUN wget "https://github.com/Masterminds/glide/releases/download/v${GLIDE_VERSION}/glide-v${GLIDE_VERSION}-`go env GOHOSTOS`-`go env GOHOSTARCH`.tar.gz" -O /tmp/glide.tar.gz \
-    && mkdir /tmp/glide \
-    && tar --directory=/tmp/glide -xvf /tmp/glide.tar.gz \
-    && rm -rf /tmp/glide.tar.gz \
-    && export PATH=$PATH:/tmp/glide/`go env GOHOSTOS`-`go env GOHOSTARCH`
-COPY glide.lock glide.yaml Makefile /go/src/github.com/northwesternmutual/kanali/
+COPY Gopkg.toml Gopkg.lock Makefile /go/src/github.com/northwesternmutual/kanali/
 RUN make install
+
+RUN cp -R vendor/* /go/src/ && rm -rf vendor
+
+RUN cd /go/src/github.com/northwesternmutual/ && \
+    git clone https://github.com/northwesternmutual/kanali-plugin-apikey.git && \
+    cd kanali-plugin-apikey && \
+    git checkout etcd-grpc && \
+    make install && \
+    cp -R vendor/* /go/src/ && \
+    rm -rf vendor
+
 COPY ./ /go/src/github.com/northwesternmutual/kanali/
-RUN GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` make binary
+RUN make binary
+RUN cd /go/src/github.com/northwesternmutual/kanali-plugin-apikey && \
+    go build -buildmode=plugin -o apiKey_v2.0.0-rc.1.so
 
 FROM centos:${CENTOS_VERSION}
 LABEL maintainer="frankgreco@northwesternmutual.com"
 LABEL version="${VERSION}"
 COPY --from=BUILD /go/bin/kanali /
+COPY --from=BUILD /go/src/github.com/northwesternmutual/kanali-plugin-apikey/apiKey_v2.0.0-rc.1.so /plugins/
 ENTRYPOINT ["/kanali"]

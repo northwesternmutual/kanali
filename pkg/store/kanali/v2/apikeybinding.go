@@ -31,8 +31,8 @@ import (
 type ApiKeyBindingStoreInterface interface {
 	Set(apiKeyBinding *v2.ApiKeyBinding)
 	Update(old, new *v2.ApiKeyBinding)
-  Contains(namespace, binding string) bool
-  ContainsApiKey(namespace, binding, key string) bool
+	Contains(namespace, binding string) bool
+	ContainsApiKey(namespace, binding, key string) bool
 	GetRuleAndRate(namespace, binding, key, target string) (*v2.Rule, *v2.Rate)
 	Delete(apiKeyBinding *v2.ApiKeyBinding) error
 	Clear()
@@ -104,18 +104,18 @@ func (s *apiKeyBindingFactory) Set(apiKeyBinding *v2.ApiKeyBinding) {
 
 func (s *apiKeyBindingFactory) set(apiKeyBinding *v2.ApiKeyBinding) {
 	// namespace is the first level
-	if _, ok := s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace]; !ok {
-		s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace] = map[string]map[string]structuredKey{}
+	if _, ok := s.apiKeyBindingMap[apiKeyBinding.GetNamespace()]; !ok {
+		s.apiKeyBindingMap[apiKeyBinding.GetNamespace()] = map[string]map[string]structuredKey{}
 	}
 
 	// binding is the second level
-	if _, ok := s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name]; !ok {
-		s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name] = map[string]structuredKey{}
+	if _, ok := s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()]; !ok {
+		s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()] = map[string]structuredKey{}
 	}
 
 	// keys are the third level
 	for _, key := range apiKeyBinding.Spec.Keys {
-		s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name][key.Name] = structuredKey{
+		s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()][key.Name] = structuredKey{
 			key:         key,
 			subpathTree: generateSubpathTree(key),
 		}
@@ -123,25 +123,25 @@ func (s *apiKeyBindingFactory) set(apiKeyBinding *v2.ApiKeyBinding) {
 }
 
 func (s *apiKeyBindingFactory) Contains(namespace, binding string) bool {
-  s.mutex.RLock()
+	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-  return s.contains(namespace, binding)
+	return s.contains(namespace, binding)
 }
 
 func (s *apiKeyBindingFactory) contains(namespace, binding string) bool {
-  _, ok := s.apiKeyBindingMap[namespace][binding]
-  return ok
+	_, ok := s.apiKeyBindingMap[namespace][binding]
+	return ok
 }
 
 func (s *apiKeyBindingFactory) ContainsApiKey(namespace, binding, key string) bool {
-  s.mutex.RLock()
+	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-  return s.containsApiKey(namespace, binding, key)
+	return s.containsApiKey(namespace, binding, key)
 }
 
 func (s *apiKeyBindingFactory) containsApiKey(namespace, binding, key string) bool {
-  _, ok := s.apiKeyBindingMap[namespace][binding][key]
-  return ok
+	_, ok := s.apiKeyBindingMap[namespace][binding][key]
+	return ok
 }
 
 // GetRuleAndRate retrieves the highest priority rule given:
@@ -169,13 +169,13 @@ func (s *apiKeyBindingFactory) Delete(apiKeyBinding *v2.ApiKeyBinding) error {
 	if apiKeyBinding == nil {
 		return nil
 	}
-	_, ok := s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace][apiKeyBinding.ObjectMeta.Name]
+	_, ok := s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()]
 	if !ok {
 		return errors.New("ApiKeyBinding not found")
 	}
-	delete(s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace], apiKeyBinding.ObjectMeta.Name)
-	if len(s.apiKeyBindingMap[apiKeyBinding.ObjectMeta.Namespace]) == 0 {
-		delete(s.apiKeyBindingMap, apiKeyBinding.ObjectMeta.Namespace)
+	delete(s.apiKeyBindingMap[apiKeyBinding.GetNamespace()], apiKeyBinding.GetName())
+	if len(s.apiKeyBindingMap[apiKeyBinding.GetNamespace()]) == 0 {
+		delete(s.apiKeyBindingMap, apiKeyBinding.GetNamespace())
 	}
 	return nil
 }

@@ -33,7 +33,7 @@ helm install ./helm --name kanali --set kanali.tag=${COMMIT:-latest}
 
 # wait for deployments to be ready
 kubectl rollout status -w deployment/kube-dns --namespace=kube-system
-kubectl rollout status -w deployment/etcd --namespace=default
+# kubectl rollout status -w deployment/etcd --namespace=default
 kubectl rollout status -w deployment/kanali --namespace=default
 
 kubectl get pods --all-namespaces

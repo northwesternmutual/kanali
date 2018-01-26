@@ -21,11 +21,86 @@
 package e2e
 
 import (
-	"fmt"
+  "io"
+  "bytes"
+  "testing"
+  "net/http"
+  "io/ioutil"
+  "encoding/json"
 
-	"testing"
+  "k8s.io/api/core/v1"
+
+  "github.com/northwesternmutual/kanali/pkg/errors"
 )
 
 func RunE2ETests(t *testing.T) {
-	fmt.Println("running end to end tests")
+
+  tests := []struct{
+    name string
+    secret *v1.Secret
+    request *http.Request
+    expectedStatusCode int
+    expectedBody []byte
+    exepectedHeaders http.Header
+    setup: func() error
+    teardown: func() error
+  }{
+   {
+     name: "simple",
+     secret: nil,
+     request: newRequestOrDie(t, "GET", "http://127.0.0.1:8080/foo", nil),
+     expectedStatusCode: 404,
+     expectedBody: marshalOrDie(t, errors.ErrorProxyNotFound),
+     setup: none,
+     teardown: none,
+   },
+   {
+     name: "endpoint",
+     secret: nil,
+     request: newRequestOrDie(t, "GET", "http://127.0.0.1:8080/foo", nil),
+     expectedStatusCode: 200,
+     expectedBody: nil,
+     setup: none,
+     teardown: none,
+   },
+  }
+
+  client := &http.Client{}
+  for _, test := range tests {
+    setup()
+    defer teardown()
+    resp, err := client.Do(test.request)
+    if err != nil {
+      t.Fail()
+    }
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+      t.Fail()
+    }
+    if !bytes.Equal(body, test.expectedBody) {
+      t.Fail()
+    }
+      t.Fail()
+    }
+  }
+}
+
+func none() error {
+  return nil
+}
+
+func marshalOrDie(t *testing.T, d interface{}) []byte {
+  data, err := json.Marshal(d)
+  if err != nil {
+    t.Fail()
+  }
+  return data
+}
+
+func newRequestOrDie(t *testing.T, method, url string, body io.Reader) *http.Request {
+  req, err := http.NewRequest(method, url, body)
+  if err != nil {
+    t.Fail()
+  }
+  return req
 }

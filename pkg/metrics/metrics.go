@@ -20,29 +20,17 @@
 
 package metrics
 
-// Metric represent a single request metric
-type Metric struct {
-	Name  string
-	Value interface{}
-	Index bool
-}
+import (
+	"github.com/prometheus/client_golang/prometheus"
+)
 
-// Metrics represents a list of Metrics associated with a request
-type Metrics []Metric
+var (
+	RequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "http_request_duration_milliseconds",
+		Help: "Duration of HTTP requests.",
+	}, []string{"method"})
+)
 
-// Add appends a metric to the list of metrics
-func (m *Metrics) Add(metrics ...Metric) {
-	for _, metric := range metrics {
-		*m = append(*m, metric)
-	}
-}
-
-// Get retrives a specific metric by name
-func (m *Metrics) Get(name string) *Metric {
-	for _, metric := range *m {
-		if metric.Name == name {
-			return &metric
-		}
-	}
-	return nil
+func init() {
+	prometheus.MustRegister(RequestDuration)
 }

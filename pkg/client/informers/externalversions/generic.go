@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@ package externalversions
 
 import (
 	"fmt"
+
 	v2 "github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -55,9 +56,9 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=Kanali, Version=V2
-	case v2.SchemeGroupVersion.WithResource("apikeies"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Kanali().V2().ApiKeies().Informer()}, nil
+	// Group=kanali.io, Version=v2
+	case v2.SchemeGroupVersion.WithResource("apikeys"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Kanali().V2().ApiKeys().Informer()}, nil
 	case v2.SchemeGroupVersion.WithResource("apikeybindings"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Kanali().V2().ApiKeyBindings().Informer()}, nil
 	case v2.SchemeGroupVersion.WithResource("apiproxies"):

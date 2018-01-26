@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@ package fake
 
 import (
 	clientset "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
-	kanaliv2 "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned/typed/kanali/v2"
-	fakekanaliv2 "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned/typed/kanali/v2/fake"
+	kanaliv2 "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned/typed/kanali.io/v2"
+	fakekanaliv2 "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned/typed/kanali.io/v2/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

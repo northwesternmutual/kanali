@@ -24,45 +24,54 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	"github.com/northwesternmutual/kanali/pkg/logging"
-	"github.com/northwesternmutual/kanali/pkg/metrics"
-	"github.com/northwesternmutual/kanali/pkg/steps"
-	"github.com/northwesternmutual/kanali/pkg/tags"
 	opentracing "github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
-	"k8s.io/client-go/informers/core"
+
+	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/tags"
 )
 
-type flow []steps.Step
+// Flow represents a list of Steps.
+type Flow []Step
 
-func New() *flow {
-	return &flow{}
+// New will create a new Flow and return its reference.
+func New() *Flow {
+	return &Flow{}
 }
 
-func (f *flow) Add(steps ...steps.Step) {
+// Add will add an arbitary number of Steps to the Flow
+// in the order in which they were passed to this method.
+func (f *Flow) Add(steps ...Step) *Flow {
 	for _, s := range steps {
 		*f = append(*f, s)
 	}
+	return f
 }
 
-func (f *flow) Play(ctx context.Context, proxy *v2.ApiProxy, k8sCoreClient core.Interface, metrics *metrics.Metrics, w http.ResponseWriter, r *http.Request, resp *http.Response, trace opentracing.Span) error {
-	logger := logging.WithContext(ctx)
+// Play will execute each Step in the Flow in sequential order.
+// If the execution of any Step returns an error, this error will
+// be returned immedietaly and the execution of any latter Step
+// will not occur.
+func (f *Flow) Play(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	logger := logging.WithContext(r.Context())
 
 	for _, step := range *f {
 		logger.With(
-			zap.String("step.name", step.GetName()),
+			zap.String("step.name", step.Name()),
 		).Debug("playing step")
-		err := step.Do(ctx, proxy, k8sCoreClient, metrics, w, r, resp, trace)
+		err := step.Do(ctx, w, r)
 		if err == nil {
 			continue
 		}
-		trace.SetTag(tags.Error, true)
-		trace.LogKV(
-			"event", tags.Error,
-			"error.message", err.Error(),
-		)
+		if span := opentracing.SpanFromContext(ctx); span != nil {
+			span.SetTag(tags.Error, true)
+			span.LogKV(
+				"event", tags.Error,
+				"error.message", err.Error(),
+			)
+		}
 		return err
 	}
+
 	return nil
 }

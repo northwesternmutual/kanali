@@ -22,140 +22,216 @@ package app
 
 import (
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
-	"io/ioutil"
 	"time"
+
+	"github.com/oklog/run"
+	"github.com/spf13/viper"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+  "github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
 	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions"
-	apikey "github.com/northwesternmutual/kanali/pkg/controller/apikey"
-	apikeybinding "github.com/northwesternmutual/kanali/pkg/controller/apikeybinding"
-	apiproxy "github.com/northwesternmutual/kanali/pkg/controller/apiproxy"
-	mocktarget "github.com/northwesternmutual/kanali/pkg/controller/mocktarget"
+	"github.com/northwesternmutual/kanali/pkg/controller/apikey"
+	"github.com/northwesternmutual/kanali/pkg/controller/apikeybinding"
+	"github.com/northwesternmutual/kanali/pkg/controller/apiproxy"
+	"github.com/northwesternmutual/kanali/pkg/controller/mocktarget"
 	"github.com/northwesternmutual/kanali/pkg/crds"
-	v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
-	logging "github.com/northwesternmutual/kanali/pkg/logging"
-	traffic "github.com/northwesternmutual/kanali/pkg/traffic"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/spf13/viper"
-	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	"github.com/northwesternmutual/kanali/pkg/logging"
+	_ "github.com/northwesternmutual/kanali/pkg/metrics"
+	"github.com/northwesternmutual/kanali/pkg/store/core/v1"
+	"github.com/northwesternmutual/kanali/pkg/tracer"
+	"github.com/northwesternmutual/kanali/pkg/traffic"
+  "github.com/northwesternmutual/kanali/pkg/middleware"
+  "github.com/northwesternmutual/kanali/pkg/chain"
+	"github.com/northwesternmutual/kanali/pkg/utils"
+  "github.com/northwesternmutual/kanali/pkg/server"
+  v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
 )
 
-func Run(ctx context.Context) error {
+func Run(sigCtx context.Context) error {
 
-	logger := logging.WithContext(ctx)
+	ctx, cancel := context.WithCancel(sigCtx)
+	logger := logging.WithContext(nil)
 
-	config, err := getRestConfig()
+	crdClientset, kanaliClientset, k8sClientset, err := createClientsets()
 	if err != nil {
-		return err
-	}
-
-	crdClientset, err := apiextensionsclient.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-
-	if err := crds.Create(crdClientset.ApiextensionsV1beta1(),
-		v2CRDs.ApiProxyCRD(),
-		v2CRDs.ApiKeyCRD(),
-		v2CRDs.ApiKeyBindingCRD(),
-		v2CRDs.MockTargetCRD(),
-	); err != nil {
 		logger.Fatal(err.Error())
-		return err
-	}
-
-	kanaliClientset, err := versioned.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-
-	k8sClientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-
-	decryptionKey, err := loadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
-	if err != nil {
 		return err
 	}
 
 	kanaliFactory := externalversions.NewSharedInformerFactory(kanaliClientset, 5*time.Minute)
 	k8sFactory := informers.NewSharedInformerFactory(k8sClientset, 5*time.Minute)
+	v1.SetGlobalInterface(k8sFactory.Core().V1())
 
-	go apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeies(), decryptionKey).Run(ctx.Done())
-	go apikeybinding.NewApiKeyBindingController(kanaliFactory.Kanali().V2().ApiKeyBindings()).Run(ctx.Done())
-	go apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()).Run(ctx.Done())
-	go mocktarget.NewMockTargetController(kanaliFactory.Kanali().V2().MockTargets()).Run(ctx.Done())
-	go k8sFactory.Core().V1().Services().Informer().Run(ctx.Done())
-	go k8sFactory.Core().V1().Secrets().Informer().Run(ctx.Done())
+	if err := crds.EnsureCRDs(crdClientset.ApiextensionsV1beta1(),
+    v2CRDs.ApiProxyCRD,
+    v2CRDs.ApiKeyCRD,
+    v2CRDs.ApiKeyBindingCRD,
+    v2CRDs.MockTargetCRD,
+  ); err != nil {
+		logger.Fatal(err.Error())
+		return err
+	} else {
+    logger.Info("all customresourcedefinitions successfully created")
+  }
 
-	// TODO: handle case that ctx.Done() stop channel sends an item through
+	decryptionKey, err := utils.LoadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
+	if err != nil {
+		logger.Fatal(err.Error())
+		return err
+	}
 
 	trafficCtlr, err := traffic.NewController()
 	if err != nil {
+		logger.Fatal(err.Error())
 		return err
 	}
-	defer func() {
-		if err := trafficCtlr.Client.Close(); err != nil {
-			logger.Warn(err.Error())
-		}
-	}()
 
-	go trafficCtlr.MonitorTraffic(ctx)
-
-	tracer, closer, err := newJaegerTracer()
-	if err != nil {
-		logger.Warn(err.Error())
-	} else {
-		opentracing.SetGlobalTracer(tracer)
-		defer func() {
-			if err := closer.Close(); err != nil {
-				logger.Warn(err.Error())
-			}
-		}()
+	tracer, tracerErr := tracer.Jaeger()
+	if tracerErr != nil {
+		logger.Warn(tracerErr.Error())
 	}
 
-	influxCtlr, err := newInfluxdbController()
-	if err != nil {
-		logger.Warn(err.Error())
-	} else {
-		defer func() {
-			if err := influxCtlr.client.Close(); err != nil {
-				logger.Warn(err.Error())
-			}
-		}()
+  gatewayServer := server.PrepareServer(&server.Options{
+    Name: "gateway",
+    InsecureAddr: viper.GetString(options.FlagServerInsecureBindAddress.GetLong()),
+    SecureAddr: viper.GetString(options.FlagServerSecureBindAddress.GetLong()),
+    InsecurePort: viper.GetInt(options.FlagServerInsecurePort.GetLong()),
+    SecurePort: viper.GetInt(options.FlagServerSecurePort.GetLong()),
+    TLSKey: viper.GetString(options.FlagTLSKeyFile.GetLong()),
+    TLSCert: viper.GetString(options.FlagTLSCertFile.GetLong()),
+    TLSCa: viper.GetString(options.FlagTLSCaFile.GetLong()),
+    Handler: chain.New().Add(
+  		middleware.Recorder,
+  		middleware.Correlation,
+  		middleware.Metrics,
+  	).Link(middleware.Gateway),
+    Logger: logger.Sugar(),
+  })
+
+  profilingServer := server.PrepareServer(&server.Options{
+    Name: "profiling",
+    InsecureAddr: viper.GetString(options.FlagProfilingInsecureBindAddress.GetLong()),
+    InsecurePort: viper.GetInt(options.FlagProfilingInsecurePort.GetLong()),
+    Handler: server.ProfilingHandler(),
+    Logger: logger.Sugar(),
+  })
+
+  metricsServer := server.PrepareServer(&server.Options{
+    Name: "prometheus",
+    InsecureAddr: viper.GetString(options.FlagPrometheusServerBindAddress.GetLong()),
+    InsecurePort: viper.GetInt(options.FlagPrometheusServerPort.GetLong()),
+    Handler: promhttp.Handler(),
+    Logger: logger.Sugar(),
+  })
+
+	var g run.Group
+
+  g.Add(func() error {
+    logger.Info("starting ApiProxy controller")
+		apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()).Run(ctx.Done())
+		return nil
+	}, nilInterrupt("ApiProxy"))
+
+	g.Add(func() error {
+    logger.Info("starting ApiKey controller")
+		apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), decryptionKey).Run(ctx.Done())
+		return nil
+	}, nilInterrupt("ApiKey"))
+
+	g.Add(func() error {
+		apikeybinding.NewApiKeyBindingController(kanaliFactory.Kanali().V2().ApiKeyBindings()).Run(ctx.Done())
+		return nil
+	}, nilInterrupt("ApiKeyBinding"))
+
+	g.Add(func() error {
+		mocktarget.NewMockTargetController(kanaliFactory.Kanali().V2().MockTargets()).Run(ctx.Done())
+		return nil
+	}, nilInterrupt("MockTarget"))
+
+	g.Add(func() error {
+		k8sFactory.Core().V1().Services().Informer().Run(ctx.Done())
+		return nil
+	}, nilInterrupt("Service"))
+
+	g.Add(func() error {
+		k8sFactory.Core().V1().Secrets().Informer().Run(ctx.Done())
+		return nil
+	}, nilInterrupt("Secret"))
+
+	g.Add(func() error {
+		return trafficCtlr.Run(ctx)
+	}, func(error) {
+		cancel()
+	})
+
+	if tracerErr == nil {
+		g.Add(func() error {
+			tracer.Run(ctx)
+			return nil
+		}, func(error) {
+			cancel()
+		})
 	}
 
-	// will always returns a non-nil error
-	return startHTTP(ctx, getHTTPHandler(influxCtlr, k8sFactory.Core()))
+	g.Add(func() error {
+		return metricsServer.Run()
+	}, func(error) {
+		metricsServer.Close()
+	})
 
+	g.Add(func() error {
+		return gatewayServer.Run()
+	}, func(error) {
+		gatewayServer.Close()
+	})
+
+  if viper.GetBool(options.FlagProfilingEnabled.GetLong()) {
+    g.Add(func() error {
+      return profilingServer.Run()
+  	}, func(error) {
+  		profilingServer.Close()
+  	})
+  }
+
+	return g.Run()
 }
 
-func getRestConfig() (*rest.Config, error) {
-	if len(viper.GetString(options.FlagKubernetesKubeConfig.GetLong())) > 0 {
-		// user has specified a path to their own kubeconfig file so we'll use that
-		return clientcmd.BuildConfigFromFlags("", viper.GetString(options.FlagKubernetesKubeConfig.GetLong()))
+func nilInterrupt(msg string) func(error) {
+	logger := logging.WithContext(nil)
+	return func(error) {
+		logger.Info("gracefully terminating " + msg + " controller")
 	}
-	// use the in cluster config as the user has not specified their own
-	return rest.InClusterConfig()
 }
 
-func loadDecryptionKey(location string) (*rsa.PrivateKey, error) {
-	// read in private key
-	keyBytes, err := ioutil.ReadFile(location)
+func createClientsets() (
+	crdClientset *clientset.Clientset,
+	kanaliClientset *versioned.Clientset,
+	k8sClientset *kubernetes.Clientset,
+	err error,
+) {
+	config, err := utils.GetRestConfig(viper.GetString(options.FlagKubernetesKubeConfig.GetLong()))
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
-	// create a pem block from the private key provided
-	block, _ := pem.Decode(keyBytes)
-	// parse the pem block into a private key
-	return x509.ParsePKCS1PrivateKey(block.Bytes)
+
+	crdClientset, err = clientset.NewForConfig(config)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	kanaliClientset, err = versioned.NewForConfig(config)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	k8sClientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return crdClientset, kanaliClientset, k8sClientset, nil
 }

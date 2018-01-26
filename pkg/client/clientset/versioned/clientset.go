@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@ package versioned
 
 import (
 	glog "github.com/golang/glog"
-	kanaliv2 "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned/typed/kanali/v2"
+	kanaliv2 "github.com/northwesternmutual/kanali/pkg/client/clientset/versioned/typed/kanali.io/v2"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

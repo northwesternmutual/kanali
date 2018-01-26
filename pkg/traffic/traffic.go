@@ -106,19 +106,34 @@ func (ctlr *Controller) Report(ctx context.Context, pt *store.TrafficPoint) {
 
 }
 
-// MonitorTraffic watches for new traffic and adds to to the in memory traffic store
-func (ctlr *Controller) MonitorTraffic(ctx context.Context) {
+// Run begins monitoring traffic. When traffic is discovered,
+// it is sent for processing. If the given context is cancelled,
+// gracefull termination will commence and this method will return
+// a nil error. If an error occurs while monitoring, then a non-nil
+// error will be returned.
+func (ctlr *Controller) Run(ctx context.Context) error {
+	logger := logging.WithContext(nil)
 
-	rch := ctlr.Client.Watch(ctx, options.FlagEtcdPrefix.GetLong())
-	for wresp := range rch {
-		for _, ev := range wresp.Events {
-			go handleNewTrafficPoint(ev.Kv.Value)
+	respCh := ctlr.Client.Watch(ctx, options.FlagEtcdPrefix.GetLong())
+
+	for watchResp := range respCh {
+		if err := watchResp.Err(); err != nil {
+			return err
+		}
+		for _, ev := range watchResp.Events {
+			go processTraffic(ev.Kv.Value)
 		}
 	}
 
+	logger.Debug("traffic controller will begin gracefull termination")
+	if err := ctlr.Client.Close(); err != nil {
+		logger.Error("traffic controller gracefull termination failed" + err.Error())
+	}
+	logger.Info("traffic controller gracefull termination successful")
+	return nil
 }
 
-func handleNewTrafficPoint(data []byte) {
+func processTraffic(data []byte) {
 
 	logger := logging.WithContext(nil)
 

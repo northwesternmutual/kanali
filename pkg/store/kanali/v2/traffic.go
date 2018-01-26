@@ -100,14 +100,14 @@ func (s *trafficFactory) IsRateLimitViolated(proxy v2.ApiProxy, rate *v2.Rate, k
 	if rate.Amount < 1 {
 		return false
 	}
-	_, ok := s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]
+	_, ok := s.trafficMap[proxy.GetNamespace()][proxy.GetName()][keyName]
 	if !ok {
 		return false
 	}
 	if rate.Unit == "" { // quota
-		return len(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName]) >= rate.Amount
+		return len(s.trafficMap[proxy.GetNamespace()][proxy.GetName()][keyName]) >= rate.Amount
 	}
-	return getTrafficVolume(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName], rate.Unit, currTime, 0, len(s.trafficMap[proxy.ObjectMeta.Namespace][proxy.ObjectMeta.Name][keyName])) >= rate.Amount
+	return getTrafficVolume(s.trafficMap[proxy.GetNamespace()][proxy.GetName()][keyName], rate.Unit, currTime, 0, len(s.trafficMap[proxy.GetNamespace()][proxy.GetName()][keyName])) >= rate.Amount
 }
 
 func getTrafficVolume(arr []time.Time, unit string, currTime time.Time, low, high int) int {

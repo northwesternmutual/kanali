@@ -50,17 +50,6 @@ spec:
           readOnly: true
         - name: config
           mountPath: /etc/kanali
-        - name: plugins
-          mountPath: /plugins
-          readOnly: true
-      initContainers:
-      - name: kanali-plugin-apikey
-        image: fbgrecojr/kanali-plugin-apikey:local
-        imagePullPolicy: IfNotPresent
-        command: ["cp", "/apiKey_v2.0.0-rc.1.so", "/plugins/"]
-        volumeMounts:
-        - name: plugins
-          mountPath: /plugins
       volumes:
       - name: pki
         projected:
@@ -80,8 +69,6 @@ spec:
       - name: config
         configMap:
           name: kanali-config
-      - name: plugins
-        emptyDir: {}
 
 ---
 

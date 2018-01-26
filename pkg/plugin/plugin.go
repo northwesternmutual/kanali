@@ -23,15 +23,11 @@ package plugin
 import (
 	"context"
 	"net/http"
-
-	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	"github.com/northwesternmutual/kanali/pkg/metrics"
-	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Plugin is an interface that is used for every Plugin used by Kanali.
 // If external plugins are developed, they also must conform to this interface.
 type Plugin interface {
-	OnRequest(ctx context.Context, config map[string]string, m *metrics.Metrics, proxy v2.ApiProxy, req *http.Request, span opentracing.Span) error
-	OnResponse(ctx context.Context, config map[string]string, m *metrics.Metrics, proxy v2.ApiProxy, req *http.Request, resp *http.Response, span opentracing.Span) error
+	OnRequest(ctx context.Context, config map[string]string, w http.ResponseWriter, r *http.Request) error
+	OnResponse(ctx context.Context, config map[string]string, w http.ResponseWriter, r *http.Request) error
 }

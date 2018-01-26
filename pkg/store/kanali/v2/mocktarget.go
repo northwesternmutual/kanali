@@ -86,17 +86,17 @@ func (s *mockTargetFactory) Set(mt *v2.MockTarget) error {
 }
 
 func (s *mockTargetFactory) set(mt *v2.MockTarget) error {
-	if _, ok := s.mockRespTree[mt.ObjectMeta.Namespace]; !ok {
-		s.mockRespTree[mt.ObjectMeta.Namespace] = map[string]*routeNode{}
+	if _, ok := s.mockRespTree[mt.GetNamespace()]; !ok {
+		s.mockRespTree[mt.GetNamespace()] = map[string]*routeNode{}
 	}
-	if _, ok := s.mockRespTree[mt.ObjectMeta.Namespace][mt.ObjectMeta.Name]; !ok {
-		s.mockRespTree[mt.ObjectMeta.Namespace][mt.ObjectMeta.Name] = &routeNode{}
+	if _, ok := s.mockRespTree[mt.GetNamespace()][mt.GetName()]; !ok {
+		s.mockRespTree[mt.GetNamespace()][mt.GetName()] = &routeNode{}
 	}
 	if len(mt.Spec.Routes) < 1 {
 		return errors.New("MockTarget must contain at least one route")
 	}
 
-	s.mockRespTree[mt.ObjectMeta.Namespace][mt.ObjectMeta.Name] = generateRouteTree(mt)
+	s.mockRespTree[mt.GetNamespace()][mt.GetName()] = generateRouteTree(mt)
 	return nil
 }
 
@@ -186,11 +186,11 @@ func (n *routeNode) doGetRoute(path string) *v2.Route {
 func (s *mockTargetFactory) Delete(mt *v2.MockTarget) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	_, ok := s.mockRespTree[mt.ObjectMeta.Namespace][mt.ObjectMeta.Name]
+	_, ok := s.mockRespTree[mt.GetNamespace()][mt.GetName()]
 	if ok {
-		delete(s.mockRespTree[mt.ObjectMeta.Namespace], mt.ObjectMeta.Name)
-		if len(s.mockRespTree[mt.ObjectMeta.Namespace]) == 0 {
-			delete(s.mockRespTree, mt.ObjectMeta.Namespace)
+		delete(s.mockRespTree[mt.GetNamespace()], mt.GetName())
+		if len(s.mockRespTree[mt.GetNamespace()]) == 0 {
+			delete(s.mockRespTree, mt.GetNamespace())
 		}
 	}
 	return ok

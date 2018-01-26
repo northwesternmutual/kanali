@@ -24,4 +24,4 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/flags"
 )
 
-var KanaliOptions = flags.NewFlagSet()
+var KanaliGatewayOptions = flags.NewFlagSet()

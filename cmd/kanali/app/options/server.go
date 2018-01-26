@@ -25,41 +25,41 @@ import (
 )
 
 func init() {
-	KanaliOptions.Add(
-		FlagServerPort,
-		FlagServerBindAddress,
-		FlagServerPeerUDPPort,
-		FlagServerProxyProtocol,
+	KanaliGatewayOptions.Add(
+		FlagServerSecurePort,
+		FlagServerInsecurePort,
+		FlagServerInsecureBindAddress,
+		FlagServerSecureBindAddress,
 	)
 }
 
 var (
-	// FlagServerPort sets the port that Kanali will listen on for incoming requests
-	FlagServerPort = flags.Flag{
-		Long:  "server.port",
-		Short: "p",
+	// FlagServerSecurePort sets the port that Kanali will listen on for incoming requests
+	FlagServerSecurePort = flags.Flag{
+		Long:  "server.insecure_port",
+		Short: "",
 		Value: 0,
 		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
-	// FlagServerBindAddress specifies the network address that Kanali will listen on for incoming requests
-	FlagServerBindAddress = flags.Flag{
-		Long:  "server.bind_address",
-		Short: "b",
+	// FlagServerInsecurePort sets the port that Kanali will listen on for incoming requests
+	FlagServerInsecurePort = flags.Flag{
+		Long:  "server.secure_port",
+		Short: "",
+		Value: 8080,
+		Usage: "Sets the port that Kanali will listen on for incoming requests.",
+	}
+	// FlagServerInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests
+	FlagServerInsecureBindAddress = flags.Flag{
+		Long:  "server.insecure_bind_address",
+		Short: "",
 		Value: "0.0.0.0",
 		Usage: "Network address that Kanali will listen on for incoming requests.",
 	}
-	// FlagServerPeerUDPPort sets the port that all Kanali instances will communicate to each other over
-	FlagServerPeerUDPPort = flags.Flag{
-		Long:  "server.peer_udp_port",
+	// FlagServerSecureBindAddress specifies the network address that Kanali will listen on for incoming requests
+	FlagServerSecureBindAddress = flags.Flag{
+		Long:  "server.secure_bind_address",
 		Short: "",
-		Value: 10001,
-		Usage: "Sets the port that all Kanali instances will communicate to each other over.",
-	}
-	// FlagServerProxyProtocol maintains the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header
-	FlagServerProxyProtocol = flags.Flag{
-		Long:  "server.proxy_protocol",
-		Short: "",
-		Value: false,
-		Usage: "Maintain the integrity of the remote client IP address when incoming traffic to Kanali includes the Proxy Protocol header.",
+		Value: "0.0.0.0",
+		Usage: "Network address that Kanali will listen on for incoming requests.",
 	}
 )

@@ -6,11 +6,9 @@
 jaeger_server_url = "jaeger-agent.kube-system.svc.cluster.local"
 jaeger_agent_url = "jaeger-agent.kube-system.svc.cluster.local"
 
-[analytics]
-influx_addr = "http://kanali-influxdb.default.svc.cluster.local:8086"
-influx_db = "kanali"
-influx_username = ""
-influx_password = ""
+[prometheus]
+port = 8000
+bind_address = "0.0.0.0"
 
 [plugins]
 location = "/"
@@ -27,8 +25,6 @@ ca_file = ""
 [server]
 port = 8080
 bind_address = "0.0.0.0"
-peer_udp_port = 10001
-proxy_protocol = false
 
 [process]
 log_level = "debug"

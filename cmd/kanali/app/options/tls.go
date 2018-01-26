@@ -25,7 +25,7 @@ import (
 )
 
 func init() {
-	KanaliOptions.Add(
+	KanaliGatewayOptions.Add(
 		FlagTLSCertFile,
 		FlagTLSKeyFile,
 		FlagTLSCaFile,

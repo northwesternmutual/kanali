@@ -24,10 +24,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-  "github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 )
 
 type loggerKeyType int
@@ -38,7 +36,7 @@ const (
 
 var logger *zap.Logger
 
-func initLogger(core zapcore.Core) {
+func Init(core zapcore.Core, logLevel string) {
 	if core != nil {
 		logger = zap.New(core)
 		return
@@ -48,7 +46,7 @@ func initLogger(core zapcore.Core) {
 	// create new logging level
 	level := zap.NewAtomicLevel()
 	// attempt to set the logging level
-	level.UnmarshalText([]byte(viper.GetString(options.FlagProcessLogLevel.GetLong())))
+	level.UnmarshalText([]byte(logLevel))
 	// create new logger from above configuration
 	l, err := cfg.Build()
 	if err == nil {
@@ -72,7 +70,7 @@ func NewContext(ctx context.Context, fields ...zapcore.Field) context.Context {
 // WithContext returns a logger from the given context
 func WithContext(ctx context.Context) *zap.Logger {
 	if logger == nil {
-		initLogger(nil)
+		Init(nil, "info")
 	}
 	if ctx == nil {
 		return logger

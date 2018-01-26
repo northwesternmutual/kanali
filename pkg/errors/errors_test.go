@@ -21,24 +21,12 @@
 package errors
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStatus(t *testing.T) {
-	se := StatusError{
-		Code: 400,
-		Err:  errors.New("new error"),
-	}
-	assert.Equal(t, "new error", se.Error())
-}
-
 func TestError(t *testing.T) {
-	se := StatusError{
-		Code: 400,
-		Err:  errors.New("new error"),
-	}
-	assert.Equal(t, 400, se.Status())
+	e := Error{404, "message", 01, "details"}
+	assert.Equal(t, "message", e.Error())
 }
