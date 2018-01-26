@@ -23,15 +23,14 @@ package v2
 import (
 	"fmt"
 
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-
-  kanaliio "github.com/northwesternmutual/kanali/pkg/apis/kanali.io"
+	kanaliio "github.com/northwesternmutual/kanali/pkg/apis/kanali.io"
 )
 
 const (
-	version         = "v2"
+	version = "v2"
 )
 
 var (
@@ -492,29 +491,29 @@ var ApiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 													"endpoint": {
 														Description: "endpoint object",
 														Type:        "object",
-                            Required: []string{
-    													"scheme",
-                              "host",
-    												},
-                            Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-                              "scheme": {
-                                Description: "http url scheme",
-                                Type:        "string",
-                                Enum: []apiextensionsv1beta1.JSON{
-    															{
-    																Raw: []byte(`"http"`),
-    															},
-    															{
-    																Raw: []byte(`"https"`),
-    															},
-    														},
-                              },
-                              "host": {
-                                Description: "http url host",
-                                Type:        "string",
-                                MinLength:   int64Ptr(1),
-                              },
-                            },
+														Required: []string{
+															"scheme",
+															"host",
+														},
+														Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
+															"scheme": {
+																Description: "http url scheme",
+																Type:        "string",
+																Enum: []apiextensionsv1beta1.JSON{
+																	{
+																		Raw: []byte(`"http"`),
+																	},
+																	{
+																		Raw: []byte(`"https"`),
+																	},
+																},
+															},
+															"host": {
+																Description: "http url host",
+																Type:        "string",
+																MinLength:   int64Ptr(1),
+															},
+														},
 													},
 												},
 											},

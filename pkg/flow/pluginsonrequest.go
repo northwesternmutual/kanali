@@ -47,7 +47,7 @@ func (step pluginsOnRequestStep) Do(ctx context.Context, w http.ResponseWriter, 
 
 	proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
 	if proxy == nil {
-    logger.Warn(errors.ErrorProxyNotFound.Message)
+		logger.Warn(errors.ErrorProxyNotFound.Message)
 		return errors.ErrorProxyNotFound
 	}
 

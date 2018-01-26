@@ -26,14 +26,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-  "github.com/spf13/viper"
+	"github.com/spf13/viper"
 
-  "github.com/northwesternmutual/kanali/pkg/utils"
-  "github.com/northwesternmutual/kanali/pkg/errors"
-  "github.com/northwesternmutual/kanali/pkg/logging"
-  "github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
+	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/pkg/errors"
+	"github.com/northwesternmutual/kanali/pkg/logging"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
+	"github.com/northwesternmutual/kanali/pkg/utils"
 )
 
 type mockTargetStep struct{}
@@ -47,11 +47,11 @@ func (step mockTargetStep) Name() string {
 }
 
 func (step mockTargetStep) Do(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-  logger := logging.WithContext(r.Context())
+	logger := logging.WithContext(r.Context())
 
 	proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
 	if proxy == nil {
-    logger.Warn(errors.ErrorProxyNotFound.Message)
+		logger.Warn(errors.ErrorProxyNotFound.Message)
 		return errors.ErrorProxyNotFound
 	}
 

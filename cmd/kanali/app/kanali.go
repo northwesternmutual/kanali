@@ -25,13 +25,14 @@ import (
 	"time"
 
 	"github.com/oklog/run"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-  "github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
+	"github.com/northwesternmutual/kanali/pkg/chain"
 	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
 	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions"
 	"github.com/northwesternmutual/kanali/pkg/controller/apikey"
@@ -39,16 +40,15 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/controller/apiproxy"
 	"github.com/northwesternmutual/kanali/pkg/controller/mocktarget"
 	"github.com/northwesternmutual/kanali/pkg/crds"
+	v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	_ "github.com/northwesternmutual/kanali/pkg/metrics"
+	"github.com/northwesternmutual/kanali/pkg/middleware"
+	"github.com/northwesternmutual/kanali/pkg/server"
 	"github.com/northwesternmutual/kanali/pkg/store/core/v1"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
 	"github.com/northwesternmutual/kanali/pkg/traffic"
-  "github.com/northwesternmutual/kanali/pkg/middleware"
-  "github.com/northwesternmutual/kanali/pkg/chain"
 	"github.com/northwesternmutual/kanali/pkg/utils"
-  "github.com/northwesternmutual/kanali/pkg/server"
-  v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
 )
 
 func Run(sigCtx context.Context) error {
@@ -67,16 +67,16 @@ func Run(sigCtx context.Context) error {
 	v1.SetGlobalInterface(k8sFactory.Core().V1())
 
 	if err := crds.EnsureCRDs(crdClientset.ApiextensionsV1beta1(),
-    v2CRDs.ApiProxyCRD,
-    v2CRDs.ApiKeyCRD,
-    v2CRDs.ApiKeyBindingCRD,
-    v2CRDs.MockTargetCRD,
-  ); err != nil {
+		v2CRDs.ApiProxyCRD,
+		v2CRDs.ApiKeyCRD,
+		v2CRDs.ApiKeyBindingCRD,
+		v2CRDs.MockTargetCRD,
+	); err != nil {
 		logger.Fatal(err.Error())
 		return err
 	} else {
-    logger.Info("all customresourcedefinitions successfully created")
-  }
+		logger.Info("all customresourcedefinitions successfully created")
+	}
 
 	decryptionKey, err := utils.LoadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
 	if err != nil {
@@ -95,49 +95,49 @@ func Run(sigCtx context.Context) error {
 		logger.Warn(tracerErr.Error())
 	}
 
-  gatewayServer := server.PrepareServer(&server.Options{
-    Name: "gateway",
-    InsecureAddr: viper.GetString(options.FlagServerInsecureBindAddress.GetLong()),
-    SecureAddr: viper.GetString(options.FlagServerSecureBindAddress.GetLong()),
-    InsecurePort: viper.GetInt(options.FlagServerInsecurePort.GetLong()),
-    SecurePort: viper.GetInt(options.FlagServerSecurePort.GetLong()),
-    TLSKey: viper.GetString(options.FlagTLSKeyFile.GetLong()),
-    TLSCert: viper.GetString(options.FlagTLSCertFile.GetLong()),
-    TLSCa: viper.GetString(options.FlagTLSCaFile.GetLong()),
-    Handler: chain.New().Add(
-  		middleware.Recorder,
-  		middleware.Correlation,
-  		middleware.Metrics,
-  	).Link(middleware.Gateway),
-    Logger: logger.Sugar(),
-  })
+	gatewayServer := server.PrepareServer(&server.Options{
+		Name:         "gateway",
+		InsecureAddr: viper.GetString(options.FlagServerInsecureBindAddress.GetLong()),
+		SecureAddr:   viper.GetString(options.FlagServerSecureBindAddress.GetLong()),
+		InsecurePort: viper.GetInt(options.FlagServerInsecurePort.GetLong()),
+		SecurePort:   viper.GetInt(options.FlagServerSecurePort.GetLong()),
+		TLSKey:       viper.GetString(options.FlagTLSKeyFile.GetLong()),
+		TLSCert:      viper.GetString(options.FlagTLSCertFile.GetLong()),
+		TLSCa:        viper.GetString(options.FlagTLSCaFile.GetLong()),
+		Handler: chain.New().Add(
+			middleware.Recorder,
+			middleware.Correlation,
+			middleware.Metrics,
+		).Link(middleware.Gateway),
+		Logger: logger.Sugar(),
+	})
 
-  profilingServer := server.PrepareServer(&server.Options{
-    Name: "profiling",
-    InsecureAddr: viper.GetString(options.FlagProfilingInsecureBindAddress.GetLong()),
-    InsecurePort: viper.GetInt(options.FlagProfilingInsecurePort.GetLong()),
-    Handler: server.ProfilingHandler(),
-    Logger: logger.Sugar(),
-  })
+	profilingServer := server.PrepareServer(&server.Options{
+		Name:         "profiling",
+		InsecureAddr: viper.GetString(options.FlagProfilingInsecureBindAddress.GetLong()),
+		InsecurePort: viper.GetInt(options.FlagProfilingInsecurePort.GetLong()),
+		Handler:      server.ProfilingHandler(),
+		Logger:       logger.Sugar(),
+	})
 
-  metricsServer := server.PrepareServer(&server.Options{
-    Name: "prometheus",
-    InsecureAddr: viper.GetString(options.FlagPrometheusServerBindAddress.GetLong()),
-    InsecurePort: viper.GetInt(options.FlagPrometheusServerPort.GetLong()),
-    Handler: promhttp.Handler(),
-    Logger: logger.Sugar(),
-  })
+	metricsServer := server.PrepareServer(&server.Options{
+		Name:         "prometheus",
+		InsecureAddr: viper.GetString(options.FlagPrometheusServerBindAddress.GetLong()),
+		InsecurePort: viper.GetInt(options.FlagPrometheusServerPort.GetLong()),
+		Handler:      promhttp.Handler(),
+		Logger:       logger.Sugar(),
+	})
 
 	var g run.Group
 
-  g.Add(func() error {
-    logger.Info("starting ApiProxy controller")
+	g.Add(func() error {
+		logger.Info("starting ApiProxy controller")
 		apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()).Run(ctx.Done())
 		return nil
 	}, nilInterrupt("ApiProxy"))
 
 	g.Add(func() error {
-    logger.Info("starting ApiKey controller")
+		logger.Info("starting ApiKey controller")
 		apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), decryptionKey).Run(ctx.Done())
 		return nil
 	}, nilInterrupt("ApiKey"))
@@ -189,13 +189,13 @@ func Run(sigCtx context.Context) error {
 		gatewayServer.Close()
 	})
 
-  if viper.GetBool(options.FlagProfilingEnabled.GetLong()) {
-    g.Add(func() error {
-      return profilingServer.Run()
-  	}, func(error) {
-  		profilingServer.Close()
-  	})
-  }
+	if viper.GetBool(options.FlagProfilingEnabled.GetLong()) {
+		g.Add(func() error {
+			return profilingServer.Run()
+		}, func(error) {
+			profilingServer.Close()
+		})
+	}
 
 	return g.Run()
 }

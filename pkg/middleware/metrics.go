@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-  
+
 	"github.com/northwesternmutual/kanali/pkg/logging"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"github.com/northwesternmutual/kanali/pkg/utils"

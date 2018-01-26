@@ -38,7 +38,7 @@ const (
 	// HTTPRequest is the opentracing tag name that represents the existence on an HTTP request
 	HTTPRequest = "http.request"
 
-  // HTTPRequestCorrelationId is an id that can be used to uniquely identify each HTTP request
+	// HTTPRequestCorrelationId is an id that can be used to uniquely identify each HTTP request
 	HTTPRequestCorrelationId = "http.request.correlation_id"
 
 	// HTTPRequestRemoteAddress is the ip address of the caller
@@ -73,6 +73,6 @@ const (
 	// HTTPResponseStatusCode is the opentracing tag name that represents an HTTP response status code
 	HTTPResponseStatusCode = "http.response.status.code"
 
-  HTTPServerBindAddress = "http.server.bind_address"
-  HTTPServerPort = "http.server.port"
+	HTTPServerBindAddress = "http.server.bind_address"
+	HTTPServerPort        = "http.server.port"
 )

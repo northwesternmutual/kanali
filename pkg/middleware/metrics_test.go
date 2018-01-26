@@ -1,9 +1,9 @@
 package middleware
 
 import (
-  "time"
+	"net/http/httptest"
 	"testing"
-  "net/http/httptest"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )

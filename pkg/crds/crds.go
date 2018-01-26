@@ -27,8 +27,8 @@ var (
 // are not only created, but ready for use by a Kubernetes cluster. If a CustomResourceDefinition
 // cannot be established within a reasonable amount of retries, an error will be returned.
 func EnsureCRDs(
-  i apiextensionsv1beta1client.ApiextensionsV1beta1Interface,
-  crds ...*apiextensionsv1beta1.CustomResourceDefinition,
+	i apiextensionsv1beta1client.ApiextensionsV1beta1Interface,
+	crds ...*apiextensionsv1beta1.CustomResourceDefinition,
 ) error {
 	funcs := make([]func() error, len(crds))
 	for index, crd := range crds {
@@ -41,8 +41,8 @@ func EnsureCRDs(
 }
 
 func ensureCRD(
-  i apiextensionsv1beta1client.ApiextensionsV1beta1Interface,
-  crd *apiextensionsv1beta1.CustomResourceDefinition,
+	i apiextensionsv1beta1client.ApiextensionsV1beta1Interface,
+	crd *apiextensionsv1beta1.CustomResourceDefinition,
 ) error {
 	// Attempt to create the crd (even if it's already present).
 	// If it is present, we still need to check its status.
@@ -75,7 +75,7 @@ func ensureCRD(
 				// If we have reached this state, the CRD will never become
 				// established
 				if cond.Status == apiextensionsv1beta1.ConditionFalse {
-          return false, fmt.Errorf("due to the naming conflict %s, the CustomResourceDefinition %s will never become established", cond.Reason, crd.GetName())
+					return false, fmt.Errorf("due to the naming conflict %s, the CustomResourceDefinition %s will never become established", cond.Reason, crd.GetName())
 				}
 			}
 		}

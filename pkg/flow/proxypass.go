@@ -26,9 +26,10 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io"
-  "strings"
-  "net"
+	"net"
 	"net/http"
+	"strconv"
+	"strings"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
@@ -54,16 +55,16 @@ type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-type proxyPassStep struct{
-  logger *zap.Logger
-  span opentracing.Span
-  proxy *v2.ApiProxy
-  originalReq *http.Request
-  upstreamReq *http.Request
-  upstreamRoundTripper http.RoundTripper
-  upstreamResp *http.Response
-  originalRespWriter http.ResponseWriter
-  err error
+type proxyPassStep struct {
+	logger               *zap.Logger
+	span                 opentracing.Span
+	proxy                *v2.ApiProxy
+	originalReq          *http.Request
+	upstreamReq          *http.Request
+	upstreamRoundTripper http.RoundTripper
+	upstreamResp         *http.Response
+	originalRespWriter   http.ResponseWriter
+	err                  error
 }
 
 // Hop-by-hop headers. These are removed when sent to the backend.
@@ -91,38 +92,38 @@ func (step proxyPassStep) Name() string {
 func (step proxyPassStep) Do(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	logger := logging.WithContext(r.Context())
 
-  proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
+	proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
 	if proxy == nil {
-    logger.Warn(errors.ErrorProxyNotFound.Message)
+		logger.Warn(errors.ErrorProxyNotFound.Message)
 		return errors.ErrorProxyNotFound
 	}
 
-  step.logger = logger
-  step.span = opentracing.SpanFromContext(ctx)
-  step.originalReq = r
-  step.originalRespWriter = w
-  step.proxy = proxy
+	step.logger = logger
+	step.span = opentracing.SpanFromContext(ctx)
+	step.originalReq = r
+	step.originalRespWriter = w
+	step.proxy = proxy
 
-  results := step.configureRequest().configureTransport().preformProxyPass().writeResponse()
-  if results.err != nil {
-    logger.Error(results.err.Error())
-    return results.err
-  }
+	results := step.configureRequest().configureTransport().preformProxyPass().writeResponse()
+	if results.err != nil {
+		logger.Error(results.err.Error())
+		return results.err
+	}
 
-  return next()
+	return next()
 }
 
 func (step proxyPassStep) configureRequest() proxyPassStep {
-  if step.err != nil {
-    return step
-  }
+	if step.err != nil {
+		return step
+	}
 
-  ctx := step.originalReq.Context()
-  // preforms a shallow copy of http.Request with a
-  // deep copy of http.Request.URL
-  step.upstreamReq = step.originalReq.WithContext(ctx)
+	ctx := step.originalReq.Context()
+	// preforms a shallow copy of http.Request with a
+	// deep copy of http.Request.URL
+	step.upstreamReq = step.originalReq.WithContext(ctx)
 
-  // Remove hop-by-hop headers listed in the "Connection" header.
+	// Remove hop-by-hop headers listed in the "Connection" header.
 	// See RFC 2616, section 14.10.
 	if c := step.upstreamReq.Header.Get("Connection"); c != "" {
 		for _, f := range strings.Split(c, ",") {
@@ -141,15 +142,15 @@ func (step proxyPassStep) configureRequest() proxyPassStep {
 		}
 	}
 
-  step.upstreamReq.Header = cloneHeader(step.originalReq.Header)
-  step.upstreamReq.URL.Host = step.originalReq.Host
-  if _, ok := step.upstreamReq.Header["User-Agent"]; !ok {
+	step.upstreamReq.Header = cloneHeader(step.originalReq.Header)
+	step.upstreamReq.URL.Host = step.originalReq.Host
+	if _, ok := step.upstreamReq.Header["User-Agent"]; !ok {
 		// explicitly disable User-Agent so it's not set to default value
 		step.upstreamReq.Header.Set("User-Agent", "")
 	}
-  step.upstreamReq.Close = false
+	step.upstreamReq.Close = false
 
-  if clientIP, _, err := net.SplitHostPort(step.originalReq.RemoteAddr); err == nil {
+	if clientIP, _, err := net.SplitHostPort(step.originalReq.RemoteAddr); err == nil {
 		// If we aren't the first proxy retain prior
 		// X-Forwarded-For information as a comma+space
 		// separated list and fold multiple headers into one.
@@ -159,42 +160,42 @@ func (step proxyPassStep) configureRequest() proxyPassStep {
 		step.upstreamReq.Header.Set("X-Forwarded-For", clientIP)
 	}
 
-  // TODO: should not be hardcoded!
-  step.upstreamReq.Header.Del("apikey")
+	// TODO: should not be hardcoded!
+	step.upstreamReq.Header.Del("apikey")
 
-  if err := step.setUpstreamURL(); err != nil {
-    step.err = err
-  }
-  return step
+	if err := step.setUpstreamURL(); err != nil {
+		step.err = err
+	}
+	return step
 }
 
 func (step proxyPassStep) configureTransport() proxyPassStep {
-  if step.err != nil {
-    return step
-  }
+	if step.err != nil {
+		return step
+	}
 
-  // TODO: set timeout
+	// TODO: set timeout
 
-  transport := http.DefaultTransport.(*http.Transport)
-  tlsConfig, err := step.configureTLS()
-  if err != nil {
-    step.err = err
-    return step
-  }
+	transport := http.DefaultTransport.(*http.Transport)
+	tlsConfig, err := step.configureTLS()
+	if err != nil {
+		step.err = err
+		return step
+	}
 
-  transport.TLSClientConfig = tlsConfig
-  step.upstreamRoundTripper = transport
+	transport.TLSClientConfig = tlsConfig
+	step.upstreamRoundTripper = transport
 
-  return step
+	return step
 }
 
 func (step proxyPassStep) preformProxyPass() proxyPassStep {
-  if step.err != nil {
-    return step
-  }
+	if step.err != nil {
+		return step
+	}
 
-  logger := logging.WithContext(step.originalReq.Context())
-  var upstreamSpan opentracing.Span
+	logger := logging.WithContext(step.originalReq.Context())
+	var upstreamSpan opentracing.Span
 
 	if step.span != nil {
 		if err := step.span.Tracer().Inject(
@@ -220,17 +221,17 @@ func (step proxyPassStep) preformProxyPass() proxyPassStep {
 		zap.String(tags.HTTPRequestURLPath, step.upstreamReq.URL.Path),
 	).Info("upstream request")
 
-  res, err := step.upstreamRoundTripper.RoundTrip(step.upstreamReq)
+	res, err := step.upstreamRoundTripper.RoundTrip(step.upstreamReq)
 	if err != nil {
-    step.err = errors.ErrorBadGateway
+		step.err = errors.ErrorBadGateway
 		return step
 	}
 
-  if step.span != nil {
+	if step.span != nil {
 		tracer.HydrateSpanFromResponse(res, upstreamSpan)
 	}
 
-  // Remove hop-by-hop headers listed in the
+	// Remove hop-by-hop headers listed in the
 	// "Connection" header of the response.
 	if c := res.Header.Get("Connection"); c != "" {
 		for _, f := range strings.Split(c, ",") {
@@ -244,19 +245,19 @@ func (step proxyPassStep) preformProxyPass() proxyPassStep {
 		res.Header.Del(h)
 	}
 
-  step.upstreamResp = res
+	step.upstreamResp = res
 
-  return step
+	return step
 }
 
 func (step proxyPassStep) writeResponse() proxyPassStep {
-  if step.err != nil {
-    return step
-  }
+	if step.err != nil {
+		return step
+	}
 
-  copyHeader(step.originalRespWriter.Header(), step.upstreamResp.Header)
+	copyHeader(step.originalRespWriter.Header(), step.upstreamResp.Header)
 
-  // The "Trailer" header isn't included in the Transport's response,
+	// The "Trailer" header isn't included in the Transport's response,
 	// at least for *http.Transport. Build it up from Trailer.
 	announcedTrailers := len(step.upstreamResp.Trailer)
 	if announcedTrailers > 0 {
@@ -267,7 +268,7 @@ func (step proxyPassStep) writeResponse() proxyPassStep {
 		step.originalRespWriter.Header().Add("Trailer", strings.Join(trailerKeys, ", "))
 	}
 
-  step.originalRespWriter.WriteHeader(step.upstreamResp.StatusCode)
+	step.originalRespWriter.WriteHeader(step.upstreamResp.StatusCode)
 	if len(step.upstreamResp.Trailer) > 0 {
 		// Force chunking if we saw a response trailer.
 		// This prevents net/http from calculating the length for short
@@ -277,10 +278,10 @@ func (step proxyPassStep) writeResponse() proxyPassStep {
 		}
 	}
 
-  copyBuffer(step.originalReq.Context(), step.originalRespWriter, step.upstreamResp.Body, []byte{})
-  step.upstreamResp.Body.Close() // close now, instead of defer, to populate res.Trailer
+	copyBuffer(step.originalReq.Context(), step.originalRespWriter, step.upstreamResp.Body, []byte{})
+	step.upstreamResp.Body.Close() // close now, instead of defer, to populate res.Trailer
 
-  if len(step.upstreamResp.Trailer) == announcedTrailers {
+	if len(step.upstreamResp.Trailer) == announcedTrailers {
 		copyHeader(step.originalRespWriter.Header(), step.upstreamResp.Trailer)
 		return step
 	}
@@ -292,7 +293,7 @@ func (step proxyPassStep) writeResponse() proxyPassStep {
 		}
 	}
 
-  return step
+	return step
 }
 
 func (step proxyPassStep) configureTLS() (*tls.Config, error) {
@@ -348,10 +349,10 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 
 	tlsConfig.RootCAs = caCertPool
 	tlsConfig.BuildNameToCertificate()
-  return tlsConfig, nil
+	return tlsConfig, nil
 }
 
-func (step proxyPassStep) serivceDetails() (string, string, error) {
+func (step proxyPassStep) serviceDetails() (string, string, error) {
 	logger := logging.WithContext(step.originalReq.Context())
 	var scheme string
 
@@ -375,9 +376,8 @@ func (step proxyPassStep) serivceDetails() (string, string, error) {
 	}
 
 	if len(services) > 1 {
-		// TODO: set a header relaying that there were multiple upstream services found
-		// x-kanali-num-services-matched
-		logger.Info(fmt.Sprintf("there were %d matching services", len(services)))
+		step.originalRespWriter.Header().Add("x-kanali-matched-services", strconv.Itoa(len(services)))
+		logger.Debug(fmt.Sprintf("there were %d matching services", len(services)))
 	}
 
 	uri := fmt.Sprintf("%s.%s.svc.cluster.local",
@@ -401,21 +401,21 @@ func (step proxyPassStep) setUpstreamURL() error {
 	if step.proxy.Spec.Target.Backend.Endpoint != (v2.Endpoint{}) { // Endpoint backend is configured
 		step.upstreamReq.URL.Scheme, step.upstreamReq.URL.Host = step.proxy.Spec.Target.Backend.Endpoint.Scheme, step.proxy.Spec.Target.Backend.Endpoint.Host
 	} else {
-		step.upstreamReq.URL.Scheme, step.upstreamReq.URL.Host, err = step.serivceDetails()
+		step.upstreamReq.URL.Scheme, step.upstreamReq.URL.Host, err = step.serviceDetails()
 	}
 
 	if err != nil {
 		return err
 	}
 
-  step.upstreamReq.URL.Path = utils.ComputeTargetPath(step.proxy.Spec.Source.Path, step.proxy.Spec.Target.Path, step.originalReq.URL.EscapedPath())
-  if step.originalReq.URL.RawQuery == "" || step.upstreamReq.URL.RawQuery == "" {
+	step.upstreamReq.URL.Path = utils.ComputeTargetPath(step.proxy.Spec.Source.Path, step.proxy.Spec.Target.Path, step.originalReq.URL.EscapedPath())
+	if step.originalReq.URL.RawQuery == "" || step.upstreamReq.URL.RawQuery == "" {
 		step.upstreamReq.URL.RawQuery = step.originalReq.URL.RawQuery + step.upstreamReq.URL.RawQuery
 	} else {
 		step.upstreamReq.URL.RawQuery = step.originalReq.URL.RawQuery + "&" + step.upstreamReq.URL.RawQuery
 	}
 
-  return nil
+	return nil
 }
 
 // x509KeyPair creates a tls.Certificate from the tls data in
@@ -447,7 +447,7 @@ func copyHeader(dst, src http.Header) {
 }
 
 func copyBuffer(ctx context.Context, dst io.Writer, src io.Reader, buf []byte) (int64, error) {
-  logger := logging.WithContext(ctx)
+	logger := logging.WithContext(ctx)
 	if len(buf) == 0 {
 		buf = make([]byte, 32*1024)
 	}
@@ -455,7 +455,7 @@ func copyBuffer(ctx context.Context, dst io.Writer, src io.Reader, buf []byte) (
 	for {
 		nr, rerr := src.Read(buf)
 		if rerr != nil && rerr != io.EOF && rerr != context.Canceled {
-      logger.Warn(fmt.Sprintf("read error during body copy: %v", rerr))
+			logger.Warn(fmt.Sprintf("read error during body copy: %v", rerr))
 		}
 		if nr > 0 {
 			nw, werr := dst.Write(buf[:nr])

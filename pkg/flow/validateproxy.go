@@ -24,8 +24,8 @@ import (
 	"context"
 	"net/http"
 
-  "go.uber.org/zap"
 	opentracing "github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 
 	"github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/pkg/logging"
@@ -57,13 +57,13 @@ func (step validateProxyStep) Do(ctx context.Context, w http.ResponseWriter, r *
 			span.SetTag(tags.KanaliProxyName, proxy.GetName())
 			span.SetTag(tags.KanaliProxyNamespace, proxy.GetNamespace())
 		}
-    logger.Info("ApiProxy details",
-      zap.String(tags.KanaliProxyName, proxy.GetName()),
+		logger.Info("ApiProxy details",
+			zap.String(tags.KanaliProxyName, proxy.GetName()),
 			zap.String(tags.KanaliProxyNamespace, proxy.GetNamespace()),
-    )
+		)
 		return next()
 	}
 
-  logger.Warn(errors.ErrorProxyNotFound.Message)
+	logger.Warn(errors.ErrorProxyNotFound.Message)
 	return errors.ErrorProxyNotFound
 }

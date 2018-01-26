@@ -33,7 +33,7 @@ func init() {
 }
 
 var (
-  // FlagProfilingEnabled sets the port that Kanali will listen on for incoming requests
+	// FlagProfilingEnabled sets the port that Kanali will listen on for incoming requests
 	FlagProfilingEnabled = flags.Flag{
 		Long:  "profiling.enabled",
 		Short: "",
