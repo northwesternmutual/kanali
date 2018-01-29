@@ -23,11 +23,12 @@ package plugin
 import (
 	"context"
 	"net/http"
+  "net/http/httptest"
 )
 
 // Plugin is an interface that is used for every Plugin used by Kanali.
 // If external plugins are developed, they also must conform to this interface.
 type Plugin interface {
-	OnRequest(ctx context.Context, config map[string]string, w http.ResponseWriter, r *http.Request) error
-	OnResponse(ctx context.Context, config map[string]string, w http.ResponseWriter, r *http.Request) error
+	OnRequest(ctx context.Context, config map[string]string, w *httptest.ResponseRecorder, r *http.Request) error
+	OnResponse(ctx context.Context, config map[string]string, w *httptest.ResponseRecorder, r *http.Request) error
 }

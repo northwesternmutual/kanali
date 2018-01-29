@@ -17,7 +17,7 @@ set -e
 helm init
 
 # add necessary rbac permissions for helm
-./scripts/helm-rbac.sh
+./hack/helm-rbac.sh
 
 # add helm repositories for dependencies
 helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/

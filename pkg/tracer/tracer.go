@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
 	jaegerConfig "github.com/uber/jaeger-client-go/config"
@@ -21,11 +21,11 @@ type tracerConfig struct {
 type customLogger struct{}
 
 func (l customLogger) Error(msg string) {
-	logging.WithContext(nil).Error(msg)
+	log.WithContext(nil).Error(msg)
 }
 
 func (l customLogger) Infof(msg string, args ...interface{}) {
-	logging.WithContext(nil).Info(fmt.Sprintf(msg, args...))
+	log.WithContext(nil).Info(fmt.Sprintf(msg, args...))
 }
 
 func Jaeger() (*tracerConfig, error) {
@@ -54,12 +54,11 @@ func Jaeger() (*tracerConfig, error) {
 }
 
 func (t *tracerConfig) Run(ctx context.Context) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 	opentracing.SetGlobalTracer(t.tracer)
 
 	<-ctx.Done()
 
-	logger.Debug("tracing controller will begin gracefull termination")
 	if err := t.closer.Close(); err != nil {
 		logger.Error("tracing controller gracefull termination failed" + err.Error())
 	}

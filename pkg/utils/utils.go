@@ -111,3 +111,13 @@ func TransferResponse(from *httptest.ResponseRecorder, to http.ResponseWriter) {
 	to.WriteHeader(from.Code)
 	to.Write(from.Body.Bytes())
 }
+
+func CloneHTTPHeader(h http.Header) http.Header {
+	h2 := make(http.Header, len(h))
+	for k, vv := range h {
+		vv2 := make([]string, len(vv))
+		copy(vv2, vv)
+		h2[k] = vv2
+	}
+	return h2
+}

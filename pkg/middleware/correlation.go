@@ -6,7 +6,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 )
 
@@ -15,8 +15,8 @@ import (
 // execeted before other middleware.
 func Correlation(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := logging.NewContext(r.Context(), zap.Stringer(tags.HTTPRequestCorrelationId, uuid.NewV4()))
-		logging.WithContext(ctx).Debug("established new correlation id for this request")
+		ctx := log.NewContext(r.Context(), zap.Stringer(tags.HTTPRequestCorrelationId, uuid.NewV4()))
+		log.WithContext(ctx).Debug("established new correlation id for this request")
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

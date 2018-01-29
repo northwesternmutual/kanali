@@ -1,18 +1,23 @@
-# Default values for kanali.
+# Default Helm values for kanali and its dependencies.
 
-# Begin: Override values on the Grafana, InfluxDB, and Jaeger subcharts to customize for Kanali
-grafana:
-  # overwrite grafana values
-  enabled: false
+prometheus:
+  alertmanager.enabled: false
+  pushgateway.enabled: false
+  kubeStateMetrics.enabled: false
+  nodeExporter.enabled: false
 
-# influxdb:
-  # overwrite influxdb values
-
-# etcd:
-  # overwrite influxdb values
+  serverFiles.prometheus.yml:
+    global:
+      scrape_interval:     15s
+      evaluation_interval: 15s
+    scrape_configs:
+      - job_name: 'kanali'
+        metrics_path: /metrics
+        scheme: http
+        static_configs:
+        - targets: ['kanali.default.svc.cluster.local:9090']
 
 jaeger:
-  enabled: false
   tags:
     cassandra: false
     elasticsearch: true

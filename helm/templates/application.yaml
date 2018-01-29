@@ -9,7 +9,7 @@ spec:
   selector:
     app: kanali
   ports:
-  - name: app-port
+  - name: gateway
     port: 8443
   type: NodePort
 

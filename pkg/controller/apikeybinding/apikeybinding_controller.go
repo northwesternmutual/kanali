@@ -25,7 +25,7 @@ import (
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"go.uber.org/zap"
@@ -58,21 +58,21 @@ func (ctlr *ApiKeyBindingController) Run(stopCh <-chan struct{}) {
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 	binding, ok := obj.(*v2.ApiKeyBinding)
 	if !ok {
 		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 		return
 	}
 	store.ApiKeyBindingStore().Set(binding)
-	logger.With(
-		zap.String(tags.KanaliApiKeyBindingName, binding.GetName()),
+	logger.Debug("added ApiKeyBinding",
+    zap.String(tags.KanaliApiKeyBindingName, binding.GetName()),
 		zap.String(tags.KanaliApiKeyBindingNamespace, binding.GetNamespace()),
-	).Debug("added ApiKeyBinding")
+  )
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new interface{}) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 	newBinding, ok := new.(*v2.ApiKeyBinding)
 	if !ok {
 		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
@@ -91,7 +91,7 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new in
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 	binding, ok := obj.(*v2.ApiKeyBinding)
 	if !ok {
 		logger.Error("received malformed ApiKeyBinding from k8s apiserver")

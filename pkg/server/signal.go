@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
 var onlyOneSignalHandler = make(chan struct{})
@@ -31,7 +31,7 @@ func SetupSignalHandler() context.Context {
 }
 
 func logSignal(sig interface{}) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 
 	switch sig {
 	case os.Interrupt:

@@ -6,10 +6,6 @@ LABEL maintainer="frankgreco@northwesternmutual.com"
 LABEL version="${VERSION}"
 ARG VERSION=""
 WORKDIR /go/src/github.com/northwesternmutual/kanali/
-COPY Gopkg.toml Gopkg.lock Makefile /go/src/github.com/northwesternmutual/kanali/
-RUN make install
-
-RUN cp -R vendor/* /go/src/ && rm -rf vendor
 
 RUN cd /go/src/github.com/northwesternmutual/ && \
     git clone https://github.com/northwesternmutual/kanali-plugin-apikey.git && \
@@ -18,6 +14,13 @@ RUN cd /go/src/github.com/northwesternmutual/ && \
     make install && \
     cp -R vendor/* /go/src/ && \
     rm -rf vendor
+
+RUN rm -rf /go/src/github.com/northwesternmutual/kanali
+
+COPY Gopkg.toml Gopkg.lock Makefile /go/src/github.com/northwesternmutual/kanali/
+RUN make install
+
+RUN cp -R vendor/* /go/src/ && rm -rf vendor
 
 COPY ./ /go/src/github.com/northwesternmutual/kanali/
 RUN make binary

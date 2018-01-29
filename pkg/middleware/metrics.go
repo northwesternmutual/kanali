@@ -6,12 +6,14 @@ import (
 	"regexp"
 	"strings"
 	"time"
+  "strconv"
 
 	"go.uber.org/zap"
 
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"github.com/northwesternmutual/kanali/pkg/utils"
+  "github.com/northwesternmutual/kanali/pkg/metrics"
 )
 
 type metricsResponseWriter struct {
@@ -35,18 +37,32 @@ func Metrics(next http.Handler) http.Handler {
 		startTime := time.Now()
 		mrw := &metricsResponseWriter{w, http.StatusOK}
 
+    metrics.RequestInFlightCount.Inc()
+
 		next.ServeHTTP(mrw, r)
+
+    metrics.RequestInFlightCount.Dec()
 
 		endTime := time.Now()
 
-		logging.WithContext(r.Context()).Info("request details",
+		log.WithContext(r.Context()).Info("request details",
 			zap.String(tags.HTTPRequestRemoteAddress, getRemoteAddr(r.RemoteAddr)),
 			zap.String(tags.HTTPRequestMethod, r.Method),
 			zap.String(tags.HTTPRequestURLPath, utils.ComputeURLPath(r.URL)),
 			zap.String(tags.HTTPRequestDuration, fmt.Sprintf("%gms", getReqDuration(startTime, endTime))),
 			zap.Int(tags.HTTPResponseStatusCode, mrw.statusCode),
 		)
+
+    metrics.RequestLatency.WithLabelValues(r.Method).Observe(getReqDuration(startTime, endTime))
+    metrics.RequestCount.WithLabelValues(strconv.Itoa(mrw.statusCode), r.Method).Inc()
+    if isError(mrw.statusCode) {
+      metrics.RequestErrorCount.WithLabelValues(strconv.Itoa(mrw.statusCode), r.Method).Inc()
+    }
 	})
+}
+
+func isError(code int) bool {
+  return code > 399 && code < 599
 }
 
 // getRemoteAddr return a parsed remote address. There is not defined format for

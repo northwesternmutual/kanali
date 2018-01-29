@@ -25,7 +25,7 @@ import (
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"go.uber.org/zap"
@@ -58,8 +58,7 @@ func (ctlr *ApiProxyController) Run(stopCh <-chan struct{}) {
 }
 
 func (ctlr *ApiProxyController) apiProxyAdd(obj interface{}) {
-	logger := logging.WithContext(nil)
-	defer logger.Sync()
+	logger := log.WithContext(nil)
 	proxy, ok := obj.(*v2.ApiProxy)
 	if !ok {
 		logger.Error("received malformed ApiProxy from k8s apiserver")
@@ -73,8 +72,7 @@ func (ctlr *ApiProxyController) apiProxyAdd(obj interface{}) {
 }
 
 func (ctlr *ApiProxyController) apiProxyUpdate(old interface{}, new interface{}) {
-	logger := logging.WithContext(nil)
-	defer logger.Sync()
+	logger := log.WithContext(nil)
 	oldProxy, ok := old.(*v2.ApiProxy)
 	if !ok {
 		logger.Error("received malformed ApiProxy from k8s apiserver")
@@ -93,8 +91,7 @@ func (ctlr *ApiProxyController) apiProxyUpdate(old interface{}, new interface{})
 }
 
 func (ctlr *ApiProxyController) apiProxyDelete(obj interface{}) {
-	logger := logging.WithContext(nil)
-	defer logger.Sync()
+	logger := log.WithContext(nil)
 	proxy, ok := obj.(*v2.ApiProxy)
 	if !ok {
 		logger.Error("received malformed ApiProxy from k8s apiserver")

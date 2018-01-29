@@ -83,7 +83,7 @@ func (params *serverParams) Run() error {
 	}
 	err := g.Wait()
 	if err != http.ErrServerClosed {
-		params.options.Logger.Error(err)
+		params.options.Logger.Error(err.Error())
 		return err
 	}
 	return nil

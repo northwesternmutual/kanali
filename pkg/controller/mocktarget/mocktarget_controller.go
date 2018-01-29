@@ -26,7 +26,7 @@ import (
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"k8s.io/client-go/tools/cache"
 )
@@ -57,8 +57,7 @@ func (ctlr *MockTargetController) Run(stopCh <-chan struct{}) {
 }
 
 func (ctlr *MockTargetController) mockTargetAdd(obj interface{}) {
-	logger := logging.WithContext(nil)
-	defer logger.Sync()
+	logger := log.WithContext(nil)
 	target, ok := obj.(*v2.MockTarget)
 	if !ok {
 		logger.Error("received malformed MockTarget from k8s apiserver")
@@ -69,8 +68,7 @@ func (ctlr *MockTargetController) mockTargetAdd(obj interface{}) {
 }
 
 func (ctlr *MockTargetController) mockTargetUpdate(old interface{}, new interface{}) {
-	logger := logging.WithContext(nil)
-	defer logger.Sync()
+	logger := log.WithContext(nil)
 	oldTarget, ok := old.(*v2.MockTarget)
 	if !ok {
 		logger.Error("received malformed MockTarget from k8s apiserver")
@@ -89,8 +87,7 @@ func (ctlr *MockTargetController) mockTargetUpdate(old interface{}, new interfac
 }
 
 func (ctlr *MockTargetController) mockTargetDelete(obj interface{}) {
-	logger := logging.WithContext(nil)
-	defer logger.Sync()
+	logger := log.WithContext(nil)
 	target, ok := obj.(*v2.MockTarget)
 	if !ok {
 		logger.Error("received malformed MockTarget from k8s apiserver")

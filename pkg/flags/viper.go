@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"strings"
 
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
 func InitViper(appName string) error {
@@ -21,7 +21,7 @@ func InitViper(appName string) error {
 	viper.SetEnvPrefix(appName)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	if err := viper.ReadInConfig(); err != nil {
-		logging.WithContext(nil).Warn(err.Error())
+		log.WithContext(nil).Warn(err.Error())
 	}
 
 	return nil

@@ -18,7 +18,10 @@ LICENSE_*
 .cover/
 torch.svg
 /kanali
+
+# go test -bench
 *.cpu
+*.mem
 
 # helm
 helm/charts/*.tgz

@@ -30,7 +30,7 @@ import (
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"go.uber.org/zap"
@@ -66,7 +66,7 @@ func (ctlr *ApiKeyController) Run(stopCh <-chan struct{}) {
 }
 
 func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 	key, ok := obj.(*v2.ApiKey)
 	if !ok {
 		logger.Error("received malformed ApiKey from k8s apiserver")
@@ -83,7 +83,7 @@ func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
 }
 
 func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 	newKey, ok := new.(*v2.ApiKey)
 	if !ok {
 		logger.Error("received malformed ApiKey from k8s apiserver")
@@ -109,7 +109,7 @@ func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
 }
 
 func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 	key, ok := obj.(*v2.ApiKey)
 	if !ok {
 		logger.Error("received malformed ApiKey from k8s apiserver")

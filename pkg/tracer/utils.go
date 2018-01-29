@@ -27,13 +27,13 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/tags"
+	"github.com/northwesternmutual/kanali/pkg/utils"
 )
 
 // StartSpan will create the and return the top level span
@@ -144,14 +144,13 @@ func omitHeaderValues(h http.Header, msg string, keys ...string) http.Header {
 	if h == nil {
 		return http.Header{}
 	}
-	copy := http.Header{}
-	for k, v := range h {
-		copy[strings.Title(k)] = v
-	}
+
+	clone := utils.CloneHTTPHeader(h)
 	for _, key := range keys {
-		if copy.Get(key) != "" {
-			copy.Set(key, msg)
+		if clone.Get(key) != "" {
+			clone.Set(key, msg)
 		}
 	}
-	return copy
+
+	return clone
 }

@@ -28,7 +28,7 @@ import (
 	"github.com/coreos/etcd/pkg/transport"
 	"github.com/golang/protobuf/proto"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/spf13/viper"
 	"go.uber.org/zap/zapgrpc"
@@ -43,7 +43,7 @@ type Controller struct {
 // NewController create a new traffic controller
 func NewController() (*Controller, error) {
 
-	clientv3.SetLogger(zapgrpc.NewLogger(logging.WithContext(nil)))
+	clientv3.SetLogger(zapgrpc.NewLogger(log.WithContext(nil)))
 
 	etcdConfig := clientv3.Config{
 		Endpoints: viper.GetStringSlice(options.FlagEtcdEndpoints.GetLong()),
@@ -80,7 +80,7 @@ func isTLSDefined() bool {
 // Report reports a new traffic point to etcd
 func (ctlr *Controller) Report(ctx context.Context, pt *store.TrafficPoint) {
 
-	logger := logging.WithContext(ctx)
+	logger := log.WithContext(ctx)
 
 	data, err := proto.Marshal(pt)
 	if err != nil {
@@ -112,7 +112,7 @@ func (ctlr *Controller) Report(ctx context.Context, pt *store.TrafficPoint) {
 // a nil error. If an error occurs while monitoring, then a non-nil
 // error will be returned.
 func (ctlr *Controller) Run(ctx context.Context) error {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 
 	respCh := ctlr.Client.Watch(ctx, options.FlagEtcdPrefix.GetLong())
 
@@ -135,7 +135,7 @@ func (ctlr *Controller) Run(ctx context.Context) error {
 
 func processTraffic(data []byte) {
 
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 
 	tp := &store.TrafficPoint{}
 	err := proto.Unmarshal(data, tp)

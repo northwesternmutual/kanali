@@ -33,7 +33,7 @@ import (
 	"github.com/northwesternmutual/kanali/cmd/kanali/app"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/flags"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/server"
 	"github.com/northwesternmutual/kanali/pkg/version"
 )
@@ -59,9 +59,9 @@ var startCmd = &cobra.Command{
 
 func startCmdRun(cmd *cobra.Command, args []string) {
 	ctx := server.SetupSignalHandler()
-	logging.Init(nil, viper.GetString(options.FlagProcessLogLevel.GetLong()))
+  log.SetLevel(viper.GetString(options.FlagProcessLogLevel.GetLong()))
 	if err := app.Run(ctx); err != nil {
-		logging.WithContext(nil).Error(err.Error())
+		log.WithContext(nil).Error(err.Error())
 		os.Exit(1)
 	}
 }
@@ -71,12 +71,12 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	if err := flags.InitViper(appName); err != nil {
-		logging.WithContext(nil).Fatal(err.Error())
+		log.WithContext(nil).Fatal(err.Error())
 		os.Exit(1)
 	}
 
 	if err := options.KanaliGatewayOptions.AddAll(startCmd); err != nil {
-		logging.WithContext(nil).Fatal(err.Error())
+		log.WithContext(nil).Fatal(err.Error())
 		os.Exit(1)
 	}
 

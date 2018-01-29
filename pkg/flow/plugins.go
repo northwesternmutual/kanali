@@ -29,7 +29,7 @@ import (
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/errors"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/plugin"
 	"github.com/spf13/viper"
 )
@@ -54,7 +54,7 @@ func combinePath(basePath string, plugin v2.Plugin) string {
 
 func getPlugin(ctx context.Context, pl v2.Plugin) (plugin.Plugin, error) {
 	basePath := viper.GetString(options.FlagPluginsLocation.GetLong())
-	logger := logging.WithContext(ctx)
+	logger := log.WithContext(ctx)
 
 	plug, err := pluginPkg.Open(combinePath(basePath, pl))
 	if err != nil {

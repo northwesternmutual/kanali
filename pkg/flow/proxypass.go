@@ -42,7 +42,7 @@ import (
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/errors"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	coreV1 "github.com/northwesternmutual/kanali/pkg/store/core/v1"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
@@ -90,7 +90,7 @@ func (step proxyPassStep) Name() string {
 }
 
 func (step proxyPassStep) Do(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	logger := logging.WithContext(r.Context())
+	logger := log.WithContext(r.Context())
 
 	proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
 	if proxy == nil {
@@ -142,7 +142,7 @@ func (step proxyPassStep) configureRequest() proxyPassStep {
 		}
 	}
 
-	step.upstreamReq.Header = cloneHeader(step.originalReq.Header)
+	step.upstreamReq.Header = utils.CloneHTTPHeader(step.originalReq.Header)
 	step.upstreamReq.URL.Host = step.originalReq.Host
 	if _, ok := step.upstreamReq.Header["User-Agent"]; !ok {
 		// explicitly disable User-Agent so it's not set to default value
@@ -194,7 +194,7 @@ func (step proxyPassStep) preformProxyPass() proxyPassStep {
 		return step
 	}
 
-	logger := logging.WithContext(step.originalReq.Context())
+	logger := log.WithContext(step.originalReq.Context())
 	var upstreamSpan opentracing.Span
 
 	if step.span != nil {
@@ -215,11 +215,11 @@ func (step proxyPassStep) preformProxyPass() proxyPassStep {
 		tracer.HydrateSpanFromRequest(step.upstreamReq, upstreamSpan)
 	}
 
-	logger.With(
-		zap.String(tags.HTTPRequestURLScheme, step.upstreamReq.URL.Scheme),
+	logger.Info("upstream request",
+    zap.String(tags.HTTPRequestURLScheme, step.upstreamReq.URL.Scheme),
 		zap.String(tags.HTTPRequestURLHost, step.upstreamReq.URL.Host),
 		zap.String(tags.HTTPRequestURLPath, step.upstreamReq.URL.Path),
-	).Info("upstream request")
+  )
 
 	res, err := step.upstreamRoundTripper.RoundTrip(step.upstreamReq)
 	if err != nil {
@@ -298,7 +298,7 @@ func (step proxyPassStep) writeResponse() proxyPassStep {
 
 func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 
-	logger := logging.WithContext(step.originalReq.Context())
+	logger := log.WithContext(step.originalReq.Context())
 
 	secret, err := coreV1.Interface().Secrets().Lister().Secrets(step.proxy.GetNamespace()).Get(step.proxy.Spec.Target.SSL.SecretName)
 	if err != nil {
@@ -353,7 +353,7 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 }
 
 func (step proxyPassStep) serviceDetails() (string, string, error) {
-	logger := logging.WithContext(step.originalReq.Context())
+	logger := log.WithContext(step.originalReq.Context())
 	var scheme string
 
 	if len(step.proxy.Spec.Target.SSL.SecretName) > 0 {
@@ -428,16 +428,6 @@ func x509KeyPair(s *v1.Secret) (*tls.Certificate, error) {
 	return &pair, err
 }
 
-func cloneHeader(h http.Header) http.Header {
-	h2 := make(http.Header, len(h))
-	for k, vv := range h {
-		vv2 := make([]string, len(vv))
-		copy(vv2, vv)
-		h2[k] = vv2
-	}
-	return h2
-}
-
 func copyHeader(dst, src http.Header) {
 	for k, vv := range src {
 		for _, v := range vv {
@@ -447,7 +437,7 @@ func copyHeader(dst, src http.Header) {
 }
 
 func copyBuffer(ctx context.Context, dst io.Writer, src io.Reader, buf []byte) (int64, error) {
-	logger := logging.WithContext(ctx)
+	logger := log.WithContext(ctx)
 	if len(buf) == 0 {
 		buf = make([]byte, 32*1024)
 	}

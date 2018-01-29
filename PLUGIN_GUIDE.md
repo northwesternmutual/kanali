@@ -11,14 +11,14 @@ Want to create you own plugin for *Kanali*? No problem! With *Kanali's* extensib
 * [Step 3: Compile](#step-3-compile)
 * [Step 4: Place](#step-4-place)
 * [Step 5: Use](#step-5-use)
-* [Step 6 (optional): Version](#step-6-optional-version)
+* [Step 6: Version](#step-6-optional-version)
 
 ## Step 1: Create
 
 There are essentially only two main design requirements for a Kanali plugin:
 
 1. The plugin must implement Kanali's [`Plugin`](https://github.com/northwesternmutual/kanali/blob/master/plugins/plugin.go) interface.
-2. The name of the exported variable implementing the interface must be `Plugin`
+2. The name of the exported variable implementing the interface must be `Plugin`.
 
 To make this simple, I've provided a [Yeoman](http://yeoman.io/) template that will dynamically scaffold everything out for you. You can find the template [here](https://github.com/northwesternmutual/kanali-plugin-template) or just follow the instructions below:
 
@@ -33,42 +33,27 @@ Every plugin has the ability to intercept a request at two points during the req
 1. `OnRequest` is invoked *before* the request is proxied upstream.
 2. `OnResponse` is invoked *after* the request has been returned from the upstream service but *before* the request is returned to the client.
 
-The return value for both of these methods depends on whether an error was encountered or not. If an error was encountered during the plugin logic that should result in the termination of the request, return an [`error`](https://golang.org/pkg/errors/#pkg-examples). If no error was encountered and you would like the request's lifecycle to proceed as normal, return `nil`.
+If an error was encountered during the plugin logic that should result in the termination of the request, the method should return an [`error`](https://golang.org/pkg/errors/#pkg-examples). If no error was encountered and you would like the request's lifecycle to proceed as normal, return `nil`.
 
-In Go, an [`error`](https://golang.org/pkg/errors/#pkg-examples) is simply an interface. Hence, if you would like to specify an HTTP status code corresponding to your specific error message, the following `type`, which implements this interface, is provided for you to use. If this type is not used, `http.StatusInternalServerError` will be used. An example showing how to use the following type is provided in the template.
+If you would like to relay a detailed error to a client which includes items like the status code, return [`*errors.Error`]() which is shown below. This utility type implements the `error` interface and allows for a verbose response to the client. If an `error` is returned that is not of this type, a default error will be relayed to the client.
 
 ```go
-type StatusError struct {
-	Code int
-	Err  error
+type Error struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+	Details string `json:"details"`
 }
 ```
 
-A plugin has the ability to define any configuration items it might require. This allows a plugin to be configured via a cli flag, environment variable, or a configuration file. Reference the configuration [documentation](https://github.com/northwesternmutual/kanali#usage-and-configuration) for details. Below is an example of how the [API key plugin](https://github.com/northwesternmutual/kanali-plugin-apikey) uses this feature:
+A series of method parameters are provided for optional usage inside of your plugin logic. Here is a table detailing their purpose:
 
-```go
-var flagPluginsAPIKeyHeaderKey = config.Flag{
-	Long:  "plugins.apiKey.header_key", // please use the convention of plugins.<plugin name>.<configuration name>
-	Short: "",
-	Value: "apikey",
-	Usage: "Name of the HTTP header holding the apikey.",
-}
-
-func init() {
-	config.Flags.Add(flagPluginsAPIKeyHeaderKey)
-}
-```
-
-A series of method parameters are provided for optional usage inside of your plugin logic. Here is a table providing detailing their purpose:
-
-name        | type             | methods              |mutability |description
+name        | type             | description
 ------------|------------------|----------------------|-----------|------------
-`ctx`        | [`context.Context`](https://golang.org/pkg/context/) | `OnRequest` `OnResponse` | Mutable | Request context.
-`m`        | [`*metrics.Metrics`](https://github.com/northwesternmutual/kanali/blob/master/metrics/metrics.go) | `OnRequest` `OnResponse` | Mutable | Holds various requests metrics for analytics.
-`proxy`      | [`spec.ApiProxy`](https://github.com/northwesternmutual/kanali/blob/master/spec/apiproxy.go#L20) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the `ApiProxy` struct that matched the incoming request.
-`req`        | [`http.Request`](https://golang.org/pkg/net/http/#Request) | `OnRequest` `OnResponse` | Mutable | This parameter gives you access to the original HTTP request struct.
-`resp`       | [`*http.Response`](https://golang.org/pkg/net/http/#Response) | `OnResponse` | Mutable | This parameter will point to the response that was returned from the upstream service. Note that it is mutable allowing for potential changes in a plugin's logic.
-`span`       | [`opentracing-go.Span`](https://godoc.org/github.com/opentracing/opentracing-go#Span) | `OnRequest` `OnResponse` | Immutable | This parameter gives you access to the parent tracing span allowing you to add details (tags) to that span and optionally create new spans in the context of this parent span.
+`ctx`        | [`context.Context`](https://golang.org/pkg/context/)  | Parent [`opentracing.Span`](https://godoc.org/github.com/opentracing/opentracing-go#Span) is stored here.
+`config`      | [`plugin.Config`]() | Arbitrary set of key value configuration items for use by a plugin.
+`w`       | [`*httptest.ResponseRecorder`](https://golang.org/pkg/net/http/httptest/#ResponseRecorder) | Response details from upstream.
+`r`        | [`*http.Request`](https://golang.org/pkg/net/http/#Request) | Original HTTP request.
 
 ## Step 2: Test
 
@@ -81,70 +66,83 @@ $ make cover
 
 ## Step 3: Compile
 
-Go plugins are not compiled into Kanali's binary but instead are loaded at runtime. Go expects are plugin to be an ELF shared object file. Here's an example of how to compile your plugin using the `go` cli:
+Go plugins are not compiled into Kanali's binary but instead are loaded at runtime. Go expects are plugin to be an ELF shared object file. Here's an example of how to compile your plugin:
 
 ```sh
 $ go build -buildmode=plugin -o myCustomPlugin.so myCustomPlugin.go
 ```
 
-An important note is that plugins can *only* be compiled on linux. Here's an example of how Kanali compiles the apikey plugin in its `Dockerfile`:
-
-```sh
-# download apikey plugin
-RUN curl -O https://github.com/northwesternmutual/kanali-plugin-apikey/raw/master/apikey.go
-# compile plugin
-RUN go build -buildmode=plugin -o apiKey.so plugin.go
-# Build project
-RUN make build
-```
-
 ## Step 4: Place
 
-During runtime, Kanali will look for compliled plugins in a location specified by the `plugins-location` cli flag with a default location of `/`. Note that for security reasons, relative paths cannot be used.
+During runtime, Kanali will look for compiled plugins in a location specified by the `plugins.location` cli flag with a default location of `/`.
 
-Depending on your use case, you may want to dynamically load new plugins without having to rebuild Kanali's Docker container. This is easily accomplished by mapping a volume from the host and placing new compiled plugins there.
+In theory, plugins should be able to be dynamically loaded without the need to modify Kanali's container image. In the context of Kubernetes, the recommended approach would be to use [init containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/). The init container would move the compiled plugin into the location where the Kanali binary is configured to look for them.
+
+**_However_**, there is a nasty bug that prevents this from being the case until at least Go v1.11. Evidence of this can be tracked in the following issues:
+* [https://github.com/golang/go/issues/18827](https://github.com/golang/go/issues/18827)
+* [https://github.com/golang/go/issues/20481](https://github.com/golang/go/issues/20481)
+
+The root cause of the issue stems from the fact that unless a plugin is compiled using the exact same `vendor/` instance as Kanali, bad things will happen. For example, global variables will be duplicated, `init` functions will execute twice, etc.
+
+The **_workaround_** , until this issue is fixed, entails building your custom plugin within the same `Dockerfile` as Kanali. The goal is to take the superset of dependencies that Kanali and every plugin requires and build them all using this aggregated dependency tree. This will only work if all intersecting dependencies utilize the exact same revision.
+
+To simplify this as much as possible for the user, a `requirements.yaml` will be mounted into the container at build time that defines what plugins are to be included.
+
+```yaml
+plugins:
+- name: apiKey
+  source: github.com/northwesternmutual/kanali-plugin-apikey
+  versions:
+  - name: v2.0.0 # name of version to be used in proxy.Spec.Plugins[i].Version
+    default: true # if true, this version will be used if proxy.Spec.Plugins[i].Version is not specified. Only one version can be specified as default.
+    version: v2.0.0 # git version
+  - name: abc123
+    default: false
+    revision: abc123 # git commit
+  - name: master
+    default: false
+    branch: master # git branch
+```
+The resulting container image will have three different versions of the `apiKey` plugin ready for use.
 
 ## Step 5: Use
 
 Adding a custom plugin to an `ApiProxy` is simple:
 
 ```yaml
-apiVersion: kanali.io/v1
+apiVersion: kanali.io/v2
 kind: ApiProxy
 metadata:
   name: plugin-example
-  namespace: application
+  namespace: default
 spec:
-  path: /api/v1/plugin-example
-  service:
-    port: 8080
-    name: my-service
+  ...
   plugins:
-  - name: myCustomPlugin
+  - name: apiKey
+    config:
+      key1: value1
+      key2: value2
 ```
 
-*NOTE:* The plugin name _**must**_ match the file name *(case sensitive)* of the compiled plugin from the previous step.
+Each plugin allows a user to configure an arbitrary number of key value pairs to be passed to the plugin logic. Values are restricted to type `string`. An example use case might be a JWT plugin where the audience id associated with this `ApiProxy` is passed as a config value.
 
 ## Step 6 (optional): Version
 
 Kanali gives you the option to version control your plugins. Below is an example of how to use a certain version of your plugin:
 
 ```yaml
-apiVersion: kanali.io/v1
+apiVersion: kanali.io/v2
 kind: ApiProxy
 metadata:
   name: plugin-example
-  namespace: application
+  namespace: default
 spec:
-  path: /api/v1/plugin-example
-  service:
-    port: 8080
-    name: my-service
+  ...
   plugins:
-  - name: myCustomPlugin
-    version: 1.0.0
+  - name: apiKey
+    version: v2.0.0
 ```
 
-Here are some naming rules that must be followed to accomplish this:
-* The file name for a compiled plugin representing a specific version must be the plugin name followed by an underscore followed by the version. As an example, the filename and extension for the above plugin would be `myCustomPlugin_1.0.0.so`
+Here are some naming rules that must be followed to accomplish this (if you are following the workaround in step 4, the following steps are abstracted from the user):
+* The file name for a compiled plugin representing a specific version must be the plugin name followed by an underscore followed by the version. As an example, the filename and extension for the above plugin would be `apiKey_v2.0.0.so`
 * As documented in the previous step, plugins not utilizing versioning are simply named after the plugin name.

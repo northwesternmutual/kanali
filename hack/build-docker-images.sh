@@ -10,7 +10,7 @@ fi
 export DOCKER_REPO="northwesternmutual/kanali"
 export DOCKER_TAG=$COMMIT
 docker build --build-arg VERSION=$DOCKER_TAG -t $DOCKER_REPO:$DOCKER_TAG .
-./scripts/upload-to-docker.sh
+./hack/upload-to-docker.sh
 
 # if [[ $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 #   echo "uploading docker image TAG=$TRAVIS_TAG"

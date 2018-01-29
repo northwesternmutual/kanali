@@ -44,16 +44,16 @@ openapi:
 .PHONY: fmt
 fmt:
 	@$(GOFMT) -e -s -l -w $(ALL_SRC)
-	@./scripts/updateLicenses.sh
+	@./hack/updateLicenses.sh
 
 .PHONY: cover
 cover:
-	@./scripts/cover.sh $(shell go list $(PACKAGES))
+	@./hack/cover.sh $(shell go list $(PACKAGES))
 	@go tool cover -html=cover.out -o cover.html
 
 .PHONY: binary
 binary:
-	CGO_ENABLED=1 ./scripts/binary.sh $(VERSION)
+	CGO_ENABLED=1 ./hack/binary.sh $(VERSION)
 
 .PHONY: test
 test:

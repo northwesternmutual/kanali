@@ -56,7 +56,7 @@ import (
   opentracing "github.com/opentracing/opentracing-go"
 
 	"github.com/northwesternmutual/kanali/pkg/tags"
-  "github.com/northwesternmutual/kanali/pkg/logging"
+  "github.com/northwesternmutual/kanali/pkg/log"
 )
 ```
 

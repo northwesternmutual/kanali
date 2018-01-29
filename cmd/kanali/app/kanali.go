@@ -41,7 +41,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/controller/mocktarget"
 	"github.com/northwesternmutual/kanali/pkg/crds"
 	v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	_ "github.com/northwesternmutual/kanali/pkg/metrics"
 	"github.com/northwesternmutual/kanali/pkg/middleware"
 	"github.com/northwesternmutual/kanali/pkg/server"
@@ -54,7 +54,7 @@ import (
 func Run(sigCtx context.Context) error {
 
 	ctx, cancel := context.WithCancel(sigCtx)
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 
 	crdClientset, kanaliClientset, k8sClientset, err := createClientsets()
 	if err != nil {
@@ -201,7 +201,7 @@ func Run(sigCtx context.Context) error {
 }
 
 func nilInterrupt(msg string) func(error) {
-	logger := logging.WithContext(nil)
+	logger := log.WithContext(nil)
 	return func(error) {
 		logger.Info("gracefully terminating " + msg + " controller")
 	}

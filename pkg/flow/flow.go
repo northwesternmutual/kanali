@@ -27,7 +27,7 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 )
 
@@ -53,7 +53,7 @@ func (f *Flow) Add(steps ...Step) *Flow {
 // be returned immedietaly and the execution of any latter Step
 // will not occur.
 func (f *Flow) Play(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	logger := logging.WithContext(r.Context())
+	logger := log.WithContext(r.Context())
 
 	for _, step := range *f {
 		logger.With(

@@ -24,9 +24,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+  "net/http/httptest"
 
 	"github.com/northwesternmutual/kanali/pkg/errors"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/plugin"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/utils"
@@ -43,7 +44,7 @@ func (step pluginsOnRequestStep) Name() string {
 }
 
 func (step pluginsOnRequestStep) Do(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	logger := logging.WithContext(r.Context())
+	logger := log.WithContext(r.Context())
 
 	proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
 	if proxy == nil {
@@ -69,9 +70,9 @@ func (step pluginsOnRequestStep) Do(ctx context.Context, w http.ResponseWriter, 
 func doOnRequest(ctx context.Context, p plugin.Plugin, config map[string]string, w http.ResponseWriter, r *http.Request) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			logging.WithContext(ctx).Error(fmt.Sprintf("%v", r))
+			log.WithContext(ctx).Error(fmt.Sprintf("%v", r))
 			err = errors.ErrorPluginRuntimeError
 		}
 	}()
-	return p.OnRequest(ctx, config, w, r)
+	return p.OnRequest(ctx, config, w.(*httptest.ResponseRecorder), r)
 }

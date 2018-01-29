@@ -28,7 +28,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/northwesternmutual/kanali/pkg/errors"
-	"github.com/northwesternmutual/kanali/pkg/logging"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"github.com/northwesternmutual/kanali/pkg/utils"
@@ -50,7 +50,7 @@ func (step validateProxyStep) Name() string {
 
 // Do executes the logic of the ValidateProxyStep step
 func (step validateProxyStep) Do(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	logger := logging.WithContext(r.Context())
+	logger := log.WithContext(r.Context())
 
 	if proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL)); proxy != nil {
 		if span := opentracing.SpanFromContext(ctx); span != nil {
