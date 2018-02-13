@@ -41,7 +41,7 @@ install:
 # install dependencies
 - make install_ci
 # build and push docker image tagged with this commit sha (used in e2e tests)
-- if [ "$E2E_TEST" == true ]; then bash ./scripts/build-docker-images.sh ; fi
+- if [ "$E2E_TEST" == true ]; then bash ./hack/build-docker-images.sh ; fi
 
 before_script:
 # Bootstrap minikukbe
