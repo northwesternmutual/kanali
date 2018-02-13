@@ -26,38 +26,38 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-  "github.com/northwesternmutual/kanali/pkg/metrics"
+	"github.com/northwesternmutual/kanali/pkg/metrics"
 )
 
 const loggerKey = iota
 
 type logger struct {
-  zap *zap.Logger
-  level zap.AtomicLevel
+	zap   *zap.Logger
+	level zap.AtomicLevel
 }
 
 var wrappedLogger *logger
 
 func init() {
-  wrappedLogger = new(logger)
-  wrappedLogger.level = zap.NewAtomicLevel()
+	wrappedLogger = new(logger)
+	wrappedLogger.level = zap.NewAtomicLevel()
 
-  config := zap.NewProductionConfig()
-  config.Level = wrappedLogger.level
-  l, err := config.Build(
-    zap.Hooks(addMetrics),
-    zap.AddCaller(),
-    zap.AddStacktrace(zap.ErrorLevel),
-  )
-  if err != nil {
-    panic(err)
-  }
+	config := zap.NewProductionConfig()
+	config.Level = wrappedLogger.level
+	l, err := config.Build(
+		zap.Hooks(addMetrics),
+		zap.AddCaller(),
+		zap.AddStacktrace(zap.ErrorLevel),
+	)
+	if err != nil {
+		panic(err)
+	}
 
-  wrappedLogger.zap = l
+	wrappedLogger.zap = l
 }
 
 func SetLevel(lvl string) {
-  wrappedLogger.level.UnmarshalText([]byte(lvl))
+	wrappedLogger.level.UnmarshalText([]byte(lvl))
 }
 
 // NewContext creates a new context the given contextual fields
@@ -77,22 +77,19 @@ func WithContext(ctx context.Context) *zap.Logger {
 }
 
 func addMetrics(e zapcore.Entry) error {
-  metrics.LoggingTotal.Inc()
-
-  switch e.Level {
-  case zap.DebugLevel:
-    metrics.LoggingDebugTotal.Inc()
-  case zap.ErrorLevel:
-    metrics.LoggingErrorTotal.Inc()
-  case zap.FatalLevel:
-    metrics.LoggingFatalTotal.Inc()
-  case zap.InfoLevel:
-    metrics.LoggingInfoTotal.Inc()
-  case zap.WarnLevel:
-    metrics.LoggingWarnTotal.Inc()
-  case zap.PanicLevel:
-    metrics.LoggingPanicTotal.Inc()
-  }
-
-  return nil
+	switch e.Level {
+	case zap.DebugLevel:
+		metrics.LoggingCount.WithLabelValues("debug").Inc()
+	case zap.ErrorLevel:
+		metrics.LoggingCount.WithLabelValues("error").Inc()
+	case zap.FatalLevel:
+		metrics.LoggingCount.WithLabelValues("fatal").Inc()
+	case zap.InfoLevel:
+		metrics.LoggingCount.WithLabelValues("info").Inc()
+	case zap.WarnLevel:
+		metrics.LoggingCount.WithLabelValues("warn").Inc()
+	case zap.PanicLevel:
+		metrics.LoggingCount.WithLabelValues("panic").Inc()
+	}
+	return nil
 }

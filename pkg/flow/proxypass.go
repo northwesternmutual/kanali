@@ -216,13 +216,14 @@ func (step proxyPassStep) preformProxyPass() proxyPassStep {
 	}
 
 	logger.Info("upstream request",
-    zap.String(tags.HTTPRequestURLScheme, step.upstreamReq.URL.Scheme),
+		zap.String(tags.HTTPRequestURLScheme, step.upstreamReq.URL.Scheme),
 		zap.String(tags.HTTPRequestURLHost, step.upstreamReq.URL.Host),
 		zap.String(tags.HTTPRequestURLPath, step.upstreamReq.URL.Path),
-  )
+	)
 
 	res, err := step.upstreamRoundTripper.RoundTrip(step.upstreamReq)
 	if err != nil {
+		logger.Error(err.Error())
 		step.err = errors.ErrorBadGateway
 		return step
 	}
@@ -398,7 +399,7 @@ func (step proxyPassStep) serviceDetails() (string, string, error) {
 func (step proxyPassStep) setUpstreamURL() error {
 	var err error
 
-	if step.proxy.Spec.Target.Backend.Endpoint != (v2.Endpoint{}) { // Endpoint backend is configured
+	if step.proxy.Spec.Target.Backend.Endpoint != nil { // Endpoint backend is configured
 		step.upstreamReq.URL.Scheme, step.upstreamReq.URL.Host = step.proxy.Spec.Target.Backend.Endpoint.Scheme, step.proxy.Spec.Target.Backend.Endpoint.Host
 	} else {
 		step.upstreamReq.URL.Scheme, step.upstreamReq.URL.Host, err = step.serviceDetails()

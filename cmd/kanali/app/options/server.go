@@ -36,16 +36,16 @@ func init() {
 var (
 	// FlagServerSecurePort sets the port that Kanali will listen on for incoming requests
 	FlagServerSecurePort = flags.Flag{
-		Long:  "server.insecure_port",
+		Long:  "server.secure_port",
 		Short: "",
 		Value: 0,
 		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerInsecurePort sets the port that Kanali will listen on for incoming requests
 	FlagServerInsecurePort = flags.Flag{
-		Long:  "server.secure_port",
+		Long:  "server.insecure_port",
 		Short: "",
-		Value: 8080,
+		Value: 0,
 		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests

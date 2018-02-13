@@ -124,7 +124,7 @@ type Source struct {
 type Target struct {
 	Path    string  `json:"path,omitempty"`
 	Backend Backend `json:"backend,omitempty"`
-	SSL     SSL     `json:"ssl,omitempty"`
+	SSL     *SSL    `json:"ssl,omitempty"`
 }
 
 // Mock describes a valid mock response
@@ -134,14 +134,15 @@ type Mock struct {
 
 // Backend describes an upstream server
 type Backend struct {
-	Endpoint Endpoint `json:"endpoint,omitempty"`
-	Mock     Mock     `json:"mock,omitempty"`
-	Service  Service  `json:"service,omitempty"`
+	Endpoint *Endpoint `json:"endpoint,omitempty"`
+	Mock     *Mock     `json:"mock,omitempty"`
+	Service  *Service  `json:"service,omitempty"`
 }
 
 type Endpoint struct {
 	Scheme string `json:"scheme,omitempty"`
 	Host   string `json:"host,omitempty"`
+	Port   int64  `json:"port,omitempty"`
 }
 
 // Service describes a Kubernetes service

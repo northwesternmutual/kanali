@@ -1,26 +1,26 @@
 # Default Helm values for kanali and its dependencies.
 
-prometheus:
-  alertmanager.enabled: false
-  pushgateway.enabled: false
-  kubeStateMetrics.enabled: false
-  nodeExporter.enabled: false
-
-  serverFiles.prometheus.yml:
-    global:
-      scrape_interval:     15s
-      evaluation_interval: 15s
-    scrape_configs:
-      - job_name: 'kanali'
-        metrics_path: /metrics
-        scheme: http
-        static_configs:
-        - targets: ['kanali.default.svc.cluster.local:9090']
-
-jaeger:
-  tags:
-    cassandra: false
-    elasticsearch: true
+# prometheus:
+#   alertmanager.enabled: false
+#   pushgateway.enabled: false
+#   kubeStateMetrics.enabled: false
+#   nodeExporter.enabled: false
+#
+#   serverFiles.prometheus.yml:
+#     global:
+#       scrape_interval:     15s
+#       evaluation_interval: 15s
+#     scrape_configs:
+#       - job_name: 'kanali'
+#         metrics_path: /metrics
+#         scheme: http
+#         static_configs:
+#         - targets: ['kanali.default.svc.cluster.local:9090']
+#
+# jaeger:
+#   tags:
+#     cassandra: false
+#     elasticsearch: true
 
 kanali:
   image: fbgrecojr/kanali

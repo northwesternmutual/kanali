@@ -95,7 +95,7 @@ func Run(sigCtx context.Context) error {
 		logger.Warn(tracerErr.Error())
 	}
 
-	gatewayServer := server.PrepareServer(&server.Options{
+	gatewayServer := server.Prepare(&server.Options{
 		Name:         "gateway",
 		InsecureAddr: viper.GetString(options.FlagServerInsecureBindAddress.GetLong()),
 		SecureAddr:   viper.GetString(options.FlagServerSecureBindAddress.GetLong()),
@@ -105,14 +105,14 @@ func Run(sigCtx context.Context) error {
 		TLSCert:      viper.GetString(options.FlagTLSCertFile.GetLong()),
 		TLSCa:        viper.GetString(options.FlagTLSCaFile.GetLong()),
 		Handler: chain.New().Add(
-			middleware.Recorder,
+			//middleware.Recorder,
 			middleware.Correlation,
 			middleware.Metrics,
 		).Link(middleware.Gateway),
 		Logger: logger.Sugar(),
 	})
 
-	profilingServer := server.PrepareServer(&server.Options{
+	profilingServer := server.Prepare(&server.Options{
 		Name:         "profiling",
 		InsecureAddr: viper.GetString(options.FlagProfilingInsecureBindAddress.GetLong()),
 		InsecurePort: viper.GetInt(options.FlagProfilingInsecurePort.GetLong()),
@@ -120,7 +120,7 @@ func Run(sigCtx context.Context) error {
 		Logger:       logger.Sugar(),
 	})
 
-	metricsServer := server.PrepareServer(&server.Options{
+	metricsServer := server.Prepare(&server.Options{
 		Name:         "prometheus",
 		InsecureAddr: viper.GetString(options.FlagPrometheusServerBindAddress.GetLong()),
 		InsecurePort: viper.GetInt(options.FlagPrometheusServerPort.GetLong()),
@@ -138,7 +138,7 @@ func Run(sigCtx context.Context) error {
 
 	g.Add(func() error {
 		logger.Info("starting ApiKey controller")
-		apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), decryptionKey).Run(ctx.Done())
+		apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), kanaliClientset, decryptionKey).Run(ctx.Done())
 		return nil
 	}, nilInterrupt("ApiKey"))
 
@@ -196,6 +196,13 @@ func Run(sigCtx context.Context) error {
 			profilingServer.Close()
 		})
 	}
+
+	g.Add(func() error {
+		<-ctx.Done()
+		return nil
+	}, func(error) {
+		cancel()
+	})
 
 	return g.Run()
 }

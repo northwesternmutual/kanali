@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-  "net/http/httptest"
+	"net/http/httptest"
 
 	"github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/pkg/log"

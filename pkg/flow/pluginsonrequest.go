@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-  "net/http/httptest"
+	"net/http/httptest"
 
 	"github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/pkg/log"
@@ -59,7 +59,6 @@ func (step pluginsOnRequestStep) Do(ctx context.Context, w http.ResponseWriter, 
 			return err
 		}
 		if err := doOnRequest(ctx, p, plugin.Config, w, r); err != nil {
-			logger.Error(err.Error())
 			return err
 		}
 	}

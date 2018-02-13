@@ -1,0 +1,36 @@
+package server
+
+import (
+	"bytes"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestGetTLSConfigFromReader(t *testing.T) {
+	ca := []byte(`-----BEGIN CERTIFICATE-----
+MIIDKTCCAhGgAwIBAgIJAKRVOSQFLDRfMA0GCSqGSIb3DQEBBQUAMBcxFTATBgNV
+BAMTDDEwLjIyOC4yMi40MjAeFw0xNzAxMTkxNDI4MTNaFw00NDA2MDYxNDI4MTNa
+MBcxFTATBgNVBAMTDDEwLjIyOC4yMi40MjCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBAL7HFXcbFygUkUomCLvYY4aOwuhptKAsVB40BYUay7bgrc4iIoFf
+bMJL3D3DHxdyO668w1GO0ZbbYcA7qvtDoTwymHjQyOYKs2o+VZLO054pDaFWeZ1q
+XSO/Y3gEqoKkIxrmxD6T2AqfS8c7aq4OLsaWnREeSBRJELMXuwHso+N2XvoheVIr
+ZqtL+QHS6M2kKVISeONeLYZyqFJgER0mofwBph4yHtt/P2INzCF4yqg/8iW5PeGC
+tmejENAIFjVojrgNnAFXWMO+yK3cc8OxPtQRlFh+GmtEh3+EPnUo4zIp0HBHApQU
+JhM2cGwkR/eY0x3ILFgIvEOyjw6blhs9F4UCAwEAAaN4MHYwHQYDVR0OBBYEFPkA
+THvctYtZivnq77z3RU8TJx13MEcGA1UdIwRAMD6AFPkATHvctYtZivnq77z3RU8T
+Jx13oRukGTAXMRUwEwYDVQQDEwwxMC4yMjguMjIuNDKCCQCkVTkkBSw0XzAMBgNV
+HRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA4IBAQCVmp/ETtxUf6T5pVfqw/xj2esT
+UxzVBhszSbSGLhxNYnbWt0VYoNGZ40famBjuV9GEU7oi/koBlpK3vxI9Z/uNdv57
+T2wNHrk3Ftdq1aRPaUXtF8M6iNgWuSnx9cQj+FO2NPhybrW7XADij3dqTDBgIroE
+3pAafoBSAgceTwKfE6S7BDGSfz+8j4ZrA4gX/3yADlV04LVXmM7Etra8MMtwGJsJ
+PCVqR8ZaZ9Nr0RpU/EVELEHBaFVakiD312W/5GCgTjgyEFWk72YfpL6i+gpzx85F
+Go6y2fUe6Qm7/Ffj+rV4DFqdM+viPOK2dGFTHPN2F9BqoeJNYHPbBrGU8Lg1
+-----END CERTIFICATE-----`)
+
+	cfg, err := getTLSConfigFromReader(bytes.NewReader(ca))
+	assert.Nil(t, err)
+
+	_, err = getTLSConfigFromReader(bytes.NewReader([]byte("foo")))
+	assert.NotNil(t, err)
+}

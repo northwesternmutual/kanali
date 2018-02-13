@@ -22,8 +22,15 @@ package e2e
 
 import (
 	"testing"
+
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
+
+	// test sources
+	_ "github.com/northwesternmutual/kanali/test/e2e/kanali.io"
 )
 
 func TestE2E(t *testing.T) {
-	RunE2ETests(t)
+	gomega.RegisterFailHandler(ginkgo.Fail)
+	ginkgo.RunSpecs(t, "e2e tests")
 }

@@ -19,6 +19,8 @@
 // THE SOFTWARE.
 
 // +k8s:deepcopy-gen=package,register
+// +k8s:openapi-gen=true
+// +k8s:defaulter-gen=TypeMeta
 
 // Package v2 is the v2 version of the API.
 // +groupName=kanali.io

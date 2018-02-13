@@ -23,7 +23,7 @@ package plugin
 import (
 	"context"
 	"net/http"
-  "net/http/httptest"
+	"net/http/httptest"
 )
 
 // Plugin is an interface that is used for every Plugin used by Kanali.

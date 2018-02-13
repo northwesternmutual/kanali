@@ -30,8 +30,8 @@ spec:
       containers:
       - name: kanali
         imagePullPolicy: {{default "IfNotPresent" .Values.kanali.pullPolicy}}
-        image: {{.Values.kanali.image}}:{{.Values.kanali.tag}}
-        command: ["/kanali", "start", "--plugins.apiKey.decryption_key_file", "/etc/pki/key.pem", "--etcd.endpoints", "http://etcd.default.svc.cluster.local:2379", "--tls.cert_file", "/etc/pki/tls.crt", "--tls.key_file", "/etc/pki/tls.key", "--server.port", "8443", "--plugins.location", "/plugins"]
+        image: fbgrecojr/kanali:local
+        command: ["/kanali", "start"]
         ports:
         - containerPort: 8443
         readinessProbe:

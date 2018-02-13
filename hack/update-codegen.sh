@@ -10,4 +10,5 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${SCRIPT_ROOT}; ls -d -1 ./vendor/k8s.io/code-ge
 vendor/k8s.io/code-generator/generate-groups.sh all \
   github.com/northwesternmutual/kanali/pkg/client github.com/northwesternmutual/kanali/pkg/apis \
   kanali.io:v2 \
-  --go-header-file ${SCRIPT_ROOT}/hack/custom-boilerplate.go.txt
+  --go-header-file ${SCRIPT_ROOT}/hack/custom-boilerplate.go.txt \
+  --v=1

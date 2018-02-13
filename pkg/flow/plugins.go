@@ -25,12 +25,14 @@ import (
 	"fmt"
 	"path/filepath"
 	pluginPkg "plugin"
+	"strings"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/plugin"
+	"github.com/northwesternmutual/kanali/plugins/apikey"
 	"github.com/spf13/viper"
 )
 
@@ -38,6 +40,12 @@ const (
 	// Lookup searches for a symbol named symName in plugin p. A symbol is any exported variable or function.
 	// It reports an error if the symbol is not found. It is safe for concurrent use by multiple goroutines.
 	symName = "Plugin"
+)
+
+var (
+	internalPlugins = map[string]plugin.Plugin{
+		"apikey": apikey.Plugin,
+	}
 )
 
 // join will return the path to the compiled plugin.
@@ -53,6 +61,10 @@ func combinePath(basePath string, plugin v2.Plugin) string {
 }
 
 func getPlugin(ctx context.Context, pl v2.Plugin) (plugin.Plugin, error) {
+	if val, ok := internalPlugins[strings.ToLower(pl.Name)]; ok {
+		return val, nil
+	}
+
 	basePath := viper.GetString(options.FlagPluginsLocation.GetLong())
 	logger := log.WithContext(ctx)
 

@@ -29,23 +29,27 @@ import (
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
 	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"go.uber.org/zap"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 )
 
 type ApiKeyController struct {
 	apikeys       informers.ApiKeyInformer
 	decryptionKey *rsa.PrivateKey
+	clientset     *versioned.Clientset
 }
 
-func NewApiKeyController(apikeys informers.ApiKeyInformer, decryptionKey *rsa.PrivateKey) *ApiKeyController {
+func NewApiKeyController(apikeys informers.ApiKeyInformer, clientset *versioned.Clientset, decryptionKey *rsa.PrivateKey) *ApiKeyController {
 
 	ctlr := &ApiKeyController{
 		decryptionKey: decryptionKey,
+		clientset:     clientset,
 	}
 
 	ctlr.apikeys = apikeys
@@ -68,17 +72,21 @@ func (ctlr *ApiKeyController) Run(stopCh <-chan struct{}) {
 func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
 	logger := log.WithContext(nil)
 	key, ok := obj.(*v2.ApiKey)
-	if !ok {
+	if !ok || key == nil {
 		logger.Error("received malformed ApiKey from k8s apiserver")
 		return
 	}
-	if err := ctlr.decryptApiKey(key); err != nil {
+	keyClone, err := ctlr.decryptApiKey(key)
+	if err != nil {
+		if err := ctlr.clientset.KanaliV2().ApiKeys().Delete(key.GetName(), &v1.DeleteOptions{}); err != nil {
+			logger.Error(err.Error())
+		}
 		logger.Error(err.Error())
 		return
 	}
-	store.ApiKeyStore().Set(key)
+	store.ApiKeyStore().Set(keyClone)
 	logger.With(
-		zap.String(tags.KanaliApiKeyName, key.GetName()),
+		zap.String(tags.KanaliApiKeyName, keyClone.GetName()),
 	).Debug("added ApiKey")
 }
 
@@ -94,17 +102,25 @@ func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
 		logger.Error("received malformed ApiKey from k8s apiserver")
 		return
 	}
-	if err := ctlr.decryptApiKey(newKey); err != nil {
+	newKeyClone, err := ctlr.decryptApiKey(newKey)
+	if err != nil {
+		if err := ctlr.clientset.KanaliV2().ApiKeys().Delete(newKeyClone.GetName(), &v1.DeleteOptions{}); err != nil {
+			logger.Error(err.Error())
+		}
 		logger.Error(err.Error())
 		return
 	}
-	if err := ctlr.decryptApiKey(oldKey); err != nil {
+	oldKeyClone, err := ctlr.decryptApiKey(oldKey)
+	if err != nil {
+		if err := ctlr.clientset.KanaliV2().ApiKeys().Delete(oldKeyClone.GetName(), &v1.DeleteOptions{}); err != nil {
+			logger.Error(err.Error())
+		}
 		logger.Error(err.Error())
 		return
 	}
-	store.ApiKeyStore().Update(oldKey, newKey)
+	store.ApiKeyStore().Update(oldKeyClone, newKeyClone)
 	logger.With(
-		zap.String(tags.KanaliApiKeyName, newKey.GetName()),
+		zap.String(tags.KanaliApiKeyName, newKeyClone.GetName()),
 	).Debug("updated ApiKey")
 }
 
@@ -115,7 +131,8 @@ func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
 		logger.Error("received malformed ApiKey from k8s apiserver")
 		return
 	}
-	if err := ctlr.decryptApiKey(key); err != nil {
+	key, err := ctlr.decryptApiKey(key)
+	if err != nil {
 		logger.Error(err.Error())
 		return
 	}
@@ -126,21 +143,23 @@ func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
 	}
 }
 
-func (ctlr *ApiKeyController) decryptApiKey(key *v2.ApiKey) error {
+func (ctlr *ApiKeyController) decryptApiKey(key *v2.ApiKey) (*v2.ApiKey, error) {
 	if ctlr.decryptionKey == nil {
-		return errors.New("decryption key not present")
+		return nil, errors.New("decryption key not present")
 	}
 
-	for _, revision := range key.Spec.Revisions {
+	clone := key.DeepCopy()
+
+	for i, revision := range clone.Spec.Revisions {
 		cipherText, err := hex.DecodeString(revision.Data)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		unencryptedApiKey, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, ctlr.decryptionKey, cipherText, []byte("kanali"))
 		if err != nil {
-			return err
+			return nil, err
 		}
-		revision.Data = string(unencryptedApiKey)
+		clone.Spec.Revisions[i].Data = string(unencryptedApiKey)
 	}
-	return nil
+	return clone, nil
 }

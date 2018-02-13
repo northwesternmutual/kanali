@@ -58,8 +58,13 @@ var startCmd = &cobra.Command{
 }
 
 func startCmdRun(cmd *cobra.Command, args []string) {
+	if err := flags.InitViper(appName); err != nil {
+		log.WithContext(nil).Fatal(err.Error())
+		os.Exit(1)
+	}
+
 	ctx := server.SetupSignalHandler()
-  log.SetLevel(viper.GetString(options.FlagProcessLogLevel.GetLong()))
+	log.SetLevel(viper.GetString(options.FlagProcessLogLevel.GetLong()))
 	if err := app.Run(ctx); err != nil {
 		log.WithContext(nil).Error(err.Error())
 		os.Exit(1)
@@ -69,11 +74,6 @@ func startCmdRun(cmd *cobra.Command, args []string) {
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	if err := flags.InitViper(appName); err != nil {
-		log.WithContext(nil).Fatal(err.Error())
-		os.Exit(1)
-	}
 
 	if err := options.KanaliGatewayOptions.AddAll(startCmd); err != nil {
 		log.WithContext(nil).Fatal(err.Error())

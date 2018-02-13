@@ -272,9 +272,6 @@ var ApiKeyBindingCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 																Type:        "string",
 																Pattern:     httpPathRegex,
 																MinLength:   int64Ptr(1),
-																Default: &apiextensionsv1beta1.JSON{
-																	Raw: []byte(""),
-																},
 															},
 															"rule": {
 																Description: "defines http method that an ApiKey has access to",
@@ -437,9 +434,6 @@ var ApiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										Type:        "string",
 										Pattern:     httpPathRegex,
 										MinLength:   int64Ptr(1),
-										Default: &apiextensionsv1beta1.JSON{
-											Raw: []byte(""),
-										},
 									},
 									"virtualHost": {
 										Description: "http hostname",
@@ -458,9 +452,6 @@ var ApiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 										Type:        "string",
 										Pattern:     httpPathRegex,
 										MinLength:   int64Ptr(1),
-										Default: &apiextensionsv1beta1.JSON{
-											Raw: []byte(""),
-										},
 									},
 									"mock": {
 										Description: "name of ConfigMap defining a valid mock response for this ApiProxy",

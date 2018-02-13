@@ -53,7 +53,7 @@ cover:
 
 .PHONY: binary
 binary:
-	CGO_ENABLED=1 ./hack/binary.sh $(VERSION)
+	./hack/binary.sh $(VERSION)
 
 .PHONY: test
 test:

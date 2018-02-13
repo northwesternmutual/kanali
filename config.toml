@@ -23,7 +23,7 @@ key_file = ""
 ca_file = ""
 
 [server]
-port = 8080
+insecure_port = 8081
 bind_address = "0.0.0.0"
 
 [process]
@@ -33,7 +33,7 @@ log_level = "debug"
 cert_file = ""
 key_file = ""
 ca_file = ""
-endpoints = "http://127.0.0.1:2379"
+endpoints = "http://192.168.99.100:31747"
 prefix = "kanali"
 
 [proxy]

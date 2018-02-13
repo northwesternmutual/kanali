@@ -11,14 +11,8 @@ data:
     jaeger_server_url = "jaeger-agent.kube-system.svc.cluster.local"
     jaeger_agent_url = "jaeger-agent.kube-system.svc.cluster.local"
 
-    [analytics]
-    influx_addr = "http://kanali-influxdb.default.svc.cluster.local:8086"
-    influx_db = "kanali"
-    influx_username = ""
-    influx_password = ""
-
     [plugins]
-    location = "/plugins"
+    location = "/"
 
     [plugins.apiKey]
     decryption_key_file = "/etc/pki/key.pem"
@@ -30,12 +24,11 @@ data:
     ca_file = ""
 
     [server]
-    port = 8443
+    secure_port = 8443
     bind_address = "0.0.0.0"
-    proxy_protocol = false
 
     [process]
-    log_level = "info"
+    log_level = "debug"
 
     [etcd]
     cert_file = ""

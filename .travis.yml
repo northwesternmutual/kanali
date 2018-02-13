@@ -4,14 +4,14 @@ language: go
 
 matrix:
   include:
-  - go: 1.9
+  - go: 1.9.3
     env:
     - TESTS=true
     - COVERAGE=true
-  - go: 1.9
+  - go: 1.9.3
     env:
     - E2E_TEST=true
-    - K8S_VERSION=v1.8.0
+    - K8S_VERSION=v1.9.0
 
 services:
 - docker

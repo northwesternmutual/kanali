@@ -66,9 +66,9 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
 	}
 	store.ApiKeyBindingStore().Set(binding)
 	logger.Debug("added ApiKeyBinding",
-    zap.String(tags.KanaliApiKeyBindingName, binding.GetName()),
+		zap.String(tags.KanaliApiKeyBindingName, binding.GetName()),
 		zap.String(tags.KanaliApiKeyBindingNamespace, binding.GetNamespace()),
-  )
+	)
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new interface{}) {

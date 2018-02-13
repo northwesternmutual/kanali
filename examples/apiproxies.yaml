@@ -14,6 +14,12 @@ spec:
      endpoint:
        scheme: https
        host: httpbin.org
+       port: 8080
+ plugins:
+ - name: apiKey
+   version: v2.0.0-rc.1
+   config:
+     apiKeyBindingName: example-apikeybinding
 
 # ---
 #

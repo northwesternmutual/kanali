@@ -48,4 +48,7 @@ var (
 	ErrorNoMatchingServices               = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, "More details coming soon!"}
 	ErrorPluginRuntimeError               = Error{http.StatusInternalServerError, "Plugin threw a runtime error.", 10, "More details coming soon!"}
 	ErrorApiProxyBackendEndpointMalformed = Error{http.StatusInternalServerError, "The ApiProxy endpoint backend is malformed.", 11, "More details coming soon!"}
+	ErrorForbidden                        = Error{http.StatusForbidden, "My lips are sealed.", 12, "More details coming soon!"}
+	ErrorApiKeyUnauthorized               = Error{http.StatusUnauthorized, "Api key is not authorized.", 13, "More details coming soon!"}
+	ErrorTooManyRequests                  = Error{http.StatusTooManyRequests, "The Api key you are using has exceeded its rate limit.", 14, "More details coming soon!"}
 )

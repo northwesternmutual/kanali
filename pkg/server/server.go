@@ -1,15 +1,38 @@
+// Copyright (c) 2018 Northwestern Mutual.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package server
 
 import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"golang.org/x/sync/errgroup"
-	"k8s.io/apimachinery/pkg/util/errors"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 type serverParams struct {
@@ -36,10 +59,10 @@ type logger interface {
 	Error(...interface{})
 }
 
-// PrepareServer will construct net.Listerer instantiations for the requested
+// Prepare will construct net.Listerer instantiations for the requested
 // server(s). If an error is encounted, it will be hidden within the returned
 // type for evaluation by that type's methods.
-func PrepareServer(opts *Options) *serverParams {
+func Prepare(opts *Options) *serverParams {
 	params := &serverParams{options: opts}
 	insecureAddr, secureAddr := fmt.Sprintf("%s:%d", opts.InsecureAddr, opts.InsecurePort), fmt.Sprintf("%s:%d", opts.SecureAddr, opts.SecurePort)
 
@@ -65,12 +88,12 @@ func PrepareServer(opts *Options) *serverParams {
 // the first server that terminates.
 func (params *serverParams) Run() error {
 	if params.err != nil && len(params.err) > 0 {
-		return errors.NewAggregate(params.err)
+		return utilerrors.NewAggregate(params.err)
 	}
 
 	var g errgroup.Group
 	if params.secureServer != nil {
-		params.options.Logger.Info(fmt.Sprintf("starting %s %s server on %s:%d", params.options.Name, "HTTP", params.options.SecureAddr, params.options.SecurePort))
+		params.options.Logger.Info(fmt.Sprintf("starting %s %s server on %s:%d", params.options.Name, "HTTPS", params.options.SecureAddr, params.options.SecurePort))
 		g.Go(func() error {
 			return params.secureServer.ListenAndServeTLS(params.options.TLSCert, params.options.TLSKey)
 		})
@@ -99,7 +122,7 @@ func (params *serverParams) Close() error {
 	if err := closeServer(params.options.Logger, params.insecureServer, params.options.Name, "HTTP"); err != nil {
 		params.err = append(params.err, err)
 	}
-	return errors.NewAggregate(params.err)
+	return utilerrors.NewAggregate(params.err)
 }
 
 func closeServer(log logger, svr *http.Server, name, scheme string) error {
@@ -115,12 +138,23 @@ func closeServer(log logger, svr *http.Server, name, scheme string) error {
 }
 
 func (opts *Options) getTLSConfig() (*tls.Config, error) {
-	caCert, err := ioutil.ReadFile(opts.TLSCa)
+	if f, err := os.Open(opts.TLSCa); err != nil {
+		return nil, err
+	} else {
+		defer f.Close()
+		return getTLSConfigFromReader(f)
+	}
+}
+
+func getTLSConfigFromReader(r io.Reader) (*tls.Config, error) {
+	caCert, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
+	if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+		return nil, errors.New("could not append cert to pool")
+	}
 	tlsConfig := &tls.Config{
 		ClientCAs:  caCertPool,
 		ClientAuth: tls.RequireAndVerifyClientCert,

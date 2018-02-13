@@ -22,6 +22,7 @@ package traffic
 
 import (
 	"context"
+	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
@@ -31,6 +32,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapgrpc"
 )
 
@@ -40,13 +42,23 @@ type Controller struct {
 	Client *clientv3.Client
 }
 
+var ctlr *Controller
+
 // NewController create a new traffic controller
 func NewController() (*Controller, error) {
+
+	if ctlr != nil {
+		return ctlr, nil
+	}
 
 	clientv3.SetLogger(zapgrpc.NewLogger(log.WithContext(nil)))
 
 	etcdConfig := clientv3.Config{
-		Endpoints: viper.GetStringSlice(options.FlagEtcdEndpoints.GetLong()),
+		Endpoints:            viper.GetStringSlice(options.FlagEtcdEndpoints.GetLong()),
+		DialTimeout:          time.Second * 5,
+		AutoSyncInterval:     time.Second * 5,
+		DialKeepAliveTime:    time.Second * 5,
+		DialKeepAliveTimeout: time.Second * 5,
 	}
 
 	if isTLSDefined() {
@@ -67,9 +79,11 @@ func NewController() (*Controller, error) {
 		return nil, err
 	}
 
-	return &Controller{
+	ctlr = &Controller{
 		Client: etcdClient,
-	}, nil
+	}
+
+	return ctlr, nil
 
 }
 
@@ -79,7 +93,6 @@ func isTLSDefined() bool {
 
 // Report reports a new traffic point to etcd
 func (ctlr *Controller) Report(ctx context.Context, pt *store.TrafficPoint) {
-
 	logger := log.WithContext(ctx)
 
 	data, err := proto.Marshal(pt)
@@ -88,7 +101,8 @@ func (ctlr *Controller) Report(ctx context.Context, pt *store.TrafficPoint) {
 		return
 	}
 
-	if _, err := ctlr.Client.Put(ctx, options.FlagEtcdPrefix.GetLong(), string(data)); err != nil {
+	resp, err := ctlr.Client.Put(ctx, viper.GetString(options.FlagEtcdPrefix.GetLong()), string(data))
+	if err != nil {
 		switch err {
 		case context.Canceled:
 			logger.Error(err.Error())
@@ -101,9 +115,12 @@ func (ctlr *Controller) Report(ctx context.Context, pt *store.TrafficPoint) {
 		}
 		return
 	}
-
-	logger.Debug("traffic point reported")
-
+	logger.Debug("traffic point reported",
+		zap.Uint64("ClusterId", resp.Header.ClusterId),
+		zap.Uint64("MemberId", resp.Header.MemberId),
+		zap.Int64("Revision", resp.Header.Revision),
+		zap.Uint64("RaftTerm", resp.Header.RaftTerm),
+	)
 }
 
 // Run begins monitoring traffic. When traffic is discovered,
@@ -114,13 +131,23 @@ func (ctlr *Controller) Report(ctx context.Context, pt *store.TrafficPoint) {
 func (ctlr *Controller) Run(ctx context.Context) error {
 	logger := log.WithContext(nil)
 
-	respCh := ctlr.Client.Watch(ctx, options.FlagEtcdPrefix.GetLong())
+	respCh := ctlr.Client.Watch(ctx, viper.GetString(options.FlagEtcdPrefix.GetLong()), clientv3.WithPrefix())
 
 	for watchResp := range respCh {
+		logger.Debug("etcd info",
+			zap.Uint64("ClusterId", watchResp.Header.ClusterId),
+			zap.Uint64("MemberId", watchResp.Header.MemberId),
+			zap.Int64("Revision", watchResp.Header.Revision),
+			zap.Uint64("RaftTerm", watchResp.Header.RaftTerm),
+		)
 		if err := watchResp.Err(); err != nil {
 			return err
 		}
 		for _, ev := range watchResp.Events {
+			logger.Debug("new etcd event",
+				zap.String("type", ev.Type.String()),
+				zap.String("key", string(ev.Kv.Key)),
+			)
 			go processTraffic(ev.Kv.Value)
 		}
 	}
@@ -145,6 +172,11 @@ func processTraffic(data []byte) {
 	}
 
 	store.TrafficStore().Set(tp)
-	logger.Debug("traffic point received and processed")
+	logger.Debug("traffic point received and processed",
+		zap.Int64("timestamp", tp.Time),
+		zap.String("namespace", tp.Namespace),
+		zap.String("namespace", tp.ProxyName),
+		zap.String("namespace", tp.KeyName),
+	)
 
 }

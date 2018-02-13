@@ -34,7 +34,7 @@ metadata:
   namespace: default
 type: Opaque
 data:
-  key.pem: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ0KTUlJRW93SUJBQUtDQVFFQXFZZG5YMGplT1gwelp1VEcwekRKK3QxcXpBNjNNTXhZbGx3Y05kU0l1REN2VDZSbg0Kd1NnMG54K1BTV1lRUXFYQ043cThDU3NCZ3A2UU5uZUN4TDNBLzFKelY3dy9mTXlXTEl1dVNPbjdHaThJeis3RQ0KTWI5ZGJQemVqSGJ4NDRURHpqSW0rK3h3cHlSNTZlNlpxaThoK1hGZk5UeFExSVdzaVVRSnNFdk5PdXM5a205Mg0KZ1RaOWhKTlg4R2dmQ3Z1UDBCakRzWEdqUVZoVXU3dExPNGVjY1h2WmpuTExZck9NOXF0a2tFZjhlRC8xZGg1Kw0KbnZtZ0NsMlFJOVlIcStPdmxDTHRBYzJtMXR4UHh0dkN1cjUxUmpvUFVYa21DZ2xqWmRxYWRTS2NVUnUvRFhNRQ0KY0xGMTNzbVFsNkpxNGdHelFZOTE5UEMxRWpraEdLWkEvRUZ0VXdJREFRQUJBb0lCQURONnI1UktyMWlyd1Rraw0KalkvQ0NBT0t5d3h1QjRqazlKMnNHTkRyMmh4OGhDL2VEN2VpK3QrN0dLckVPSG5VbGZhUVdOczcyUGlPSitLeQ0KUmQ1eWRMSFRtcnp3cUNMQWlYVzdjTkFwWlJ2ZFhvS3QwWnY5cldRVUlZeHI3aVlWd2RQU2ZPNFJMV0JEL2xWZw0KSS85KzBvVkp2UXlRWlVjejFHSFdiRTdCcGUrVzB2a0RlRlh4bENQMzlVV216ZkNDaGh6Q0ZYVFRndmwyRUhkeA0KUU1Qbm4zZGhqZit1QnRaWlhVcGpvNmxGTklyV2xxblNnRTdrckpVZnpENVRWZ0cxcThBZkY1QmRZbUF0RW9JYQ0KbldRcm41MSsrc2VKUWNDaDBnNGJSV2Jqazc5UXAydWFub2VWWnBaZFJRU2FndVVuSmJPTFhrU0pBaXFBY3pvRA0KTVdxWFNXa0NnWUVBMlNwSk1NZE4zMHlqVFplSFBMYjcyd3VtN2wrWlo2V3J2OHp0NkFXUEEzVDdpNmRCUlNLaQ0KRDZ5Y0NMazZWNlNXT0VnbTJNcnVZeHd2ZDNsWTNYSGpKd21mcFdxUWpZcktwMXU2dytCOE5LaGNkQXgybGNuMw0KVXY3cnYxQS9FdDdRMWFiekw5ZS92dGVQMG81c1lEdmZER3hNRnQ5amd1NDNTL3JwSE9XVGUxMENnWUVBeDloYQ0KaUhIY1BmcHlzWlI1a1gwZU9UOHBYcE9HNlVmckV3Mzh5WnFJeUNHejRmeVpLUStidHRnMFdxSE1wV2UxbXc5UA0KcFlCcTJQdHpVdXlKVkdmdDl4VFA3T3Yxb2E3NDFjWUZwQmJZdFc0ZTgxQ1dQQmo0Y1pOQnpxMVkwZGc0SHcwcw0KYUdZQlE5TDg3a29NMGVsZmpObzIvSEpmVFZjOE9XVTYwRVdMc0c4Q2dZQmcyQlN2cGhHNkpRa21UdzdHS3F3Qw0KTVI0T2E1K1RzelAyWXNNdGwxMEJvNmVSemRLenJCQXRnVUpNT1o0ays0YnFMbkwwZHZyOFE5Ti9LaVJSRExySg0KNithLzg5Zm01eUFjcGpHUnJJaDNTeVYvc3hjbkVWdzBMTzZnOEg1UVFnRkxaaHBKR2FPdXpaNmJ2VnZqUm8vZg0Ka0dRV1J5U3ZmT0E0Qi9yeElnZzFHUUtCZ0NNL1ZxQndMSjlGMkFyWUhDVDhBMk9uYnoxK0diSjFlOUd0aXVObg0KL1M0SE83bmxHb0p5ZlUxZmpzUlplMFhGSi9QRVhKRGRPSHN5eG1GZTFNM3RVcnhja0Z2Q05sMmhCY1IybTdJWQ0KVVhxV2hLRDNtcmZZMDZEOGp3UEw4VGw1d0ZSQnQ0NW1SMXpXRHNSY2pTeE0xQXg4eEd2OEpERDQ3T2RXb212dg0KaURiREFvR0JBSy9XcHpvTjU5dnNhdytQY3hTOTNXZ0JBbkdlOXErbVB4TlBMajB4YWFraU5GbjdGQ2RpR1Y4eg0KNFduMHN1YTQ4djdRY0piS2NMMFpiWGt5NjFFWlYzSHFBeXpoV1o2alNTUW9NMzdTL25QcHE1RVBUZnM0RHZubA0KQkE3ZFdleUxGbk43ZVBWU2tMMVNFUzU4TXBNTWl1bnJVby9DaTZPamlPeU43eW5uVTZ0RQ0KLS0tLS1FTkQgUlNBIFBSSVZBVEUgS0VZLS0tLS0=
+  key.pem: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQ0KTUlJRXBRSUJBQUtDQVFFQXlxT3ZLYVFtT0o1cDVOdmtPSm5YNURJdFhlTWxWcjJablBnOURLUGkxVGI0WDUwRg0KL2dCMC9uRVI4VCtxUGJ2eWViR1FQVjNPcXZNSHJDYUp0ZmE1VmlYVUZzc2lxSm1LTTkrU3ZpY1ErcGNHdkhEWg0KVDVHTUVXaWZWUTAyK1pOaUZ5ZmxQY0k0NVM4VGZVaGlNRmFBaDFRVHkvZ1ZRcFA0RUZYUGZwQ3U2OGJyNCtrTA0KWXRUS1dvbkdFaDZ1cFcvRy94MDNxRnRhdGh1emFQTEdyTVdGQ2xZbGljMjhjbDB6MUZ2aWtDZ1hGZmYxTWE0MQ0KTHM5RWUyMGRxV3RrTlEzSFFsQnRhWGlKMkRTRGZjYWYxMEYycmc4QjQ4eFhxRnF4QlY4aTE0WmgvMUt4NkJMZg0KUVJuWGNsM2g4cys4MjE2MWsyQXVRdnNWM2s3WnVIRU5tTHFjb1FJREFRQUJBb0lCQVFDRjQ1MEs0SUM0akVMZg0KaWtMQyt6TmdmWjdvRi90RjBzUzZxSEo5OVpNYzJkTkdLWlFaL2VkUGJ4b3gwcVVEWVRtWEdyRjVPcEFnOTY4cw0KR2RLSHZsczdCb2VaLytJSWtGcDJaOVNuZTF5R2xsOUhCekV1bDdaNmtpd2tvRFNndHJicklkc2Y4VUp5ZTZaZQ0KOHdLZGVhbzJ3R0RNTmtDbDJ1cmVzRFFISmtYTlZsWjhVaUdIMGR2UFZHVEdpaFFBWnJxOXM2MkhhRUZwaG8wNQ0KRTdBU0xkZ00rQUNBWHpiUU1hNEJOYlJFQnFwdThUSGJGKzdDcEdpcURzaW5hMTkxS3BjZCtsS0ZNaGtHTjZrbA0KNXFKTGxxWFJrQVg3T09oWGM4RGZYZnpwQ1NuWVNlK0kyeDBtTDJjQUxVc05ZYlpGRXRzNHJFeU9WM1hXMmdJeQ0Kd09Oa0VqY2hBb0dCQVBDR0N5WnZ2Vk5HSTVIWEVCRUhFdk11ZWhudDVlKy9wYnVDbWZhTVRNTmdyb2tIcFFGRA0KWU85aUJua3dRM2hSdzVQQm5SMFVOZkd0WWZuUDlYRlRZM1VYOUJsWURCbW50WlRSbU5VNzZVRWJ4elRKM0w4Zg0Kd2ZKVk5SMXR3V1NnNGQ5SnpkWVJOZlQxdHJtRi9sS1J3NzZzeitEMVV0NkNPTTl0OVE5TE1GaTFBb0dCQU5ldA0KbW83VEIxejNKVWMyNDlobmhOVTFLV3E3TVduZFNiSHptNldiMTlmYy9uTVFOcW9qRFZvT05kVSs5VGZnZWxPSA0KOXRXRkdoMGxKRklnaTh0UXdEcWg2bS96cGJORHh0QlN1R1B6T2U2Q0lVSUNUbk0wQ3d1QWFmeXJVaW1MM3B2bg0KZXNtWEhCL0k0VkFFK2NpK2laSFlJU1pUNzMxbklXdWlCYmU3WXdPOUFvR0JBSUpiTTZuV1A1YmxXWnZPSWxBSQ0KTkhZR0Iza01IV1d0eWFYeHAzNGZGZStCODdZaXBZUWt2MkdlRUFJWWJVakZqNmtCOHlQeWN6WVRrUmt5WTBUVA0KUEFFWFJWMkRBYlBaMkNqYTIra2RlbEttT25YYXZiLzc5MEplZWRZRVNSOC9yb3MwMWRFaUxNc2hiTEhwOUNkTw0KQnZmTmN6RHA1TXJoYXViSklscnlsalpOQW9HQkFOSkxUb0ZtV0M2WU9Edm8xRjVrQ1V2T0t4VUxjdEhUVjVEdw0KZzlvRlMzOEoxdndnV2Z5b2N0TlZPYjQwUmV0MnNDK1VTZVBGaFVIWHZrTnB3b1M2dHNRMHJoNzhoWnQyUVh0TQ0Kdk1lUUYvTnI1THUwL2dNc1FueXplQ1JLYzdGWTFQUlV6dytTakhTZGJMdVdMbXREQldZMFE1WllqeEpLSlhjSw0KSXVNVURpWk5Bb0dBUVZIcGhCZjhERmttZkNXQ3RBSEN1NWFMRFE4dFpDeEtjd0FFNEhLWm10WFVlWVB0U0F3Tw0KOW03Zi91Zml0bG95cVFjRm9WZEdkWURHYzRKNXRoKzV3MitaZ1VKREs5OTRFRUJwZU4xSE1DdjN4b3BreVpkcg0KM0hNemRvZm1LeTk0NjFZUEZVYlRldDhwR0VIV25CSzlQbFhaN0ZkSGNRRHEwaVV2VFcxQzNHcz0NCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0t
 
 ---
 
@@ -44,6 +44,7 @@ metadata:
   name: kanali
   namespace: default
 spec:
+  replicas: 2
   selector:
     matchLabels:
       k8s-app: kanali
@@ -55,7 +56,7 @@ spec:
       serviceAccountName: kanali
       containers:
       - name: kanali
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         image: fbgrecojr/kanali:test
         command:
         - /kanali
@@ -106,11 +107,9 @@ data:
     jaeger_server_url = "jaeger-agent.kube-system.svc.cluster.local"
     jaeger_agent_url = "jaeger-agent.kube-system.svc.cluster.local"
 
-    [analytics]
-    influx_addr = "http://kanali-influxdb.default.svc.cluster.local:8086"
-    influx_db = "kanali"
-    influx_username = ""
-    influx_password = ""
+    [prometheus]
+    port = 8000
+    bind_address = "0.0.0.0"
 
     [plugins]
     location = "/"
@@ -125,26 +124,24 @@ data:
     ca_file = ""
 
     [server]
-    port = 8443
+    secure_port = 8443
     bind_address = "0.0.0.0"
-    peer_udp_port = 10001
-    proxy_protocol = false
 
     [process]
-    log_level = "info"
+    log_level = "debug"
 
     [etcd]
     cert_file = ""
     key_file = ""
     ca_file = ""
-    endpoints = "http://192.168.99.100:23790"
+    endpoints = "http://etcd-grpc-proxy:23790"
     prefix = "kanali"
 
     [proxy]
     enable_cluster_ip = true
     enable_mock_responses = true
     upstream_timeout = "0h0m10s"
-    header_mask_value = "ommitted"
+    header_mask_value = "omitted"
     tls_common_name_validation = false
     mask_header_keys = [
       "apikey"
@@ -212,28 +209,3 @@ subjects:
 - kind: ServiceAccount
   name: kanali
   namespace: default
-
----
-
-apiVersion: v1
-kind: Pod
-metadata:
-  name: etcd
-  namespace: default
-spec:
-  hostNetwork: true
-  containers:
-  - name: etcd
-    imagePullPolicy: IfNotPresent
-    image: quay.io/coreos/etcd:v3.2.9
-    command:
-    - etcd
-    - grpc-proxy
-    - start
-    - --advertise-client-url=192.168.99.100:23790
-    - --endpoints=localhost:2379
-    - --listen-addr=192.168.99.100:23790
-    - --resolver-prefix=kanali
-    - --resolver-ttl=60
-    ports:
-    - containerPort: 23790

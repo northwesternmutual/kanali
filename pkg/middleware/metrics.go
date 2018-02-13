@@ -1,47 +1,59 @@
+// Copyright (c) 2018 Northwestern Mutual.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package middleware
 
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
-  "strconv"
 
 	"go.uber.org/zap"
 
 	"github.com/northwesternmutual/kanali/pkg/log"
+	"github.com/northwesternmutual/kanali/pkg/metrics"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"github.com/northwesternmutual/kanali/pkg/utils"
-  "github.com/northwesternmutual/kanali/pkg/metrics"
 )
-
-type metricsResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
 
 var (
 	ipRegex = regexp.MustCompile("^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$")
 )
-
-func (mrw *metricsResponseWriter) WriteHeader(code int) {
-	mrw.statusCode = code
-	mrw.ResponseWriter.WriteHeader(code)
-}
 
 // Metrics is a middleware that will log and report metrics
 // corresponding to the current request.
 func Metrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
-		mrw := &metricsResponseWriter{w, http.StatusOK}
 
-    metrics.RequestInFlightCount.Inc()
+		rec := httptest.NewRecorder()
 
-		next.ServeHTTP(mrw, r)
+		metrics.RequestInFlightCount.Inc()
 
-    metrics.RequestInFlightCount.Dec()
+		next.ServeHTTP(rec, r)
+
+		metrics.RequestInFlightCount.Dec()
 
 		endTime := time.Now()
 
@@ -50,19 +62,14 @@ func Metrics(next http.Handler) http.Handler {
 			zap.String(tags.HTTPRequestMethod, r.Method),
 			zap.String(tags.HTTPRequestURLPath, utils.ComputeURLPath(r.URL)),
 			zap.String(tags.HTTPRequestDuration, fmt.Sprintf("%gms", getReqDuration(startTime, endTime))),
-			zap.Int(tags.HTTPResponseStatusCode, mrw.statusCode),
+			zap.Int(tags.HTTPResponseStatusCode, rec.Code),
 		)
 
-    metrics.RequestLatency.WithLabelValues(r.Method).Observe(getReqDuration(startTime, endTime))
-    metrics.RequestCount.WithLabelValues(strconv.Itoa(mrw.statusCode), r.Method).Inc()
-    if isError(mrw.statusCode) {
-      metrics.RequestErrorCount.WithLabelValues(strconv.Itoa(mrw.statusCode), r.Method).Inc()
-    }
-	})
-}
+		metrics.RequestLatency.WithLabelValues(r.Method).Observe(getReqDuration(startTime, endTime))
+		metrics.RequestCount.WithLabelValues(strconv.Itoa(rec.Code), r.Method).Inc()
 
-func isError(code int) bool {
-  return code > 399 && code < 599
+		utils.TransferResponse(rec, w)
+	})
 }
 
 // getRemoteAddr return a parsed remote address. There is not defined format for
