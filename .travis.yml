@@ -4,11 +4,11 @@ language: go
 
 matrix:
   include:
-  - go: 1.9.3
+  - go: 1.10
     env:
     - TESTS=true
     - COVERAGE=true
-  - go: 1.9.3
+  - go: 1.10
     env:
     - E2E_TEST=true
     - K8S_VERSION=v1.9.0
