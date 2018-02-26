@@ -3,23 +3,37 @@
 apiVersion: kanali.io/v2
 kind: ApiProxy
 metadata:
- name: example-basic-endpoint-backend
+ name: endpoint
  namespace: default
 spec:
  source:
-   path: /example-basic-endpoint-backend
+   path: /endpoint
  target:
-   path: /
    backend:
-     endpoint:
-       scheme: https
-       host: httpbin.org
-       port: 8080
- plugins:
- - name: apiKey
-   version: v2.0.0-rc.1
-   config:
-     apiKeyBindingName: example-apikeybinding
+     endpoint: http://tester.default.svc.cluster.local:8080
+
+# ---
+#
+# apiVersion: kanali.io/v2
+# kind: ApiProxy
+# metadata:
+#  name: example-basic-endpoint-backend
+#  namespace: default
+# spec:
+#  source:
+#    path: /example-basic-endpoint-backend
+#  target:
+#    path: /
+#    backend:
+#      endpoint:
+#        scheme: https
+#        host: httpbin.org
+#        port: 8080
+#  plugins:
+#  - name: apiKey
+#    version: v2.0.0-rc.1
+#    config:
+#      apiKeyBindingName: example-apikeybinding
 
 # ---
 #

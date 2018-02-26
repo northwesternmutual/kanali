@@ -81,7 +81,10 @@ func (step mockTargetStep) Do(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 func mockTargetDefined(proxy *v2.ApiProxy) bool {
-	return len(proxy.Spec.Target.Backend.Mock.MockTargetName) > 0
+	if proxy.Spec.Target.Backend.Mock != nil {
+		return len(proxy.Spec.Target.Backend.Mock.MockTargetName) > 0
+	}
+	return false
 }
 
 func mockTargetEnabled(proxy *v2.ApiProxy) bool {

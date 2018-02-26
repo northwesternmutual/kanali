@@ -34,18 +34,18 @@ data:
     cert_file = ""
     key_file = ""
     ca_file = ""
-    endpoints = "http://etcd.default.svc.cluster.local:2379"
+    endpoints = "http://192.168.99.100:31747"
     prefix = "kanali"
 
     [proxy]
     enable_cluster_ip = true
     enable_mock_responses = true
     upstream_timeout = "0h0m10s"
-    header_mask_value = "ommitted"
+    header_mask_value = "omitted"
     tls_common_name_validation = false
     mask_header_keys = [
       "apikey"
     ]
 
     [proxy.default_header_values]
-    deployment = "production"
+    x-canary-deployment = "stable"

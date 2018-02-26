@@ -26,9 +26,15 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 
+	"github.com/northwesternmutual/kanali/test/e2e/framework"
+
 	// test sources
 	_ "github.com/northwesternmutual/kanali/test/e2e/kanali.io"
 )
+
+func init() {
+	framework.RegisterCommonFlags()
+}
 
 func TestE2E(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)

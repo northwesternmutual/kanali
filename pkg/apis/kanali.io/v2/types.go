@@ -42,11 +42,18 @@ type ApiKeySpec struct {
 	Revisions []Revision `json:"revisions"`
 }
 
+type RevisionStatus string
+
+const (
+	RevisionStatusActive   RevisionStatus = "Active"
+	RevisionStatusInactive RevisionStatus = "Inactive"
+)
+
 // ApiKeyRevision is an ApiKey revision
 type Revision struct {
-	Data     string `json:"data"`
-	Status   string `json:"status"`
-	LastUsed string `json:"lastUsed"`
+	Data     []byte         `json:"data"`
+	Status   RevisionStatus `json:"status"`
+	LastUsed string         `json:"lastUsed"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -134,15 +141,9 @@ type Mock struct {
 
 // Backend describes an upstream server
 type Backend struct {
-	Endpoint *Endpoint `json:"endpoint,omitempty"`
-	Mock     *Mock     `json:"mock,omitempty"`
-	Service  *Service  `json:"service,omitempty"`
-}
-
-type Endpoint struct {
-	Scheme string `json:"scheme,omitempty"`
-	Host   string `json:"host,omitempty"`
-	Port   int64  `json:"port,omitempty"`
+	Endpoint *string  `json:"endpoint,omitempty"`
+	Mock     *Mock    `json:"mock,omitempty"`
+	Service  *Service `json:"service,omitempty"`
 }
 
 // Service describes a Kubernetes service

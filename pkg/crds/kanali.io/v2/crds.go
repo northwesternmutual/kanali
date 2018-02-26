@@ -481,30 +481,7 @@ var ApiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 												Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
 													"endpoint": {
 														Description: "endpoint object",
-														Type:        "object",
-														Required: []string{
-															"scheme",
-															"host",
-														},
-														Properties: map[string]apiextensionsv1beta1.JSONSchemaProps{
-															"scheme": {
-																Description: "http url scheme",
-																Type:        "string",
-																Enum: []apiextensionsv1beta1.JSON{
-																	{
-																		Raw: []byte(`"http"`),
-																	},
-																	{
-																		Raw: []byte(`"https"`),
-																	},
-																},
-															},
-															"host": {
-																Description: "http url host",
-																Type:        "string",
-																MinLength:   int64Ptr(1),
-															},
-														},
+														Type:        "string",
 													},
 												},
 											},

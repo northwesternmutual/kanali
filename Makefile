@@ -23,23 +23,15 @@ unit_test:
 
 .PHONY: e2e_test
 e2e_test:
-	@bash -c "set -e; set -o pipefail; $(GOTEST) ./test/e2e | $(COLORIZE)"
+	@bash -c "set -e; set -o pipefail; $(GOTEST) ./test/e2e -kubeconfig $(KUBECONFIG) -kanali-endpoint $(KANALI_ENDPOINT) | $(COLORIZE)"
 
 .PHONY: test
 test: unit_test e2e_test
 
 .PHONY: install
 install:
-	dep version || (go get github.com/golang/dep/cmd/dep && dep version)
+	(dep version | grep v0.4.1) || (wget -q https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 && chmod +x dep-linux-amd64 && mv dep-linux-amd64 /usr/local/bin/dep && dep version)
 	dep ensure -v -vendor-only # assumes updated Gopkg.lock
-
-.PHONY: openapi
-openapi:
-	@go install ./vendor/k8s.io/code-generator/cmd/openapi-gen
-	openapi-gen \
-		--input-dirs=github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2 \
-		--go-header-file=./hack/custom-boilerplate.go.txt \
-		--output-base=github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2
 
 .PHONY: fmt
 fmt:
@@ -54,10 +46,6 @@ cover:
 .PHONY: binary
 binary:
 	./hack/binary.sh $(VERSION)
-
-.PHONY: test
-test:
-	@bash -c "set -e; set -o pipefail; $(GOTEST) $(PACKAGES) | $(COLORIZE)"
 
 .PHONY: lint
 lint:

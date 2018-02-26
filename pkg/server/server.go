@@ -63,11 +63,21 @@ type logger interface {
 // server(s). If an error is encounted, it will be hidden within the returned
 // type for evaluation by that type's methods.
 func Prepare(opts *Options) *serverParams {
+	f, err := os.Open(opts.TLSCa)
+	if err != nil && len(opts.TLSCa) > 0 {
+		return &serverParams{err: []error{err}}
+	} else {
+		defer f.Close()
+	}
+	return prepare(opts, f)
+}
+
+func prepare(opts *Options, r io.Reader) *serverParams {
 	params := &serverParams{options: opts}
 	insecureAddr, secureAddr := fmt.Sprintf("%s:%d", opts.InsecureAddr, opts.InsecurePort), fmt.Sprintf("%s:%d", opts.SecureAddr, opts.SecurePort)
 
 	if opts.SecurePort > 0 && len(opts.TLSCa) > 0 { // client has requested an HTTPS server with mutual TLS
-		tlsConfig, err := opts.getTLSConfig()
+		tlsConfig, err := getTLSConfigFromReader(r)
 		if err != nil {
 			params.err = append(params.err, err)
 		} else {
@@ -135,15 +145,6 @@ func closeServer(log logger, svr *http.Server, name, scheme string) error {
 	}
 	log.Info(fmt.Sprintf("gracefully closed %s %s server", name, scheme))
 	return nil
-}
-
-func (opts *Options) getTLSConfig() (*tls.Config, error) {
-	if f, err := os.Open(opts.TLSCa); err != nil {
-		return nil, err
-	} else {
-		defer f.Close()
-		return getTLSConfigFromReader(f)
-	}
 }
 
 func getTLSConfigFromReader(r io.Reader) (*tls.Config, error) {

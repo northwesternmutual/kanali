@@ -47,7 +47,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/server"
 	"github.com/northwesternmutual/kanali/pkg/store/core/v1"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
-	"github.com/northwesternmutual/kanali/pkg/traffic"
+	//"github.com/northwesternmutual/kanali/pkg/traffic"
 	"github.com/northwesternmutual/kanali/pkg/utils"
 )
 
@@ -84,11 +84,11 @@ func Run(sigCtx context.Context) error {
 		return err
 	}
 
-	trafficCtlr, err := traffic.NewController()
-	if err != nil {
-		logger.Fatal(err.Error())
-		return err
-	}
+	// trafficCtlr, err := traffic.NewController()
+	// if err != nil {
+	// 	logger.Fatal(err.Error())
+	// 	return err
+	// }
 
 	tracer, tracerErr := tracer.Jaeger()
 	if tracerErr != nil {
@@ -162,11 +162,11 @@ func Run(sigCtx context.Context) error {
 		return nil
 	}, nilInterrupt("Secret"))
 
-	g.Add(func() error {
-		return trafficCtlr.Run(ctx)
-	}, func(error) {
-		cancel()
-	})
+	// g.Add(func() error {
+	// 	return trafficCtlr.Run(ctx)
+	// }, func(error) {
+	// 	cancel()
+	// })
 
 	if tracerErr == nil {
 		g.Add(func() error {

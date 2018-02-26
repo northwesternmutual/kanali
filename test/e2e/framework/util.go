@@ -1,14 +1,17 @@
 package framework
 
 import (
-	"os"
-	"path/filepath"
+	"time"
 
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+var (
+	Poll                    = 2 * time.Second
+	NamespaceCleanupTimeout = 15 * time.Minute
+)
+
 func LoadConfig() (*restclient.Config, error) {
-	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
-	return clientcmd.BuildConfigFromFlags("", kubeconfig)
+	return clientcmd.BuildConfigFromFlags("", TestContext.KubeConfig)
 }

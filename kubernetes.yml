@@ -9,8 +9,10 @@ spec:
   selector:
     k8s-app: kanali
   ports:
-  - name: app-port
+  - name: https
     port: 8443
+  - name: http
+    port: 8080
   type: NodePort
 
 ---
@@ -44,7 +46,7 @@ metadata:
   name: kanali
   namespace: default
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       k8s-app: kanali
@@ -125,6 +127,7 @@ data:
 
     [server]
     secure_port = 8443
+    insecure_port = 8080
     bind_address = "0.0.0.0"
 
     [process]
@@ -142,7 +145,7 @@ data:
     enable_mock_responses = true
     upstream_timeout = "0h0m10s"
     header_mask_value = "omitted"
-    tls_common_name_validation = false
+    tls_common_name_validation = true
     mask_header_keys = [
       "apikey"
     ]

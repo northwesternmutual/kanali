@@ -28,8 +28,10 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/spf13/viper"
@@ -174,17 +176,27 @@ func (step proxyPassStep) configureTransport() proxyPassStep {
 		return step
 	}
 
-	// TODO: set timeout
-
-	transport := http.DefaultTransport.(*http.Transport)
+	//transport := http.DefaultTransport.(*http.Transport)
 	tlsConfig, err := step.configureTLS()
 	if err != nil {
 		step.err = err
 		return step
 	}
 
-	transport.TLSClientConfig = tlsConfig
-	step.upstreamRoundTripper = transport
+	//transport.TLSClientConfig = tlsConfig
+	step.upstreamRoundTripper = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   100 * time.Second,
+		ExpectContinueTimeout: 10 * time.Second,
+		TLSClientConfig:       tlsConfig,
+	}
 
 	return step
 }
@@ -301,10 +313,15 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 
 	logger := log.WithContext(step.originalReq.Context())
 
+	if step.proxy.Spec.Target.SSL == nil {
+		return nil, nil
+	}
+
 	secret, err := coreV1.Interface().Secrets().Lister().Secrets(step.proxy.GetNamespace()).Get(step.proxy.Spec.Target.SSL.SecretName)
 	if err != nil {
 		switch e := err.(type) {
 		case *k8sErrors.StatusError:
+			logger.Info("secret not found")
 			if e.ErrStatus.Reason == metav1.StatusReasonNotFound {
 				return nil, nil
 			}
@@ -357,7 +374,7 @@ func (step proxyPassStep) serviceDetails() (string, string, error) {
 	logger := log.WithContext(step.originalReq.Context())
 	var scheme string
 
-	if len(step.proxy.Spec.Target.SSL.SecretName) > 0 {
+	if step.proxy.Spec.Target.SSL != nil && len(step.proxy.Spec.Target.SSL.SecretName) > 0 {
 		scheme = "https"
 	} else {
 		scheme = "http"
@@ -400,7 +417,13 @@ func (step proxyPassStep) setUpstreamURL() error {
 	var err error
 
 	if step.proxy.Spec.Target.Backend.Endpoint != nil { // Endpoint backend is configured
-		step.upstreamReq.URL.Scheme, step.upstreamReq.URL.Host = step.proxy.Spec.Target.Backend.Endpoint.Scheme, step.proxy.Spec.Target.Backend.Endpoint.Host
+		u, err := url.Parse(*step.proxy.Spec.Target.Backend.Endpoint)
+		if err != nil {
+			return err
+		} else {
+			step.upstreamReq.URL.Scheme = u.Scheme
+			step.upstreamReq.URL.Host = u.Host
+		}
 	} else {
 		step.upstreamReq.URL.Scheme, step.upstreamReq.URL.Host, err = step.serviceDetails()
 	}

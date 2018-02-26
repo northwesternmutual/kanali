@@ -41,7 +41,7 @@ enable_cluster_ip = true
 enable_mock_responses = true
 upstream_timeout = "0h0m10s"
 header_mask_value = "omitted"
-tls_common_name_validation = false
+tls_common_name_validation = true
 mask_header_keys = [
   "apikey"
 ]
