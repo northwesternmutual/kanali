@@ -30,7 +30,7 @@ test: unit_test e2e_test
 
 .PHONY: install
 install:
-	(dep version | grep v0.4.1) || (wget -q https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 && chmod +x dep-linux-amd64 && mv dep-linux-amd64 /usr/local/bin/dep && dep version)
+	(dep version | grep v0.4.1) || (mkdir -p $(GOPATH)/bin && DEP_RELEASE_TAG=v0.4.1 curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh && dep version)
 	dep ensure -v -vendor-only # assumes updated Gopkg.lock
 
 .PHONY: fmt
