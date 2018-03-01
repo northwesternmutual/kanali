@@ -11,8 +11,10 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/test/builder"
+	"github.com/northwesternmutual/kanali/test/e2e/context"
+	"github.com/northwesternmutual/kanali/test/e2e/deploy"
+	"github.com/northwesternmutual/kanali/test/e2e/deploy/tester"
 	"github.com/northwesternmutual/kanali/test/e2e/framework"
-	"github.com/northwesternmutual/kanali/test/e2e/tester"
 	testutils "github.com/northwesternmutual/kanali/test/utils"
 )
 
@@ -28,7 +30,7 @@ var _ = Describe("ApiProxy", func() {
 
 	It("should not match any apiproxy", func() {
 		By("preforming an http request")
-		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(framework.TestContext.KanaliEndpoint).WithPath("/foo").NewOrDie()
+		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(context.TestContext.KanaliConfig.GetEndpoint()).WithPath("/foo").NewOrDie()
 		resp, err := f.HTTPClient.Do(req)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -39,19 +41,19 @@ var _ = Describe("ApiProxy", func() {
 
 	It("should proxy to a backend Kubernetes service", func() {
 		By("deploying an upstream application")
-		_, _, err := tester.Deploy(f.BaseName, f.ClientSet,
-			tester.WithServer(tester.TLSTypeNone),
+		_, _, err := tester.Deploy(f.BaseName, f.Namespace.GetName(), f.ClientSet,
+			deploy.WithServer(deploy.TLSTypeNone),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("creating an apiproxy")
-		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.BaseName).Create(
-			builder.NewApiProxy("endpoint", f.BaseName).WithSourcePath("/endpoint").WithTargetPath("/").WithTargetBackendStaticService(tester.Name, tester.InsecurePort).NewOrDie(),
+		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.Namespace.GetName()).Create(
+			builder.NewApiProxy("endpoint", f.Namespace.GetName()).WithSourcePath("/endpoint").WithTargetPath("/").WithTargetBackendStaticService(tester.Name, tester.InsecurePort).NewOrDie(),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("preforming an http request")
-		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(framework.TestContext.KanaliEndpoint).WithPath(apiproxy.Spec.Source.Path).NewOrDie()
+		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(context.TestContext.KanaliConfig.GetEndpoint()).WithPath(apiproxy.Spec.Source.Path).NewOrDie()
 		resp, err := f.HTTPClient.Do(req)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -62,19 +64,19 @@ var _ = Describe("ApiProxy", func() {
 
 	It("should proxy to arbitrary http endpoint", func() {
 		By("deploying an upstream application")
-		dns, _, err := tester.Deploy(f.BaseName, f.ClientSet,
-			tester.WithServer(tester.TLSTypeNone),
+		dns, _, err := tester.Deploy(f.BaseName, f.Namespace.GetName(), f.ClientSet,
+			deploy.WithServer(deploy.TLSTypeNone),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("creating an apiproxy")
-		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.BaseName).Create(
-			builder.NewApiProxy("endpoint", f.BaseName).WithSourcePath("/endpoint").WithTargetPath("/").WithTargetBackendEndpoint(dns).NewOrDie(),
+		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.Namespace.GetName()).Create(
+			builder.NewApiProxy("endpoint", f.Namespace.GetName()).WithSourcePath("/endpoint").WithTargetPath("/").WithTargetBackendEndpoint(dns).NewOrDie(),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("preforming an http request")
-		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(framework.TestContext.KanaliEndpoint).WithPath(apiproxy.Spec.Source.Path).NewOrDie()
+		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(context.TestContext.KanaliConfig.GetEndpoint()).WithPath(apiproxy.Spec.Source.Path).NewOrDie()
 		resp, err := f.HTTPClient.Do(req)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -85,19 +87,19 @@ var _ = Describe("ApiProxy", func() {
 
 	It("should proxy to arbitrary https endpoint using tls", func() {
 		By("deploying an upstream application")
-		dns, _, err := tester.Deploy(f.BaseName, f.ClientSet,
-			tester.WithServer(tester.TLSTypePresent),
+		dns, _, err := tester.Deploy(f.BaseName, f.Namespace.GetName(), f.ClientSet,
+			deploy.WithServer(deploy.TLSTypePresent),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("creating an apiproxy")
-		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.BaseName).Create(
-			builder.NewApiProxy("endpoint", f.BaseName).WithSourcePath("/endpoint").WithTargetPath("/").WithSecret(tester.Name).WithTargetBackendEndpoint(dns).NewOrDie(),
+		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.Namespace.GetName()).Create(
+			builder.NewApiProxy("endpoint", f.Namespace.GetName()).WithSourcePath("/endpoint").WithTargetPath("/").WithSecret(tester.Name).WithTargetBackendEndpoint(dns).NewOrDie(),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("preforming an http request")
-		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(framework.TestContext.KanaliEndpoint).WithPath(apiproxy.Spec.Source.Path).NewOrDie()
+		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(context.TestContext.KanaliConfig.GetEndpoint()).WithPath(apiproxy.Spec.Source.Path).NewOrDie()
 		resp, err := f.HTTPClient.Do(req)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -108,19 +110,19 @@ var _ = Describe("ApiProxy", func() {
 
 	It("should proxy to arbitrary https endpoint using mutual tls", func() {
 		By("deploying an upstream application")
-		dns, _, err := tester.Deploy(f.BaseName, f.ClientSet,
-			tester.WithServer(tester.TLSTypeMutual),
+		dns, _, err := tester.Deploy(f.BaseName, f.Namespace.GetName(), f.ClientSet,
+			deploy.WithServer(deploy.TLSTypeMutual),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("creating an apiproxy")
-		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.BaseName).Create(
-			builder.NewApiProxy("endpoint", f.BaseName).WithSourcePath("/endpoint").WithTargetPath("/").WithSecret(tester.Name).WithTargetBackendEndpoint(dns).NewOrDie(),
+		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.Namespace.GetName()).Create(
+			builder.NewApiProxy("endpoint", f.Namespace.GetName()).WithSourcePath("/endpoint").WithTargetPath("/").WithSecret(tester.Name).WithTargetBackendEndpoint(dns).NewOrDie(),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("preforming an http request")
-		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(framework.TestContext.KanaliEndpoint).WithPath(apiproxy.Spec.Source.Path).NewOrDie()
+		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(context.TestContext.KanaliConfig.GetEndpoint()).WithPath(apiproxy.Spec.Source.Path).NewOrDie()
 		resp, err := f.HTTPClient.Do(req)
 		Expect(err).NotTo(HaveOccurred())
 

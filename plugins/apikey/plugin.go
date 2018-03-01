@@ -75,7 +75,7 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 	}
 
 	// attempt to find a matching api key
-	apiKeyObj := store.ApiKeyStore().Get(apiKeyText)
+	apiKeyObj := store.ApiKeyStore().Get([]byte(apiKeyText))
 	if apiKeyObj == nil {
 		logger.Warn("api key was not found in store")
 		return kanaliErrors.ErrorApiKeyUnauthorized

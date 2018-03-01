@@ -21,11 +21,14 @@
 package e2e
 
 import (
+	"flag"
+	"fmt"
 	"testing"
 
-	"github.com/onsi/ginkgo"
-	"github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
+	"github.com/northwesternmutual/kanali/test/e2e/context"
 	"github.com/northwesternmutual/kanali/test/e2e/framework"
 
 	// test sources
@@ -33,10 +36,15 @@ import (
 )
 
 func init() {
-	framework.RegisterCommonFlags()
+	context.RegisterCommonFlags()
 }
 
 func TestE2E(t *testing.T) {
-	gomega.RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "e2e tests")
+	flag.VisitAll(func(f *flag.Flag) {
+		fmt.Printf("%s=%s\n", f.Name, f.Value)
+	})
+
+	framework.NewDefaultSuite("kanali")
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "e2e tests")
 }

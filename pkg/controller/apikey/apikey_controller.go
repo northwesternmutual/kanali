@@ -24,7 +24,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"encoding/hex"
+	//"encoding/hex"
 	"errors"
 	"time"
 
@@ -151,15 +151,16 @@ func (ctlr *ApiKeyController) decryptApiKey(key *v2.ApiKey) (*v2.ApiKey, error) 
 	clone := key.DeepCopy()
 
 	for i, revision := range clone.Spec.Revisions {
-		cipherText, err := hex.DecodeString(revision.Data)
-		if err != nil {
-			return nil, err
-		}
+    cipherText := revision.Data // TODO: fix me
+		//cipherText, err := hex.DecodeString(revision.Data)
+		// if err != nil {
+		// 	return nil, err
+		// }
 		unencryptedApiKey, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, ctlr.decryptionKey, cipherText, []byte("kanali"))
 		if err != nil {
 			return nil, err
 		}
-		clone.Spec.Revisions[i].Data = string(unencryptedApiKey)
+		clone.Spec.Revisions[i].Data = unencryptedApiKey
 	}
 	return clone, nil
 }

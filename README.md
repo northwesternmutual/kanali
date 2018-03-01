@@ -49,6 +49,17 @@ $ open $(minikube service kanali-grafana --url)/dashboard/file/kanali.json
 $ open $(minikube service jaeger-all-in-one --url)
 ```
 
+# E2E Test Suite
+
+```sh
+$ git clone git@github.com:northwesternmutual/kanali.git
+$ cd kanali
+$ minikube start --kubernetes-version v1.9.0 --feature-gates CustomResourceValidation=true
+$ eval $(minikube docker-env)
+$ docker build -t kanali:local .
+$ make e2e_test
+```
+
 # Tutorial
 
 A complete guide showcasing all of Kanali's features is provided to ease the learning curve! The guided tutorial can be found [here](http://tutorial.kanali.io).

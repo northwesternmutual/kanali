@@ -23,7 +23,7 @@ unit_test:
 
 .PHONY: e2e_test
 e2e_test:
-	@bash -c "set -e; set -o pipefail; $(GOTEST) ./test/e2e -kubeconfig $(KUBECONFIG) -kanali-endpoint $(KANALI_ENDPOINT) | $(COLORIZE)"
+	@./hack/e2e.sh
 
 .PHONY: test
 test: unit_test e2e_test
@@ -45,7 +45,7 @@ cover:
 
 .PHONY: binary
 binary:
-	./hack/binary.sh $(VERSION)
+	@./hack/binary.sh $(VERSION)
 
 .PHONY: lint
 lint:

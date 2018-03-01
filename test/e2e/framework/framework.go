@@ -1,19 +1,39 @@
+// Copyright (c) 2018 Northwestern Mutual.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package framework
 
 import (
+  "fmt"
 	"net/http"
 	"time"
+  "math/rand"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
+	"github.com/northwesternmutual/kanali/test/e2e/deploy"
 )
 
 type Framework struct {
@@ -21,7 +41,7 @@ type Framework struct {
 	ClientSet       clientset.Interface
 	KanaliClientSet versioned.Interface
 	HTTPClient      *http.Client
-	KanaliEndpoint  string
+	Namespace       *v1.Namespace
 }
 
 func NewDefaultFramework(name string) *Framework {
@@ -52,34 +72,12 @@ func (f *Framework) BeforeEach() {
 		Expect(err).NotTo(HaveOccurred())
 	}
 
-	var got *v1.Namespace
-	err := wait.PollImmediate(Poll, 30*time.Second, func() (bool, error) {
-		var err error
-		got, err = f.ClientSet.CoreV1().Namespaces().Create(&v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: f.BaseName,
-			},
-		})
-		if err != nil {
-			return false, nil
-		}
-		return true, nil
-	})
+	ns, err := deploy.CreateNamespace(f.ClientSet, fmt.Sprintf("e2e-%s-%d", f.BaseName, rand.Intn(1000)))
 	Expect(err).NotTo(HaveOccurred())
+	f.Namespace = ns
 }
 
 func (f *Framework) AfterEach() {
-	err := f.ClientSet.CoreV1().Namespaces().Delete(f.BaseName, &metav1.DeleteOptions{})
-	Expect(err).NotTo(HaveOccurred())
-
-	err = wait.PollImmediate(Poll, NamespaceCleanupTimeout, func() (bool, error) {
-		if _, err := f.ClientSet.CoreV1().Namespaces().Get(f.BaseName, metav1.GetOptions{}); err != nil {
-			if apierrors.IsNotFound(err) {
-				return true, nil
-			}
-			return false, nil
-		}
-		return false, nil
-	})
+	err := deploy.DestroyNamespace(f.ClientSet, f.Namespace.GetName())
 	Expect(err).NotTo(HaveOccurred())
 }

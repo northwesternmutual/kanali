@@ -22,6 +22,7 @@ package v2
 
 import (
 	"sync"
+  "bytes"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 )
@@ -29,7 +30,7 @@ import (
 type ApiKeyStoreInterface interface {
 	Set(apiKey *v2.ApiKey)
 	Update(old, new *v2.ApiKey)
-	Get(data string) *v2.ApiKey
+	Get(data []byte) *v2.ApiKey
 	Delete(apiKey *v2.ApiKey) *v2.ApiKey
 	Clear()
 	IsEmpty() bool
@@ -71,22 +72,22 @@ func (s *apiKeyFactory) Update(old, new *v2.ApiKey) {
 	newRevisions := mergeSort(new.Spec.Revisions)
 
 	for len(oldRevisions) > 0 && len(newRevisions) > 0 {
-		if oldRevisions[0].Data == newRevisions[0].Data {
-			s.keyMap[newRevisions[0].Data] = *new
+		if bytes.Equal(oldRevisions[0].Data, newRevisions[0].Data) {
+			s.keyMap[string(newRevisions[0].Data)] = *new
 			oldRevisions = oldRevisions[1:]
 			newRevisions = newRevisions[1:]
-		} else if oldRevisions[0].Data < newRevisions[0].Data {
-			delete(s.keyMap, oldRevisions[0].Data)
+		} else if string(oldRevisions[0].Data) < string(newRevisions[0].Data) {
+			delete(s.keyMap, string(oldRevisions[0].Data))
 			oldRevisions = oldRevisions[1:]
 		}
 	}
 
 	for i := range oldRevisions {
-		delete(s.keyMap, oldRevisions[i].Data)
+		delete(s.keyMap, string(oldRevisions[i].Data))
 	}
 
 	for i := range newRevisions {
-		s.keyMap[newRevisions[i].Data] = *new
+		s.keyMap[string(newRevisions[i].Data)] = *new
 	}
 }
 
@@ -100,16 +101,16 @@ func (s *apiKeyFactory) Set(key *v2.ApiKey) {
 
 func (s *apiKeyFactory) set(key *v2.ApiKey) {
 	for _, revision := range key.Spec.Revisions {
-		s.keyMap[revision.Data] = *key
+		s.keyMap[string(revision.Data)] = *key
 	}
 }
 
 // Get retrieves an ApiKey if present
 // O(1)
-func (s *apiKeyFactory) Get(data string) *v2.ApiKey {
+func (s *apiKeyFactory) Get(data []byte) *v2.ApiKey {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	key, ok := s.keyMap[data]
+	key, ok := s.keyMap[string(data)]
 	if !ok {
 		return nil
 	}
@@ -128,12 +129,12 @@ func (s *apiKeyFactory) Delete(key *v2.ApiKey) *v2.ApiKey {
 		return nil
 	}
 	// Each ApiKey at each revision will be the same
-	result, ok := s.keyMap[key.Spec.Revisions[0].Data]
+	result, ok := s.keyMap[string(key.Spec.Revisions[0].Data)]
 	if !ok {
 		return nil
 	}
 	for _, revision := range key.Spec.Revisions {
-		delete(s.keyMap, revision.Data)
+		delete(s.keyMap, string(revision.Data))
 	}
 	return &result
 }
@@ -165,7 +166,7 @@ func merge(left, right []v2.Revision) []v2.Revision {
 		} else if j > len(right)-1 && i <= len(left)-1 {
 			slice[k] = left[i]
 			i++
-		} else if left[i].Data < right[j].Data {
+		} else if string(left[i].Data) < string(right[j].Data) {
 			slice[k] = left[i]
 			i++
 		} else {

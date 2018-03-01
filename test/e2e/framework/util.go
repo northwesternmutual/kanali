@@ -1,17 +1,12 @@
 package framework
 
 import (
-	"time"
-
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-)
 
-var (
-	Poll                    = 2 * time.Second
-	NamespaceCleanupTimeout = 15 * time.Minute
+	"github.com/northwesternmutual/kanali/test/e2e/context"
 )
 
 func LoadConfig() (*restclient.Config, error) {
-	return clientcmd.BuildConfigFromFlags("", TestContext.KubeConfig)
+	return clientcmd.BuildConfigFromFlags("", context.TestContext.KubeConfig)
 }
