@@ -184,12 +184,12 @@ func getTestApiProxy(name, namespace, sourcePath, targetPath string) *v2.ApiProx
 			Target: v2.Target{
 				Path: targetPath,
 				Backend: v2.Backend{
-					Service: v2.Service{
+					Service: &v2.Service{
 						Name: "my-service",
 						Port: 8080,
 					},
 				},
-				SSL: v2.SSL{
+				SSL: &v2.SSL{
 					SecretName: "mySecret",
 				},
 			},

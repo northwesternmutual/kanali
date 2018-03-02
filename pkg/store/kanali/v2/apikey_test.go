@@ -36,8 +36,8 @@ func TestApiKeyStore(t *testing.T) {
 func TestApiKeyStoreSet(t *testing.T) {
 	defer ApiKeyStore().Clear()
 
-	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: "abc123", Status: "active"})
-	apiKeyTwo := getTestApiKey("example-two", "foo", v2.Revision{Data: "def456", Status: "active"}, v2.Revision{Data: "ghi789", Status: "active"})
+	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: []byte("abc123"), Status: "active"})
+	apiKeyTwo := getTestApiKey("example-two", "foo", v2.Revision{Data: []byte("def456"), Status: "active"}, v2.Revision{Data: []byte("ghi789"), Status: "active"})
 
 	ApiKeyStore().Set(apiKeyOne)
 	ApiKeyStore().Set(apiKeyTwo)
@@ -50,11 +50,11 @@ func TestApiKeyStoreSet(t *testing.T) {
 func TestApiKeyStoreUpdate(t *testing.T) {
 	defer ApiKeyStore().Clear()
 
-	apiKeyOneOld := getTestApiKey("example-one", "foo", v2.Revision{Data: "mno345", Status: "active"}, v2.Revision{Data: "abc123", Status: "active"})
-	apiKeyOneNew := getTestApiKey("example-one", "foo", v2.Revision{Data: "abc123", Status: "inactive"})
+	apiKeyOneOld := getTestApiKey("example-one", "foo", v2.Revision{Data: []byte("mno345"), Status: "active"}, v2.Revision{Data: []byte("abc123"), Status: "active"})
+	apiKeyOneNew := getTestApiKey("example-one", "foo", v2.Revision{Data: []byte("abc123"), Status: "inactive"})
 
-	apiKeyTwoOld := getTestApiKey("example-two", "foo", v2.Revision{Data: "def456", Status: "active"}, v2.Revision{Data: "ghi789", Status: "active"})
-	apiKeyTwoNew := getTestApiKey("example-two", "foo", v2.Revision{Data: "jkl012", Status: "active"})
+	apiKeyTwoOld := getTestApiKey("example-two", "foo", v2.Revision{Data: []byte("def456"), Status: "active"}, v2.Revision{Data: []byte("ghi789"), Status: "active"})
+	apiKeyTwoNew := getTestApiKey("example-two", "foo", v2.Revision{Data: []byte("jkl012"), Status: "active"})
 
 	ApiKeyStore().Update(apiKeyOneOld, apiKeyOneNew)
 	ApiKeyStore().Update(apiKeyTwoOld, apiKeyTwoNew)
@@ -69,7 +69,7 @@ func TestApiKeyStoreUpdate(t *testing.T) {
 func TestApiKeyStoreClear(t *testing.T) {
 	defer ApiKeyStore().Clear()
 
-	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: "abc123", Status: "active"})
+	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: []byte("abc123"), Status: "active"})
 
 	ApiKeyStore().Set(apiKeyOne)
 	assert.Equal(t, 1, len(apiKeyStore.keyMap))
@@ -80,7 +80,7 @@ func TestApiKeyStoreClear(t *testing.T) {
 func TestApiKeyStoreIsEmpty(t *testing.T) {
 	defer ApiKeyStore().Clear()
 
-	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: "abc123", Status: "active"})
+	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: []byte("abc123"), Status: "active"})
 
 	assert.True(t, ApiKeyStore().IsEmpty())
 	ApiKeyStore().Set(apiKeyOne)
@@ -92,23 +92,23 @@ func TestApiKeyStoreIsEmpty(t *testing.T) {
 func TestApiKeyStoreGet(t *testing.T) {
 	defer ApiKeyStore().Clear()
 
-	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: "abc123", Status: "active"})
-	apiKeyTwo := getTestApiKey("example-two", "foo", v2.Revision{Data: "def456", Status: "active"}, v2.Revision{Data: "ghi789", Status: "active"})
+	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: []byte("abc123"), Status: "active"})
+	apiKeyTwo := getTestApiKey("example-two", "foo", v2.Revision{Data: []byte("def456"), Status: "active"}, v2.Revision{Data: []byte("ghi789"), Status: "active"})
 
 	ApiKeyStore().Set(apiKeyOne)
 	ApiKeyStore().Set(apiKeyTwo)
 
-	assert.Nil(t, ApiKeyStore().Get(""))
-	assert.Equal(t, apiKeyOne, ApiKeyStore().Get("abc123"))
-	assert.Equal(t, apiKeyTwo, ApiKeyStore().Get("def456"))
-	assert.Equal(t, apiKeyTwo, ApiKeyStore().Get("ghi789"))
+	assert.Nil(t, ApiKeyStore().Get([]byte("")))
+	assert.Equal(t, apiKeyOne, ApiKeyStore().Get([]byte("abc123")))
+	assert.Equal(t, apiKeyTwo, ApiKeyStore().Get([]byte("def456")))
+	assert.Equal(t, apiKeyTwo, ApiKeyStore().Get([]byte("ghi789")))
 }
 
 func TestAPIKeyDelete(t *testing.T) {
 	defer ApiKeyStore().Clear()
 
-	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: "abc123", Status: "active"})
-	apiKeyTwo := getTestApiKey("example-two", "foo", v2.Revision{Data: "def456", Status: "active"}, v2.Revision{Data: "ghi789", Status: "active"})
+	apiKeyOne := getTestApiKey("example-one", "foo", v2.Revision{Data: []byte("abc123"), Status: "active"})
+	apiKeyTwo := getTestApiKey("example-two", "foo", v2.Revision{Data: []byte("def456"), Status: "active"}, v2.Revision{Data: []byte("ghi789"), Status: "active"})
 
 	ApiKeyStore().Set(apiKeyOne)
 	ApiKeyStore().Set(apiKeyTwo)
@@ -118,7 +118,7 @@ func TestAPIKeyDelete(t *testing.T) {
 	assert.Equal(t, apiKeyTwo, ApiKeyStore().Delete(apiKeyTwo))
 	assert.True(t, ApiKeyStore().IsEmpty())
 	assert.Nil(t, ApiKeyStore().Delete(getTestApiKey("example-one", "foo")))
-	assert.Nil(t, ApiKeyStore().Delete(getTestApiKey("example-one", "foo", v2.Revision{Data: "abc123", Status: "active"})))
+	assert.Nil(t, ApiKeyStore().Delete(getTestApiKey("example-one", "foo", v2.Revision{Data: []byte("abc123"), Status: "active"})))
 }
 
 func getTestApiKey(name, namespace string, revisions ...v2.Revision) *v2.ApiKey {

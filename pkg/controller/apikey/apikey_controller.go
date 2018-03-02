@@ -21,10 +21,7 @@
 package apikey
 
 import (
-	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
-	//"encoding/hex"
 	"errors"
 	"time"
 
@@ -37,6 +34,8 @@ import (
 	"go.uber.org/zap"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
+
+  rsautils "github.com/northwesternmutual/kanali/pkg/rsa"
 )
 
 type ApiKeyController struct {
@@ -151,12 +150,10 @@ func (ctlr *ApiKeyController) decryptApiKey(key *v2.ApiKey) (*v2.ApiKey, error) 
 	clone := key.DeepCopy()
 
 	for i, revision := range clone.Spec.Revisions {
-    cipherText := revision.Data // TODO: fix me
-		//cipherText, err := hex.DecodeString(revision.Data)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		unencryptedApiKey, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, ctlr.decryptionKey, cipherText, []byte("kanali"))
+    unencryptedApiKey, err := rsautils.Decrypt(revision.Data, ctlr.decryptionKey,
+      rsautils.Base64Decode(),
+      rsautils.WithEncryptionLabel(rsautils.EncryptionLabel),
+    )
 		if err != nil {
 			return nil, err
 		}

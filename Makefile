@@ -9,6 +9,7 @@ GOFMT			=	gofmt
 ERRCHECK	=	errcheck -ignoretests
 FMT_LOG		=	fmt.log
 LINT_LOG	=	lint.log
+DEP_VERSION = v0.4.1
 PASS			=	$(shell printf "\033[32mPASS\033[0m")
 FAIL			=	$(shell printf "\033[31mFAIL\033[0m")
 COLORIZE	=	sed ''/PASS/s//$(PASS)/'' | sed ''/FAIL/s//$(FAIL)/''
@@ -30,7 +31,7 @@ test: unit_test e2e_test
 
 .PHONY: install
 install:
-	(dep version | grep v0.4.1) || (mkdir -p $(GOPATH)/bin && DEP_RELEASE_TAG=v0.4.1 curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh && dep version)
+	(dep version | grep $(DEP_VERSION)) || (mkdir -p $(GOPATH)/bin && DEP_RELEASE_TAG=$(DEP_VERSION) curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh && dep version)
 	dep ensure -v -vendor-only # assumes updated Gopkg.lock
 
 .PHONY: fmt

@@ -30,7 +30,7 @@ import (
 type option func(*config)
 
 type config struct {
-	base64Encode    bool
+	base64Encode, base64Decode bool
 	encryptionLabel []byte
 }
 
@@ -56,9 +56,32 @@ func Encrypt(data []byte, key *rsa.PublicKey, options ...option) ([]byte, error)
 	return b64, nil
 }
 
+func Decrypt(cipherText []byte, key *rsa.PrivateKey, options ...option) ([]byte, error) {
+  cfg := new(config)
+	for _, op := range options {
+		op(cfg)
+	}
+
+  if cfg.base64Decode {
+    var b64 []byte
+  	if _, err := base64.StdEncoding.Decode(b64, cipherText); err != nil {
+      return nil, err
+    }
+    cipherText = b64
+  }
+
+  return rsa.DecryptOAEP(sha256.New(), rand.Reader, key, cipherText, cfg.encryptionLabel)
+}
+
 func Base64Encode() option {
 	return option(func(cfg *config) {
 		cfg.base64Encode = true
+	})
+}
+
+func Base64Decode() option {
+	return option(func(cfg *config) {
+		cfg.base64Decode = true
 	})
 }
 
