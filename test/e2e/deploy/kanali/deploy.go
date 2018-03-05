@@ -1,3 +1,23 @@
+// Copyright (c) 2018 Northwestern Mutual.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package kanali
 
 import (
@@ -82,9 +102,9 @@ func (cfg *deployConfig) deploy() error {
 }
 
 func Destroy(cli kubernetes.Interface) error {
-  err := cli.RbacV1beta1().ClusterRoles().Delete(name, nil)
-  err = cli.RbacV1beta1().ClusterRoleBindings().Delete(name, nil)
-  return err
+	err := cli.RbacV1beta1().ClusterRoles().Delete(name, nil)
+	err = cli.RbacV1beta1().ClusterRoleBindings().Delete(name, nil)
+	return err
 }
 
 func (cfg *deployConfig) deployService() (*v1.Service, error) {
@@ -209,7 +229,7 @@ func (cfg *deployConfig) deployRBACResources() error {
 			},
 			{
 				Verbs:     []string{"watch"},
-        APIGroups: []string{""}, // needed to prevent error:
+				APIGroups: []string{""}, // needed to prevent error:
 				Resources: []string{"services", "secrets", "configmaps"},
 			},
 		},
@@ -325,14 +345,14 @@ func (cfg *deployConfig) deployPod() (*v1.Pod, error) {
 		args = append(args, insecureArgs...)
 		port = InsecurePort
 	case deploy.TLSTypePresent:
-    args = append(args, secureArgs...)
+		args = append(args, secureArgs...)
 		port = SecurePort
 		volumes[0].VolumeSource.Projected.Sources = append(volumes[0].VolumeSource.Projected.Sources, tlsProjectedVolume)
 	case deploy.TLSTypeMutual:
 		args = append(args, secureArgs...)
-    args = append(args,
-      "--tls.ca_file=/etc/kanali/pki/tls.ca",
-    )
+		args = append(args,
+			"--tls.ca_file=/etc/kanali/pki/tls.ca",
+		)
 		volumes[0].VolumeSource.Projected.Sources = append(volumes[0].VolumeSource.Projected.Sources, tlsProjectedVolume)
 		port = SecurePort
 	}
@@ -352,8 +372,8 @@ func (cfg *deployConfig) deployPod() (*v1.Pod, error) {
 			Name:      name,
 			Namespace: cfg.commitSHA,
 			Labels: map[string]string{
-        "app": name,
-        "sha": cfg.commitSHA,
+				"app": name,
+				"sha": cfg.commitSHA,
 			},
 		},
 		Spec: v1.PodSpec{

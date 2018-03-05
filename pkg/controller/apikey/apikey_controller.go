@@ -35,7 +35,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 
-  rsautils "github.com/northwesternmutual/kanali/pkg/rsa"
+	rsautils "github.com/northwesternmutual/kanali/pkg/rsa"
 )
 
 type ApiKeyController struct {
@@ -150,14 +150,14 @@ func (ctlr *ApiKeyController) decryptApiKey(key *v2.ApiKey) (*v2.ApiKey, error) 
 	clone := key.DeepCopy()
 
 	for i, revision := range clone.Spec.Revisions {
-    unencryptedApiKey, err := rsautils.Decrypt(revision.Data, ctlr.decryptionKey,
-      rsautils.Base64Decode(),
-      rsautils.WithEncryptionLabel(rsautils.EncryptionLabel),
-    )
+		unencryptedApiKey, err := rsautils.Decrypt([]byte(revision.Data), ctlr.decryptionKey,
+			rsautils.Base64Decode(),
+			rsautils.WithEncryptionLabel(rsautils.EncryptionLabel),
+		)
 		if err != nil {
 			return nil, err
 		}
-		clone.Spec.Revisions[i].Data = unencryptedApiKey
+		clone.Spec.Revisions[i].Data = string(unencryptedApiKey)
 	}
 	return clone, nil
 }

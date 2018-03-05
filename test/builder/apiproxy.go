@@ -62,12 +62,12 @@ func (b *ApiProxyBuilder) WithTargetBackendEndpoint(url string) *ApiProxyBuilder
 }
 
 func (b *ApiProxyBuilder) WithPlugin(name, version string, config map[string]string) *ApiProxyBuilder {
-  b.curr.Spec.Plugins = append(b.curr.Spec.Plugins, v2.Plugin{
-    Name: name,
-    Version: version,
-    Config: config,
-  })
-  return b
+	b.curr.Spec.Plugins = append(b.curr.Spec.Plugins, v2.Plugin{
+		Name:    name,
+		Version: version,
+		Config:  config,
+	})
+	return b
 }
 
 func (b *ApiProxyBuilder) WithTargetBackendStaticService(name string, port int) *ApiProxyBuilder {

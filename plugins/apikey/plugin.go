@@ -26,7 +26,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"time"
+	//"time"
 
 	//"github.com/northwesternmutual/kanali/pkg/metrics"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
@@ -34,7 +34,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
-	"github.com/northwesternmutual/kanali/pkg/traffic"
+	//"github.com/northwesternmutual/kanali/pkg/traffic"
 	"github.com/northwesternmutual/kanali/pkg/utils"
 	pluginConfig "github.com/northwesternmutual/kanali/plugins/apikey/config"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -47,7 +47,7 @@ type ApiKeyFactory struct{}
 // OnRequest intercepts a request before it get proxied to an upstream service
 func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, w *httptest.ResponseRecorder, r *http.Request) error {
 
-	trafficCtlr, _ := traffic.NewController()
+	//trafficCtlr, _ := traffic.NewController()
 
 	logger := log.WithContext(r.Context())
 
@@ -59,7 +59,7 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 
 	span := opentracing.SpanFromContext(ctx)
 
-	timestamp := time.Now()
+	//timestamp := time.Now()
 
 	// do not continue if an OPTION request
 	if strings.ToUpper(r.Method) == "OPTIONS" {
@@ -75,7 +75,7 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 	}
 
 	// attempt to find a matching api key
-	apiKeyObj := store.ApiKeyStore().Get([]byte(apiKeyText))
+	apiKeyObj := store.ApiKeyStore().Get(apiKeyText)
 	if apiKeyObj == nil {
 		logger.Warn("api key was not found in store")
 		return kanaliErrors.ErrorApiKeyUnauthorized
@@ -123,23 +123,23 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 		return kanaliErrors.ErrorApiKeyUnauthorized
 	}
 
-	rule, rate := store.ApiKeyBindingStore().GetRuleAndRate(p.ObjectMeta.Namespace, cfg.ApiKeyBindingName, apiKeyObj.ObjectMeta.Name, utils.ComputeTargetPath(p.Spec.Source.Path, p.Spec.Target.Path, r.URL.Path))
+	rule, _ := store.ApiKeyBindingStore().GetRuleAndRate(p.ObjectMeta.Namespace, cfg.ApiKeyBindingName, apiKeyObj.ObjectMeta.Name, utils.ComputeTargetPath(p.Spec.Source.Path, p.Spec.Target.Path, r.URL.Path))
 
 	if !validateApiKey(rule, r.Method) {
 		return kanaliErrors.ErrorApiKeyUnauthorized
 	}
 
-	if store.TrafficStore().IsRateLimitViolated(*p, rate, apiKeyObj.ObjectMeta.Name, timestamp) {
-		logger.Info("rate limit exceeded")
-		return kanaliErrors.ErrorTooManyRequests
-	}
-
-	go trafficCtlr.Report(ctx, &store.TrafficPoint{
-		Time:      timestamp.UnixNano(),
-		Namespace: p.ObjectMeta.Namespace,
-		ProxyName: config["apiKeyBindingName"],
-		KeyName:   apiKeyObj.ObjectMeta.Name,
-	})
+	// if store.TrafficStore().IsRateLimitViolated(*p, rate, apiKeyObj.ObjectMeta.Name, timestamp) {
+	// 	logger.Info("rate limit exceeded")
+	// 	return kanaliErrors.ErrorTooManyRequests
+	// }
+	//
+	// go trafficCtlr.Report(ctx, &store.TrafficPoint{
+	// 	Time:      timestamp.UnixNano(),
+	// 	Namespace: p.ObjectMeta.Namespace,
+	// 	ProxyName: config["apiKeyBindingName"],
+	// 	KeyName:   apiKeyObj.ObjectMeta.Name,
+	// })
 
 	return next()
 
@@ -148,7 +148,7 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 // OnResponse intercepts a request after it has been proxied to an upstream service
 // but before the response gets returned to the client
 func (k ApiKeyFactory) OnResponse(ctx context.Context, config map[string]string, w *httptest.ResponseRecorder, r *http.Request) error {
-	log.WithContext(ctx).Info("api key plugin OnRequest method not implemented")
+	log.WithContext(ctx).Info("api key plugin OnResponse method not implemented")
 	return next()
 }
 

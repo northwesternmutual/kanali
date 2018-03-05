@@ -25,13 +25,14 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 )
 
 type option func(*config)
 
 type config struct {
 	base64Encode, base64Decode bool
-	encryptionLabel []byte
+	encryptionLabel            []byte
 }
 
 var EncryptionLabel = []byte("kanali")
@@ -47,30 +48,40 @@ func Encrypt(data []byte, key *rsa.PublicKey, options ...option) ([]byte, error)
 		return nil, err
 	}
 
+	h := make([]byte, hex.EncodedLen(len(data)))
+	data = h[:hex.Encode(h, data)]
+
 	if !cfg.base64Encode {
 		return data, nil
 	}
 
-	var b64 []byte
+	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
 	base64.StdEncoding.Encode(b64, data)
 	return b64, nil
 }
 
 func Decrypt(cipherText []byte, key *rsa.PrivateKey, options ...option) ([]byte, error) {
-  cfg := new(config)
+	cfg := new(config)
 	for _, op := range options {
 		op(cfg)
 	}
 
-  if cfg.base64Decode {
-    var b64 []byte
-  	if _, err := base64.StdEncoding.Decode(b64, cipherText); err != nil {
-      return nil, err
-    }
-    cipherText = b64
-  }
+	if cfg.base64Decode {
+		b64 := make([]byte, base64.StdEncoding.DecodedLen(len(cipherText)))
+		n, err := base64.StdEncoding.Decode(b64, cipherText)
+		if err != nil {
+			return nil, err
+		}
+		cipherText = b64[:n]
+	}
 
-  return rsa.DecryptOAEP(sha256.New(), rand.Reader, key, cipherText, cfg.encryptionLabel)
+	hexDecodedCipherText := make([]byte, hex.DecodedLen(len(cipherText)))
+	n, err := hex.Decode(hexDecodedCipherText, cipherText)
+	if err != nil {
+		return nil, err
+	}
+
+	return rsa.DecryptOAEP(sha256.New(), rand.Reader, key, hexDecodedCipherText[:n], cfg.encryptionLabel)
 }
 
 func Base64Encode() option {

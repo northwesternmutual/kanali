@@ -51,7 +51,7 @@ const (
 
 // ApiKeyRevision is an ApiKey revision
 type Revision struct {
-	Data     []byte         `json:"data"`
+	Data     string         `json:"data"`
 	Status   RevisionStatus `json:"status"`
 	LastUsed string         `json:"lastUsed"`
 }
@@ -65,7 +65,6 @@ type ApiKeyList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ApiKey `json:"items"`
 }
-
 
 // +genclient
 // +genclient:noStatus

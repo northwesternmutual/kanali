@@ -42,6 +42,16 @@ func (b *HTTPRequestBuilder) WithMethod(method string) *HTTPRequestBuilder {
 	return b
 }
 
+func (b *HTTPRequestBuilder) WithHeader(key string, values ...string) *HTTPRequestBuilder {
+	if b.curr.Header == nil {
+		b.curr.Header = map[string][]string{}
+	}
+	for _, val := range values {
+		b.curr.Header.Add(key, val)
+	}
+	return b
+}
+
 func (b *HTTPRequestBuilder) WithHost(host string) *HTTPRequestBuilder {
 	u, _ := url.Parse(host)
 	b.curr.URL.Scheme = u.Scheme

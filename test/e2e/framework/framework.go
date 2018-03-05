@@ -21,10 +21,10 @@
 package framework
 
 import (
-  "fmt"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
-  "math/rand"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

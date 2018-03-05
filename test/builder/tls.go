@@ -72,7 +72,7 @@ func (b *tlsBuilder) NewOrDie() *tlsAssets {
 func CreateGenericCertificateTemplate() *x509.Certificate {
 	return &x509.Certificate{
 		SerialNumber:          big.NewInt(1653),
-		NotBefore:             time.Now().AddDate(0, 0, -1),
+		NotBefore:             time.Now().AddDate(-10, 0, 0),
 		NotAfter:              time.Now().AddDate(10, 0, 0),
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,

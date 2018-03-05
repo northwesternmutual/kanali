@@ -45,7 +45,7 @@ func NewApiKey(name string) *ApiKeyBuilder {
 
 func (b *ApiKeyBuilder) WithRevision(status v2.RevisionStatus, encryptedKey []byte) *ApiKeyBuilder {
 	b.curr.Spec.Revisions = append(b.curr.Spec.Revisions, v2.Revision{
-		Data:   encryptedKey,
+		Data:   string(encryptedKey),
 		Status: status,
 	})
 
