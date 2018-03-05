@@ -1,7 +1,7 @@
 # How to Contribute to Kanali
 
 ## Getting Started
-This project uses [dep](https://github.com/golang/dep) to manage dependencies.
+This project uses [dep](https://github.com/golang/dep) to manage dependencies. If not found locally, `make install` will bootstrap it locally.
 
 Use the following commands to bootstrap a local development environment for Kanali. Note that Kanali is built using Go version `1.10`.
 
@@ -17,17 +17,16 @@ $ make install
 
 This project contains a robust suite of unit and end-to-end (e2e) tests. Instructions detailing how to execute these suites are given below:
 
-###### unit
+#### unit
 ```sh
 $ make unit_test
 ```
 
-###### e2e
+#### e2e
 
 This test suite requires a running Kubernetes cluster. Bootstrap a local one as follows:
 
 ```sh
-# bootstrap
 $ minikube start --kubernetes-version v1.9.0 --feature-gates CustomResourceValidation=true
 ```
 If you would like to run this test suite against local changes, it is necessary to create a container image with these changes. This can be done in the following manner. Note that many other aspects of this test suite are configurable via environment variables. Reference [this](./hack/e2e.sh) for a list of these variables.
@@ -76,13 +75,13 @@ This projects adheres to the following pattern when grouping imports in Go files
 In addition, imports in each group must be sorted by length. For example:
 ```go
 import (
-	"context"
-	"net/http"
+  "context"
+  "net/http"
 
   "go.uber.org/zap"
   opentracing "github.com/opentracing/opentracing-go"
 
-	"github.com/northwesternmutual/kanali/pkg/tags"
+  "github.com/northwesternmutual/kanali/pkg/tags"
   "github.com/northwesternmutual/kanali/pkg/log"
 )
 ```
