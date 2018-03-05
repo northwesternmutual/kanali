@@ -20,10 +20,19 @@ func TestRSA(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, plainText, originalValue)
 
-	cipherText, err = Encrypt(originalValue, &priv.PublicKey, Base64Encode())
+	plainText, err = Decrypt(cipherText, priv, Base64Decode())
+	assert.NotNil(t, err)
+
+	cipherText, err = Encrypt(originalValue, &priv.PublicKey, Base64Encode(), WithEncryptionLabel(EncryptionLabel))
 	assert.Nil(t, err)
 
-	plainText, err = Decrypt(cipherText, priv, Base64Decode())
+	plainText, err = Decrypt(cipherText, priv, Base64Decode(), WithEncryptionLabel(EncryptionLabel))
 	assert.Nil(t, err)
 	assert.Equal(t, plainText, originalValue)
+
+	plainText, err = Decrypt(cipherText, priv, Base64Decode())
+	assert.NotNil(t, err)
+
+	plainText, err = Decrypt(cipherText, priv, WithEncryptionLabel(EncryptionLabel))
+	assert.NotNil(t, err)
 }
