@@ -26,6 +26,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -55,6 +56,9 @@ func TestGetTLSConfigFromReader(t *testing.T) {
 	assert.Equal(t, 1, len(cfg.ClientCAs.Subjects()))
 
 	_, err = getTLSConfigFromReader(bytes.NewReader([]byte("foo")))
+	assert.NotNil(t, err)
+
+	_, err = getTLSConfigFromReader(nil)
 	assert.NotNil(t, err)
 }
 
@@ -91,4 +95,31 @@ func TestPrepare(t *testing.T) {
 	params := prepare(opts, bytes.NewReader(pem))
 	assert.NotNil(t, params)
 	assert.Nil(t, params.err)
+	assert.NotNil(t, params.secureServer)
+	assert.NotNil(t, params.insecureServer)
+	assert.Equal(t, params.options, opts)
+	assert.Equal(t, params.secureServer.Addr, "4.3.2.1:4321")
+	assert.Equal(t, params.insecureServer.Addr, "1.2.3.4:1234")
+
+	params = prepare(opts, nil)
+	assert.NotNil(t, params)
+	assert.NotNil(t, params.err)
+	assert.Equal(t, params.err[0].Error(), "reader is nil")
+	assert.NotNil(t, params.insecureServer)
+
+	opts.TLSCa = ""
+	params = prepare(opts, bytes.NewReader(pem))
+	assert.NotNil(t, params)
+	assert.Nil(t, params.err)
+	assert.NotNil(t, params.secureServer)
+	assert.NotNil(t, params.insecureServer)
+}
+
+func TestRun(t *testing.T) {
+	params := serverParams{
+		err: []error{errors.New("foo")},
+	}
+	err := params.Run()
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "foo")
 }

@@ -25,6 +25,7 @@ import (
 	"net/http"
 
 	opentracing "github.com/opentracing/opentracing-go"
+	tracelog "github.com/opentracing/opentracing-go/log"
 	"go.uber.org/zap"
 
 	"github.com/northwesternmutual/kanali/pkg/log"
@@ -65,9 +66,9 @@ func (f *Flow) Play(ctx context.Context, w http.ResponseWriter, r *http.Request)
 		}
 		if span := opentracing.SpanFromContext(ctx); span != nil {
 			span.SetTag(tags.Error, true)
-			span.LogKV(
-				"event", tags.Error,
-				"error.message", err.Error(),
+			span.LogFields(
+				tracelog.String("event", tags.Error),
+				tracelog.String("error.message", err.Error()),
 			)
 		}
 		return err

@@ -148,6 +148,9 @@ func closeServer(log logger, svr *http.Server, name, scheme string) error {
 }
 
 func getTLSConfigFromReader(r io.Reader) (*tls.Config, error) {
+	if r == nil {
+		return nil, errors.New("reader is nil")
+	}
 	caCert, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err

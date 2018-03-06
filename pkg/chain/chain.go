@@ -43,10 +43,10 @@ func (c *Chain) Add(m ...func(next http.Handler) http.Handler) *Chain {
 	return c
 }
 
-// Link will link together off of the middlewares
+// Link will link together all of the middlewares
 // in the chain. The resulting http.Handler will
-// execute the middleware in the order they were
-// inserted into the chain with the passed middleware
+// execute the middlewares in the order they were
+// inserted into the chain with the given middleware
 // executed last.
 func (c *Chain) Link(final http.HandlerFunc) http.Handler {
 	if c == nil || final == nil {

@@ -27,13 +27,14 @@ import (
 	pluginPkg "plugin"
 	"strings"
 
+	"github.com/spf13/viper"
+
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/plugin"
 	"github.com/northwesternmutual/kanali/plugins/apikey"
-	"github.com/spf13/viper"
 )
 
 const (
