@@ -453,7 +453,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "grpclog-v2"
   name = "go.uber.org/zap"
   packages = [
     ".",
@@ -462,10 +461,11 @@
     "internal/color",
     "internal/exit",
     "zapcore",
-    "zapgrpc"
+    "zapgrpc",
+    "zaptest/observer"
   ]
-  revision = "0e55ec438687b894a0ce775770bebe817bb8f049"
-  source = "github.com/frankgreco/zap"
+  revision = "35aad584952c3e7020db7b839f6b102de6271f89"
+  version = "v1.7.1"
 
 [[projects]]
   branch = "master"
@@ -863,6 +863,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "14574b8b2f3d80c2da147e3f407d0e5d3fdebf61a938998617765282ffd40841"
+  inputs-digest = "f0c64b2155e39aa72d7afc0faf6335192f562861a03b9660de554e7d04a1984b"
   solver-name = "gps-cdcl"
   solver-version = 1

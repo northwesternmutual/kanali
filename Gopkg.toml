@@ -55,13 +55,9 @@ required = [
   name = "k8s.io/code-generator"
   version = "kubernetes-1.9.3"
 
-# the following constraint must be updated
-# once this PR has been merged:
-# https://github.com/uber-go/zap/pull/538
 [[constraint]]
   name = "go.uber.org/zap"
-  branch = "grpclog-v2"
-  source = "github.com/frankgreco/zap"
+  version = "v1.7.1"
 
 [[constraint]]
   name = "github.com/satori/go.uuid"

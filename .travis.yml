@@ -27,27 +27,11 @@ env:
   # Docker password
   - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
 
-before_install:
-- curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-- sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu
-  $(lsb_release -cs) stable"
-- sudo apt-get update
-- sudo apt-get -y install docker-ce
-- docker --version
-# nsenter needed for port forwarding
-- docker run --rm -v /usr/local/bin:/target jpetazzo/nsenter
-
 install:
 # install dependencies
 - make install_ci
 # build and push docker image tagged with this commit sha (used in e2e tests)
 - if [ "$E2E_TEST" == true ]; then bash ./hack/build-docker-images.sh ; fi
-
-before_script:
-# Bootstrap minikukbe
-- if [ "$E2E_TEST" == true ]; then bash ./hack/minikube-bootstrap.sh ; fi
-# Install Kanali and its dependencies
-- if [ "$E2E_TEST" == true ]; then bash ./hack/install.sh ; fi
 
 script:
 - if [ "$TESTS" == true ]; then make test_ci ; fi

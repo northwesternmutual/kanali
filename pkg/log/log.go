@@ -36,14 +36,41 @@ type logger struct {
 	level zap.AtomicLevel
 }
 
+type tempLogger struct {
+	previous zap.Logger
+}
+
+type Level zapcore.Level
+
+const (
+	// DebugLevel logs are typically voluminous, and are usually disabled in
+	// production.
+	DebugLevel Level = Level(zapcore.DebugLevel)
+	// InfoLevel is the default logging priority.
+	InfoLevel Level = Level(zapcore.InfoLevel)
+	// WarnLevel logs are more important than Info, but don't need individual
+	// human review.
+	WarnLevel Level = Level(zapcore.WarnLevel)
+	// ErrorLevel logs are high-priority. If an application is running smoothly,
+	// it shouldn't generate any error-level logs.
+	ErrorLevel Level = Level(zapcore.ErrorLevel)
+	// DPanicLevel logs are particularly important errors. In development the
+	// logger panics after writing the message.
+	DPanicLevel Level = Level(zapcore.DPanicLevel)
+	// PanicLevel logs a message, then panics.
+	PanicLevel Level = Level(zapcore.PanicLevel)
+	// FatalLevel logs a message, then calls os.Exit(1).
+	FatalLevel Level = Level(zapcore.FatalLevel)
+)
+
 var wrappedLogger *logger
 
 func init() {
-	wrappedLogger = new(logger)
-	wrappedLogger.level = zap.NewAtomicLevel()
-
+	// Create a new logging configuration. Using zap's default production config.
+	// More details here: https://github.com/uber-go/zap/blob/master/config.go#L114-L127
+	// If further tweaking is needed, either this one can be tweaked ore one
+	// can be created from scratch. Note that the default level is info.
 	config := zap.NewProductionConfig()
-	config.Level = wrappedLogger.level
 	l, err := config.Build(
 		zap.Hooks(addMetrics),
 		zap.AddCaller(),
@@ -53,11 +80,32 @@ func init() {
 		panic(err)
 	}
 
-	wrappedLogger.zap = l
+	wrappedLogger = &logger{
+		zap:   l,
+		level: config.Level,
+	}
 }
 
-func SetLevel(lvl string) {
-	wrappedLogger.level.UnmarshalText([]byte(lvl))
+// SetLogger mutates the global logger. This function is often
+// used in conjunction with Restore() which restores the
+// global logger to the one used before a call to this function.
+func SetLogger(l *zap.Logger) *tempLogger {
+	tmp := &tempLogger{
+		previous: *(wrappedLogger.zap),
+	}
+	wrappedLogger.zap = l
+	return tmp
+}
+
+// Restore mutates the global logger and sets it to the
+// previous logger.
+func (t *tempLogger) Restore() {
+	wrappedLogger.zap = &(t.previous)
+}
+
+// SetLevel dynamically sets the logging level.
+func SetLevel(lvl Level) {
+	wrappedLogger.level.SetLevel(zapcore.Level(lvl))
 }
 
 // NewContext creates a new context the given contextual fields
