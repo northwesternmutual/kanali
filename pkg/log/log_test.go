@@ -21,10 +21,13 @@
 package log
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 func TestInit(t *testing.T) {
@@ -37,4 +40,38 @@ func TestSetLevel(t *testing.T) {
 	assert.False(t, wrappedLogger.zap.Core().Enabled(zapcore.DebugLevel))
 	SetLevel(DebugLevel)
 	assert.True(t, wrappedLogger.zap.Core().Enabled(zapcore.DebugLevel))
+}
+
+func TestNewContext(t *testing.T) {
+	lvl := zap.NewAtomicLevelAt(zapcore.DebugLevel)
+	core, logs := observer.New(lvl)
+	defer SetLogger(zap.New(core)).Restore()
+
+	ctx := NewContext(context.Background(), zap.String("foo", "bar"))
+	logger, ok := ctx.Value(loggerKey).(*zap.Logger)
+	assert.True(t, ok)
+	logger.Debug("foo")
+	assert.Equal(t, 1, logs.FilterField(zap.String("foo", "bar")).Len())
+}
+
+func TestWithContext(t *testing.T) {
+	assert.Equal(t, wrappedLogger.zap, WithContext(nil))
+	assert.Equal(t, wrappedLogger.zap, WithContext(context.Background()))
+	ctx := NewContext(context.Background(), zap.String("foo", "bar"))
+	logger, ok := ctx.Value(loggerKey).(*zap.Logger)
+	assert.True(t, ok)
+	assert.Equal(t, logger, WithContext(ctx))
+}
+
+// There is no way actually test this yet.
+// But I still want the code coverage :)
+// https://github.com/prometheus/client_golang/issues/58
+func TestAddMetrics(t *testing.T) {
+	addMetrics(zapcore.Entry{Level: zap.DebugLevel})
+	addMetrics(zapcore.Entry{Level: zap.ErrorLevel})
+	addMetrics(zapcore.Entry{Level: zap.FatalLevel})
+	addMetrics(zapcore.Entry{Level: zap.InfoLevel})
+	addMetrics(zapcore.Entry{Level: zap.WarnLevel})
+	addMetrics(zapcore.Entry{Level: zap.PanicLevel})
+	addMetrics(zapcore.Entry{Level: zap.DPanicLevel})
 }

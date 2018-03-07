@@ -25,6 +25,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
 // Flag is a simplified representation of a configuration item.
@@ -63,24 +65,29 @@ func (f Flag) GetUsage() string {
 }
 
 func (f flagSet) AddAll(cmd *cobra.Command) error {
-	for _, currFlag := range f {
-		switch v := currFlag.Value.(type) {
+	for _, curr := range f {
+		switch v := curr.Value.(type) {
 		case int:
-			cmd.Flags().IntP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
+			cmd.Flags().IntP(curr.Long, curr.Short, v, curr.Usage)
 		case bool:
-			cmd.Flags().BoolP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
+			cmd.Flags().BoolP(curr.Long, curr.Short, v, curr.Usage)
 		case string:
-			cmd.Flags().StringP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
+			cmd.Flags().StringP(curr.Long, curr.Short, v, curr.Usage)
 		case time.Duration:
-			cmd.Flags().DurationP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
+			cmd.Flags().DurationP(curr.Long, curr.Short, v, curr.Usage)
 		case []string:
-			cmd.Flags().StringSliceP(currFlag.Long, currFlag.Short, v, currFlag.Usage)
+			cmd.Flags().StringSliceP(curr.Long, curr.Short, v, curr.Usage)
+		case log.Level:
+			// if val, ok := v.(flag.Value); ok {
+			//   cmd.Flags().VarP(&v, curr.Long, curr.Short, curr.Usage)
+			// }
+			cmd.Flags().VarP(&v, curr.Long, curr.Short, curr.Usage)
 		default:
-			viper.SetDefault(currFlag.Long, currFlag.Value)
+			viper.SetDefault(curr.Long, curr.Value)
 			continue
 		}
-		viper.SetDefault(currFlag.Long, currFlag.Value)
-		if err := viper.BindPFlag(currFlag.Long, cmd.Flags().Lookup(currFlag.Long)); err != nil {
+		viper.SetDefault(curr.Long, curr.Value)
+		if err := viper.BindPFlag(curr.Long, cmd.Flags().Lookup(curr.Long)); err != nil {
 			return err
 		}
 	}

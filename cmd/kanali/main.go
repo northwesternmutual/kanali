@@ -64,7 +64,9 @@ func startCmdRun(cmd *cobra.Command, args []string) {
 	}
 
 	ctx := server.SetupSignalHandler()
-	log.SetLevel(viper.GetString(options.FlagProcessLogLevel.GetLong()))
+	if val, ok := viper.Get(options.FlagProcessLogLevel.GetLong()).(log.Level); ok {
+		log.SetLevel(val)
+	}
 	if err := app.Run(ctx); err != nil {
 		log.WithContext(nil).Error(err.Error())
 		os.Exit(1)

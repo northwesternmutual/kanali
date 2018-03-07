@@ -40,29 +40,6 @@ type tempLogger struct {
 	previous zap.Logger
 }
 
-type Level zapcore.Level
-
-const (
-	// DebugLevel logs are typically voluminous, and are usually disabled in
-	// production.
-	DebugLevel Level = Level(zapcore.DebugLevel)
-	// InfoLevel is the default logging priority.
-	InfoLevel Level = Level(zapcore.InfoLevel)
-	// WarnLevel logs are more important than Info, but don't need individual
-	// human review.
-	WarnLevel Level = Level(zapcore.WarnLevel)
-	// ErrorLevel logs are high-priority. If an application is running smoothly,
-	// it shouldn't generate any error-level logs.
-	ErrorLevel Level = Level(zapcore.ErrorLevel)
-	// DPanicLevel logs are particularly important errors. In development the
-	// logger panics after writing the message.
-	DPanicLevel Level = Level(zapcore.DPanicLevel)
-	// PanicLevel logs a message, then panics.
-	PanicLevel Level = Level(zapcore.PanicLevel)
-	// FatalLevel logs a message, then calls os.Exit(1).
-	FatalLevel Level = Level(zapcore.FatalLevel)
-)
-
 var wrappedLogger *logger
 
 func init() {
@@ -81,7 +58,7 @@ func init() {
 	}
 
 	wrappedLogger = &logger{
-		zap:   l,
+		zap:   l.Named("kanali"),
 		level: config.Level,
 	}
 }
@@ -105,7 +82,7 @@ func (t *tempLogger) Restore() {
 
 // SetLevel dynamically sets the logging level.
 func SetLevel(lvl Level) {
-	wrappedLogger.level.SetLevel(zapcore.Level(lvl))
+	wrappedLogger.level.UnmarshalText([]byte(lvl.String()))
 }
 
 // NewContext creates a new context the given contextual fields
@@ -125,19 +102,9 @@ func WithContext(ctx context.Context) *zap.Logger {
 }
 
 func addMetrics(e zapcore.Entry) error {
-	switch e.Level {
-	case zap.DebugLevel:
-		metrics.LoggingCount.WithLabelValues("debug").Inc()
-	case zap.ErrorLevel:
-		metrics.LoggingCount.WithLabelValues("error").Inc()
-	case zap.FatalLevel:
-		metrics.LoggingCount.WithLabelValues("fatal").Inc()
-	case zap.InfoLevel:
-		metrics.LoggingCount.WithLabelValues("info").Inc()
-	case zap.WarnLevel:
-		metrics.LoggingCount.WithLabelValues("warn").Inc()
-	case zap.PanicLevel:
-		metrics.LoggingCount.WithLabelValues("panic").Inc()
+	if e.Level == zap.DPanicLevel {
+		e.Level = zap.PanicLevel
 	}
+	metrics.LoggingCount.WithLabelValues(e.Level.String()).Inc()
 	return nil
 }
