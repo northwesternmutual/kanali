@@ -2,8 +2,10 @@
 
 set -e
 
+source hack/vars.sh
+
 COVER=.cover
-ROOT_PKG=github.com/northwesternmutual/kanali/
+ROOT_PKG=$PATH_IMPORT
 
 if [[ -d "$COVER" ]]; then
 	rm -rf "$COVER"

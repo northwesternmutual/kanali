@@ -2,16 +2,16 @@
 
 set -e
 
+source hack/vars.sh
+
 if [ -z "$1" ]; then
     VERSION=dev-$(date +%FT%T%z)
 else
     VERSION=$1
 fi
 
-PROJECTPATH=$GOPATH/src/github.com/northwesternmutual/kanali
-BINARIES=($(for i in $(ls -d $PROJECTPATH/cmd/*/); do echo ${i%%/} | awk -F "/" '{print $NF}'; done))
-GITCOMMIT=$(git rev-parse --short HEAD)
-BUILD_FLAGS=(-ldflags="-X main.version=${VERSION} -X main.commit=${GITCOMMIT}")
+BINARIES=($(for i in $(ls -d $PATH_PROJECT/cmd/*/); do echo ${i%%/} | awk -F "/" '{print $NF}'; done))
+BUILD_FLAGS=(-ldflags="-X $PATH_IMPORT/pkg/version.version=${VERSION} -X $PATH_IMPORT/pkg/version.commit=${GIT_COMMIT}")
 
 for i in "${BINARIES[@]}"
 do
@@ -19,7 +19,7 @@ do
 
   go install \
       "${BUILD_FLAGS[@]}" \
-      github.com/northwesternmutual/kanali/cmd/$i
+      $PATH_IMPORT/cmd/$i
 
   if [ $? -eq 0 ]; then
     echo "Build successful. Binary located at ${GOPATH%%:*}/bin/$i"
