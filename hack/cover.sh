@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-
 source hack/vars.sh
 
 COVER=.cover
@@ -23,7 +22,6 @@ for pkg in "$@"; do
 		filter="\"$pkg\": true"
 	fi
 done
-
 
 i=0
 for pkg in "$@"; do

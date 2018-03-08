@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -e
-
 source hack/vars.sh
 
 if [ -z "$1" ]; then
@@ -18,8 +17,8 @@ do
   rm -f ${GOPATH%%:*}/bin/$i
 
   go install \
-      "${BUILD_FLAGS[@]}" \
-      $PATH_IMPORT/cmd/$i
+    "${BUILD_FLAGS[@]}" \
+    $PATH_IMPORT/cmd/$i
 
   if [ $? -eq 0 ]; then
     echo "Build successful. Binary located at ${GOPATH%%:*}/bin/$i"

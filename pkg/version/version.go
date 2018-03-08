@@ -34,10 +34,12 @@ func Command() *cobra.Command {
 		Use:   `version`,
 		Short: `Version information`,
 		Long:  `Version information`,
-		Run:   versionCmdRun,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(parseVersion())
+		},
 	}
 }
 
-func versionCmdRun(cmd *cobra.Command, args []string) {
-	fmt.Println(fmt.Sprintf("%s (%s)", version, commit))
+func parseVersion() string {
+	return fmt.Sprintf("%s (%s)", version, commit)
 }
