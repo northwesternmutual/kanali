@@ -26,13 +26,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	debugLvl = DebugLevel
+	infoLvl  = InfoLevel
+	warnLvl  = WarnLevel
+	errorLvl = ErrorLevel
+	panicLvl = PanicLevel
+	fatalLvl = FatalLevel
+)
+
 func TestString(t *testing.T) {
-	assert.Equal(t, "debug", (&DebugLevel).String())
-	assert.Equal(t, "panic", (&PanicLevel).String())
+	assert.Equal(t, "debug", (&debugLvl).String())
+	assert.Equal(t, "info", (&infoLvl).String())
+	assert.Equal(t, "warn", (&warnLvl).String())
+	assert.Equal(t, "error", (&errorLvl).String())
+	assert.Equal(t, "panic", (&panicLvl).String())
+	assert.Equal(t, "fatal", (&fatalLvl).String())
 }
 
 func TestType(t *testing.T) {
-	assert.Equal(t, "github.com/northwesternmutual/kanali/pkg/log.Level", (&DebugLevel).Type())
+	assert.Equal(t, "string", (&debugLvl).Type())
 }
 
 func TestSet(t *testing.T) {

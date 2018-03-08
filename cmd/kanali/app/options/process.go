@@ -22,6 +22,7 @@ package options
 
 import (
 	"github.com/northwesternmutual/kanali/pkg/flags"
+	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
 func init() {
@@ -35,7 +36,7 @@ var (
 	FlagProcessLogLevel = flags.Flag{
 		Long:  "process.log_level",
 		Short: "l",
-		Value: "info",
+		Value: log.InfoLevel,
 		Usage: "Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'.",
 	}
 )

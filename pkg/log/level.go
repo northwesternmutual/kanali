@@ -22,49 +22,63 @@ package log
 
 import (
 	"fmt"
-
-	"go.uber.org/zap"
+	"strings"
 )
 
-type Level string
+type Level int
 
-var (
+const (
 	// DebugLevel logs are typically voluminous, and are usually disabled in
 	// production.
-	DebugLevel Level = Level(zap.DebugLevel.String())
+	DebugLevel Level = iota
 	// InfoLevel is the default logging priority.
-	InfoLevel Level = Level(zap.InfoLevel.String())
+	InfoLevel
 	// WarnLevel logs are more important than Info, but don't need individual
 	// human review.
-	WarnLevel Level = Level(zap.WarnLevel.String())
+	WarnLevel
 	// ErrorLevel logs are high-priority. If an application is running smoothly,
 	// it shouldn't generate any error-level logs.
-	ErrorLevel Level = Level(zap.ErrorLevel.String())
+	ErrorLevel
 	// PanicLevel logs a message, then panics.
-	PanicLevel Level = Level(zap.PanicLevel.String())
+	PanicLevel
 	// FatalLevel logs a message, then calls os.Exit(1).
-	FatalLevel Level = Level(zap.FatalLevel.String())
+	FatalLevel
 )
 
 // String implements pflag.Value and string.Stringer
 func (l *Level) String() string {
-	return string(*l)
+	var s string
+	switch *l {
+	case DebugLevel:
+		s = "debug"
+	case InfoLevel:
+		s = "info"
+	case WarnLevel:
+		s = "warn"
+	case ErrorLevel:
+		s = "error"
+	case PanicLevel:
+		s = "panic"
+	case FatalLevel:
+		s = "fatal"
+	}
+	return s
 }
 
 // Set implements pflag.Value
 func (l *Level) Set(s string) error {
-	switch s {
-	case "debug", "DEBUG":
+	switch strings.ToUpper(s) {
+	case "DEBUG":
 		*l = DebugLevel
-	case "info", "INFO", "": // make the zero value useful
+	case "INFO", "": // make the zero value useful
 		*l = InfoLevel
-	case "warn", "WARN":
+	case "WARN":
 		*l = WarnLevel
-	case "error", "ERROR":
+	case "ERROR":
 		*l = ErrorLevel
-	case "panic", "PANIC":
+	case "PANIC":
 		*l = PanicLevel
-	case "fatal", "FATAL":
+	case "FATAL":
 		*l = FatalLevel
 	default:
 		return fmt.Errorf("unrecognized level %s", s)
@@ -74,5 +88,5 @@ func (l *Level) Set(s string) error {
 
 // Type implements pflag.Value
 func (l *Level) Type() string {
-	return "github.com/northwesternmutual/kanali/pkg/log.Level"
+	return "string"
 }
