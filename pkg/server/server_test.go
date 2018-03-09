@@ -22,6 +22,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -119,7 +120,7 @@ func TestRun(t *testing.T) {
 	params := serverParams{
 		err: []error{errors.New("foo")},
 	}
-	err := params.Run()
+	err := params.Run(context.Background())
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "foo")
 }

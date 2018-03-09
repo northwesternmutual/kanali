@@ -51,8 +51,6 @@ import (
 )
 
 func Run(sigCtx context.Context) error {
-
-	ctx, cancel := context.WithCancel(sigCtx)
 	logger := log.WithContext(nil)
 
 	crdClientset, kanaliClientset, k8sClientset, err := createClientsets()
@@ -122,6 +120,8 @@ func Run(sigCtx context.Context) error {
 	})
 
 	var g run.Group
+
+	ctx, cancel := context.WithCancel(sigCtx)
 
 	g.Add(ctx, apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()))
 	g.Add(ctx, apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), kanaliClientset, decryptionKey))

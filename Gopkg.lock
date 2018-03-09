@@ -31,21 +31,6 @@
   revision = "3a0bb77429bd3a61596f5e8a3172445844342120"
 
 [[projects]]
-  name = "github.com/coreos/etcd"
-  packages = [
-    "auth/authpb",
-    "clientv3",
-    "etcdserver/api/v3rpc/rpctypes",
-    "etcdserver/etcdserverpb",
-    "mvcc/mvccpb",
-    "pkg/tlsutil",
-    "pkg/transport",
-    "pkg/types"
-  ]
-  revision = "1b3ac99e8a431b381e633802cc42fe70e663baf5"
-  version = "v3.2.15"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -122,7 +107,6 @@
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
-    "protoc-gen-go/descriptor",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
@@ -464,7 +448,6 @@
     "internal/color",
     "internal/exit",
     "zapcore",
-    "zapgrpc",
     "zaptest/observer"
   ]
   revision = "35aad584952c3e7020db7b839f6b102de6271f89"
@@ -487,9 +470,7 @@
     "http2",
     "http2/hpack",
     "idna",
-    "internal/timeseries",
-    "lex/httplex",
-    "trace"
+    "lex/httplex"
   ]
   revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
 
@@ -549,45 +530,6 @@
     "imports"
   ]
   revision = "99037e3760ed7d9c772c980caee42b17779b80ce"
-
-[[projects]]
-  branch = "master"
-  name = "google.golang.org/genproto"
-  packages = [
-    "googleapis/api/annotations",
-    "googleapis/rpc/status"
-  ]
-  revision = "a8101f21cf983e773d0c1133ebc5424792003214"
-
-[[projects]]
-  name = "google.golang.org/grpc"
-  packages = [
-    ".",
-    "balancer",
-    "balancer/base",
-    "balancer/roundrobin",
-    "codes",
-    "connectivity",
-    "credentials",
-    "encoding",
-    "grpclb/grpc_lb_v1/messages",
-    "grpclog",
-    "health/grpc_health_v1",
-    "internal",
-    "keepalive",
-    "metadata",
-    "naming",
-    "peer",
-    "resolver",
-    "resolver/dns",
-    "resolver/passthrough",
-    "stats",
-    "status",
-    "tap",
-    "transport"
-  ]
-  revision = "6b51017f791ae1cfbec89c52efdf444b13b550ef"
-  version = "v1.9.2"
 
 [[projects]]
   name = "gopkg.in/inf.v0"
@@ -866,6 +808,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "84305928edb60bcf003fe356bfe5e55a008875090f84c34afd8ff4b06d9dd124"
+  inputs-digest = "8969f85a3ecc0f8569bf2f1e8cd070fdcafc23b85eec6cb6b335a54383130e33"
   solver-name = "gps-cdcl"
   solver-version = 1
