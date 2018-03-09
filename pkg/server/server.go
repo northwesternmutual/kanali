@@ -67,7 +67,11 @@ func Prepare(opts *Options) *serverParams {
 	if err != nil && len(opts.TLSCa) > 0 {
 		return &serverParams{err: []error{err}}
 	} else {
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				opts.Logger.Error(fmt.Sprintf("error closing %s: %s", opts.Name, err))
+			}
+		}()
 	}
 	return prepare(opts, f)
 }
@@ -120,6 +124,11 @@ func (params *serverParams) Run(context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// Name returns the name of the server
+func (params *serverParams) Name() string {
+	return params.options.Name
 }
 
 // Close will gracefully terminate http(s) server(s) that were bootstrapped

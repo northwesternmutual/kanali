@@ -68,8 +68,11 @@ func (ctlr *MockTargetController) mockTargetAdd(obj interface{}) {
 	if !ok {
 		logger.Error("received malformed MockTarget from k8s apiserver")
 	} else {
-		store.MockTargetStore().Set(target)
-		logger.Debug(fmt.Sprintf("added MockTarget %s in %s namespace", target.GetName(), target.GetNamespace()))
+		if err := store.MockTargetStore().Set(target); err != nil {
+			logger.Warn(fmt.Sprintf("failed to add MockTarget %s in %s namespace: %s", target.GetName(), target.GetNamespace(), err))
+		} else {
+			logger.Debug(fmt.Sprintf("added MockTarget %s in %s namespace", target.GetName(), target.GetNamespace()))
+		}
 	}
 }
 

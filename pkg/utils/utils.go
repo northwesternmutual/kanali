@@ -104,12 +104,13 @@ func GetRestConfig(location string) (*rest.Config, error) {
 	return rest.InClusterConfig()
 }
 
-func TransferResponse(from *httptest.ResponseRecorder, to http.ResponseWriter) {
+func TransferResponse(from *httptest.ResponseRecorder, to http.ResponseWriter) error {
 	for k, v := range from.Header() {
 		to.Header()[k] = v
 	}
 	to.WriteHeader(from.Code)
-	to.Write(from.Body.Bytes())
+	_, err := to.Write(from.Body.Bytes())
+	return err
 }
 
 func CloneHTTPHeader(h http.Header) http.Header {

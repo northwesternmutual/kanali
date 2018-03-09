@@ -57,7 +57,9 @@ func Metrics(next http.Handler) http.Handler {
 
 		endTime := time.Now()
 
-		log.WithContext(r.Context()).Info("request details",
+		logger := log.WithContext(r.Context())
+
+		logger.Info("request details",
 			zap.String(tags.HTTPRequestRemoteAddress, getRemoteAddr(r.RemoteAddr)),
 			zap.String(tags.HTTPRequestMethod, r.Method),
 			zap.String(tags.HTTPRequestURLPath, utils.ComputeURLPath(r.URL)),
@@ -68,7 +70,9 @@ func Metrics(next http.Handler) http.Handler {
 		metrics.RequestLatency.WithLabelValues(r.Method).Observe(getReqDuration(startTime, endTime))
 		metrics.RequestCount.WithLabelValues(strconv.Itoa(rec.Code), r.Method).Inc()
 
-		utils.TransferResponse(rec, w)
+		if err := utils.TransferResponse(rec, w); err != nil {
+			logger.Error(fmt.Sprintf("error writing response: %s", err))
+		}
 	})
 }
 

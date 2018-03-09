@@ -96,7 +96,6 @@ func Run(sigCtx context.Context) error {
 		TLSCert:      viper.GetString(options.FlagTLSCertFile.GetLong()),
 		TLSCa:        viper.GetString(options.FlagTLSCaFile.GetLong()),
 		Handler: chain.New().Add(
-			middleware.Recorder,
 			middleware.Correlation,
 			middleware.Metrics,
 		).Link(middleware.Gateway),
@@ -123,25 +122,25 @@ func Run(sigCtx context.Context) error {
 
 	ctx, cancel := context.WithCancel(sigCtx)
 
-	g.Add(ctx, apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()))
-	g.Add(ctx, apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), kanaliClientset, decryptionKey))
-	g.Add(ctx, apikeybinding.NewApiKeyBindingController(kanaliFactory.Kanali().V2().ApiKeyBindings()))
-	g.Add(ctx, mocktarget.NewMockTargetController(kanaliFactory.Kanali().V2().MockTargets()))
-	g.Add(ctx, run.InformerWrapper(k8sFactory.Core().V1().Services().Informer()))
-	g.Add(ctx, run.InformerWrapper(k8sFactory.Core().V1().Secrets().Informer()))
+	g.Add(ctx, "apiproxy controller", apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()))
+	g.Add(ctx, "apikey controller", apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), kanaliClientset, decryptionKey))
+	g.Add(ctx, "apikeybinding controller", apikeybinding.NewApiKeyBindingController(kanaliFactory.Kanali().V2().ApiKeyBindings()))
+	g.Add(ctx, "mocktarget controller", mocktarget.NewMockTargetController(kanaliFactory.Kanali().V2().MockTargets()))
+	g.Add(ctx, "service informer", run.InformerWrapper(k8sFactory.Core().V1().Services().Informer()))
+	g.Add(ctx, "secret informer", run.InformerWrapper(k8sFactory.Core().V1().Secrets().Informer()))
 
 	if tracerErr == nil {
-		g.Add(ctx, tracer)
+		g.Add(ctx, "tracer", tracer)
 	}
 
-	g.Add(ctx, metricsServer)
-	g.Add(ctx, gatewayServer)
+	g.Add(ctx, metricsServer.Name(), metricsServer)
+	g.Add(ctx, gatewayServer.Name(), gatewayServer)
 
 	if viper.GetBool(options.FlagProfilingEnabled.GetLong()) {
-		g.Add(ctx, profilingServer)
+		g.Add(ctx, profilingServer.Name(), profilingServer)
 	}
 
-	g.Add(ctx, run.MonitorContext(cancel))
+	g.Add(ctx, "parent process", run.MonitorContext(cancel))
 
 	return g.Run()
 }

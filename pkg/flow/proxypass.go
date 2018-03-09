@@ -268,6 +268,8 @@ func (step proxyPassStep) writeResponse() proxyPassStep {
 		return step
 	}
 
+	logger := log.WithContext(step.originalReq.Context())
+
 	copyHeader(step.originalRespWriter.Header(), step.upstreamResp.Header)
 
 	// The "Trailer" header isn't included in the Transport's response,
@@ -291,8 +293,12 @@ func (step proxyPassStep) writeResponse() proxyPassStep {
 		}
 	}
 
-	copyBuffer(step.originalReq.Context(), step.originalRespWriter, step.upstreamResp.Body, []byte{})
-	step.upstreamResp.Body.Close() // close now, instead of defer, to populate res.Trailer
+	if n, err := copyBuffer(step.originalReq.Context(), step.originalRespWriter, step.upstreamResp.Body, []byte{}); err != nil {
+		logger.Warn(fmt.Sprintf("error writing to response - %d bytes written: %s", n, err))
+	}
+	if err := step.upstreamResp.Body.Close(); err != nil { // close now, instead of defer, to populate res.Trailer
+		logger.Warn(fmt.Sprintf("error closing response body: %s", err))
+	}
 
 	if len(step.upstreamResp.Trailer) == announcedTrailers {
 		copyHeader(step.originalRespWriter.Header(), step.upstreamResp.Trailer)

@@ -23,6 +23,7 @@ package tracer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -35,6 +36,8 @@ import (
 	"github.com/spf13/viper"
 	jaegerConfig "github.com/uber/jaeger-client-go/config"
 	jaegerProm "github.com/uber/jaeger-lib/metrics/prometheus"
+
+	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
 type tracerParams struct {
@@ -71,7 +74,11 @@ func parseConfig(location string) (*jaegerConfig.Configuration, error) {
 	if err != nil {
 		return nil, err
 	} else {
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.WithContext(nil).Error(fmt.Sprintf("error closing tracer: %s", err))
+			}
+		}()
 	}
 	return doParseConfig(f)
 }

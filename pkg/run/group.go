@@ -22,19 +22,24 @@ package run
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/oklog/run"
+
+	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
 type Group struct {
 	group run.Group
 }
 
-func (g *Group) Add(ctx context.Context, r Runnable) {
+func (g *Group) Add(ctx context.Context, name string, r Runnable) {
 	g.group.Add(func() error {
 		return r.Run(ctx)
 	}, func(err error) {
-		r.Close(err)
+		if err := r.Close(err); err != nil {
+			log.WithContext(ctx).Error(fmt.Sprintf("error closing %s: %s", name, err))
+		}
 	})
 }
 

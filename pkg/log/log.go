@@ -22,6 +22,7 @@ package log
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -82,7 +83,9 @@ func (t *tempLogger) Restore() {
 
 // SetLevel dynamically sets the logging level.
 func SetLevel(lvl Level) {
-	wrappedLogger.level.UnmarshalText([]byte(lvl.String()))
+	if err := wrappedLogger.level.UnmarshalText([]byte(lvl.String())); err != nil {
+		wrappedLogger.zap.Warn(fmt.Sprintf("error setting lot level: %s", err))
+	}
 }
 
 // NewContext creates a new context the given contextual fields

@@ -23,6 +23,7 @@ package flow
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 
@@ -71,11 +72,13 @@ func (step mockTargetStep) Do(ctx context.Context, w http.ResponseWriter, r *htt
 		headers.Add(k, v)
 	}
 
-	utils.TransferResponse(&httptest.ResponseRecorder{
+	if err := utils.TransferResponse(&httptest.ResponseRecorder{
 		Code:      mr.StatusCode,
 		Body:      bytes.NewBuffer(mr.Body),
 		HeaderMap: headers,
-	}, w)
+	}, w); err != nil {
+		logger.Error(fmt.Sprintf("error writing response: %s", err))
+	}
 
 	return next()
 }
