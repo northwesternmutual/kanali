@@ -1,18 +1,18 @@
-ALL_SRC 	= $(shell find . -name "*.go" | grep -v -e vendor)
-BINARY		=	$(shell echo $${PWD\#\#*/})
-PACKAGES 	=	$(shell go list ./... | grep -v /vendor/)
-RACE			=	-race
-GOTEST		=	go test -v $(RACE)
-GOLINT		=	golint
-GOVET			=	go vet
-GOFMT			=	gofmt
-ERRCHECK	=	errcheck -ignoretests
-FMT_LOG		=	fmt.log
-LINT_LOG	=	lint.log
+ALL_SRC     = $(shell find . -name "*.go" | grep -v -e vendor)
+BINARY      = $(shell echo $${PWD\#\#*/})
+PACKAGES    = $(shell go list ./... | grep -v /vendor/)
+RACE        = -race
+GOTEST      = go test -v $(RACE)
+GOLINT      = golint
+GOVET       = go vet
+GOFMT       = gofmt
+ERRCHECK    = errcheck -ignoretests
+FMT_LOG     = fmt.log
+LINT_LOG    = lint.log
 DEP_VERSION = v0.4.1
-PASS			=	$(shell printf "\033[32mPASS\033[0m")
-FAIL			=	$(shell printf "\033[31mFAIL\033[0m")
-COLORIZE	=	sed ''/PASS/s//$(PASS)/'' | sed ''/FAIL/s//$(FAIL)/''
+PASS        = $(shell printf "\033[32mPASS\033[0m")
+FAIL        = $(shell printf "\033[31mFAIL\033[0m")
+COLORIZE    = sed ''/PASS/s//$(PASS)/'' | sed ''/FAIL/s//$(FAIL)/''
 
 .DEFAULT_GOAL: $(BINARY)
 
