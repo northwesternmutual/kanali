@@ -21,7 +21,6 @@
 package middleware
 
 import (
-	"net/http/httptest"
 	"testing"
 	"time"
 
