@@ -22,65 +22,84 @@ package tracer
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
-	"time"
+	"io/ioutil"
+	"os"
+
+	"github.com/ghodss/yaml"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
-	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 	jaegerConfig "github.com/uber/jaeger-client-go/config"
+	jaegerProm "github.com/uber/jaeger-lib/metrics/prometheus"
 )
 
-type tracerConfig struct {
+type tracerParams struct {
 	tracer opentracing.Tracer
 	closer io.Closer
 }
 
-type customLogger struct{}
+func New() (*tracerParams, error) {
 
-func (l customLogger) Error(msg string) {
-	log.WithContext(nil).Error(msg)
-}
-
-func (l customLogger) Infof(msg string, args ...interface{}) {
-	log.WithContext(nil).Info(fmt.Sprintf(msg, args...))
-}
-
-func Jaeger() (*tracerConfig, error) {
-	cfg := jaegerConfig.Configuration{
-		Sampler: &jaegerConfig.SamplerConfig{
-			Type:              "const",
-			SamplingServerURL: viper.GetString(options.FlagTracingJaegerServerURL.GetLong()),
-			Param:             1,
-		},
-		Reporter: &jaegerConfig.ReporterConfig{
-			LogSpans:            true,
-			BufferFlushInterval: 1 * time.Second,
-			LocalAgentHostPort:  fmt.Sprintf("%s:5775", viper.GetString(options.FlagTracingJaegerAgentURL.GetLong())),
-		},
-	}
-
-	tracer, closer, err := cfg.New("kanali", jaegerConfig.Logger(customLogger{}))
+	cfg, err := parseConfig(viper.GetString(options.FlagTracingConfig.GetLong()))
 	if err != nil {
 		return nil, err
 	}
 
-	return &tracerConfig{
+	tracer, closer, err := (*cfg).New("kanali",
+		jaegerConfig.Gen128Bit(true),
+		jaegerConfig.Logger(customLogger{}),
+		jaegerConfig.Metrics(jaegerProm.New(
+			jaegerProm.WithRegisterer(prometheus.DefaultRegisterer),
+		)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tracerParams{
 		tracer: tracer,
 		closer: closer,
 	}, nil
 }
 
-func (t *tracerConfig) Run(ctx context.Context) {
-	logger := log.WithContext(nil)
-	opentracing.SetGlobalTracer(t.tracer)
-
-	<-ctx.Done()
-
-	if err := t.closer.Close(); err != nil {
-		logger.Error("tracing controller gracefull termination failed" + err.Error())
+func parseConfig(location string) (*jaegerConfig.Configuration, error) {
+	f, err := os.Open(location)
+	if err != nil {
+		return nil, err
+	} else {
+		defer f.Close()
 	}
-	logger.Info("tracing controller gracefull termination successful")
+	return doParseConfig(f)
+}
+
+func doParseConfig(r io.Reader) (*jaegerConfig.Configuration, error) {
+	if r == nil {
+		return nil, errors.New("reader is nil")
+	}
+
+	var cfg jaegerConfig.Configuration
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
+}
+
+func (params *tracerParams) Run(ctx context.Context) error {
+	opentracing.SetGlobalTracer(params.tracer)
+	<-ctx.Done()
+	return nil
+}
+
+func (params *tracerParams) Close(error) error {
+	return params.closer.Close()
 }

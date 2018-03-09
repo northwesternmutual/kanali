@@ -21,6 +21,7 @@
 package apiproxy
 
 import (
+	"context"
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
@@ -53,8 +54,13 @@ func NewApiProxyController(apiproxies informers.ApiProxyInformer) *ApiProxyContr
 	return ctlr
 }
 
-func (ctlr *ApiProxyController) Run(stopCh <-chan struct{}) {
-	ctlr.apiproxies.Informer().Run(stopCh)
+func (ctlr *ApiProxyController) Run(ctx context.Context) error {
+	ctlr.apiproxies.Informer().Run(ctx.Done())
+	return nil
+}
+
+func (ctlr *ApiProxyController) Close(error) error {
+	return nil
 }
 
 func (ctlr *ApiProxyController) apiProxyAdd(obj interface{}) {

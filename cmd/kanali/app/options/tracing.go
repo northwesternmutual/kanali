@@ -26,24 +26,16 @@ import (
 
 func init() {
 	KanaliGatewayOptions.Add(
-		FlagTracingJaegerServerURL,
-		FlagTracingJaegerAgentURL,
+		FlagTracingConfig,
 	)
 }
 
 var (
-	// FlagTracingJaegerServerURL specifies the endpoint to the Jaeger server
-	FlagTracingJaegerServerURL = flags.Flag{
-		Long:  "tracing.jaeger_server_url",
+	// FlagTracingConfig specifies the endpoint to the Jaeger server
+	FlagTracingConfig = flags.Flag{
+		Long:  "tracing.config",
 		Short: "",
-		Value: "jaeger-all-in-one-agent.default.svc.cluster.local",
-		Usage: "Endpoint to the Jaeger server",
-	}
-	// FlagTracingJaegerAgentURL specifies the endpoint to the Jaeger agent
-	FlagTracingJaegerAgentURL = flags.Flag{
-		Long:  "tracing.jaeger_agent_url",
-		Short: "",
-		Value: "jaeger-all-in-one-agent.default.svc.cluster.local",
-		Usage: "Endpoint to the Jaeger agent",
+		Value: "tracer.yaml",
+		Usage: "Location of config file for Jaeger.",
 	}
 )

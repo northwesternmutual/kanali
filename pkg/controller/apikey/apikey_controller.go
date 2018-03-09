@@ -21,6 +21,7 @@
 package apikey
 
 import (
+	"context"
 	"crypto/rsa"
 	"errors"
 	"time"
@@ -64,8 +65,13 @@ func NewApiKeyController(apikeys informers.ApiKeyInformer, clientset *versioned.
 	return ctlr
 }
 
-func (ctlr *ApiKeyController) Run(stopCh <-chan struct{}) {
-	ctlr.apikeys.Informer().Run(stopCh)
+func (ctlr *ApiKeyController) Run(ctx context.Context) error {
+	ctlr.apikeys.Informer().Run(ctx.Done())
+	return nil
+}
+
+func (ctlr *ApiKeyController) Close(error) error {
+	return nil
 }
 
 func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {

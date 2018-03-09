@@ -25,13 +25,36 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/northwesternmutual/kanali/pkg/tags"
 )
+
+func TestStartSpan(t *testing.T) {
+	opentracing.SetGlobalTracer(mocktracer.New())
+	u, _ := url.Parse("/foo/bar")
+	req := &http.Request{
+		Header: make(http.Header),
+		URL:    u,
+	}
+	sp, ok := StartSpan(req).(*mocktracer.MockSpan)
+	assert.True(t, ok)
+	assert.Equal(t, sp.ParentID, 0)
+
+	opentracing.GlobalTracer().Inject(
+		sp.Context(),
+		opentracing.HTTPHeaders,
+		opentracing.HTTPHeadersCarrier(req.Header),
+	)
+	sp, ok = StartSpan(req).(*mocktracer.MockSpan)
+	assert.True(t, ok)
+	assert.NotEqual(t, sp.ParentID, 0)
+}
 
 func TestHydrateSpanFromRequest(t *testing.T) {
 	mockTracer := mocktracer.New()

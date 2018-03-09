@@ -24,7 +24,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -44,10 +43,10 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/log"
 	_ "github.com/northwesternmutual/kanali/pkg/metrics"
 	"github.com/northwesternmutual/kanali/pkg/middleware"
+	"github.com/northwesternmutual/kanali/pkg/run"
 	"github.com/northwesternmutual/kanali/pkg/server"
 	"github.com/northwesternmutual/kanali/pkg/store/core/v1"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
-	//"github.com/northwesternmutual/kanali/pkg/traffic"
 	"github.com/northwesternmutual/kanali/pkg/utils"
 )
 
@@ -84,13 +83,7 @@ func Run(sigCtx context.Context) error {
 		return err
 	}
 
-	// trafficCtlr, err := traffic.NewController()
-	// if err != nil {
-	// 	logger.Fatal(err.Error())
-	// 	return err
-	// }
-
-	tracer, tracerErr := tracer.Jaeger()
+	tracer, tracerErr := tracer.New()
 	if tracerErr != nil {
 		logger.Warn(tracerErr.Error())
 	}
@@ -105,7 +98,7 @@ func Run(sigCtx context.Context) error {
 		TLSCert:      viper.GetString(options.FlagTLSCertFile.GetLong()),
 		TLSCa:        viper.GetString(options.FlagTLSCaFile.GetLong()),
 		Handler: chain.New().Add(
-			//middleware.Recorder,
+			middleware.Recorder,
 			middleware.Correlation,
 			middleware.Metrics,
 		).Link(middleware.Gateway),
@@ -130,88 +123,27 @@ func Run(sigCtx context.Context) error {
 
 	var g run.Group
 
-	g.Add(func() error {
-		logger.Info("starting ApiProxy controller")
-		apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()).Run(ctx.Done())
-		return nil
-	}, nilInterrupt("ApiProxy"))
-
-	g.Add(func() error {
-		logger.Info("starting ApiKey controller")
-		apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), kanaliClientset, decryptionKey).Run(ctx.Done())
-		return nil
-	}, nilInterrupt("ApiKey"))
-
-	g.Add(func() error {
-		apikeybinding.NewApiKeyBindingController(kanaliFactory.Kanali().V2().ApiKeyBindings()).Run(ctx.Done())
-		return nil
-	}, nilInterrupt("ApiKeyBinding"))
-
-	g.Add(func() error {
-		mocktarget.NewMockTargetController(kanaliFactory.Kanali().V2().MockTargets()).Run(ctx.Done())
-		return nil
-	}, nilInterrupt("MockTarget"))
-
-	g.Add(func() error {
-		k8sFactory.Core().V1().Services().Informer().Run(ctx.Done())
-		return nil
-	}, nilInterrupt("Service"))
-
-	g.Add(func() error {
-		k8sFactory.Core().V1().Secrets().Informer().Run(ctx.Done())
-		return nil
-	}, nilInterrupt("Secret"))
-
-	// g.Add(func() error {
-	// 	return trafficCtlr.Run(ctx)
-	// }, func(error) {
-	// 	cancel()
-	// })
+	g.Add(ctx, apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()))
+	g.Add(ctx, apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), kanaliClientset, decryptionKey))
+	g.Add(ctx, apikeybinding.NewApiKeyBindingController(kanaliFactory.Kanali().V2().ApiKeyBindings()))
+	g.Add(ctx, mocktarget.NewMockTargetController(kanaliFactory.Kanali().V2().MockTargets()))
+	g.Add(ctx, run.InformerWrapper(k8sFactory.Core().V1().Services().Informer()))
+	g.Add(ctx, run.InformerWrapper(k8sFactory.Core().V1().Secrets().Informer()))
 
 	if tracerErr == nil {
-		g.Add(func() error {
-			tracer.Run(ctx)
-			return nil
-		}, func(error) {
-			cancel()
-		})
+		g.Add(ctx, tracer)
 	}
 
-	g.Add(func() error {
-		return metricsServer.Run()
-	}, func(error) {
-		metricsServer.Close()
-	})
-
-	g.Add(func() error {
-		return gatewayServer.Run()
-	}, func(error) {
-		gatewayServer.Close()
-	})
+	g.Add(ctx, metricsServer)
+	g.Add(ctx, gatewayServer)
 
 	if viper.GetBool(options.FlagProfilingEnabled.GetLong()) {
-		g.Add(func() error {
-			return profilingServer.Run()
-		}, func(error) {
-			profilingServer.Close()
-		})
+		g.Add(ctx, profilingServer)
 	}
 
-	g.Add(func() error {
-		<-ctx.Done()
-		return nil
-	}, func(error) {
-		cancel()
-	})
+	g.Add(ctx, run.MonitorContext(cancel))
 
 	return g.Run()
-}
-
-func nilInterrupt(msg string) func(error) {
-	logger := log.WithContext(nil)
-	return func(error) {
-		logger.Info("gracefully terminating " + msg + " controller")
-	}
 }
 
 func createClientsets() (

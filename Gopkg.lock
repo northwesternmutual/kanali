@@ -436,9 +436,12 @@
 
 [[projects]]
   name = "github.com/uber/jaeger-lib"
-  packages = ["metrics"]
-  revision = "7f95f4f7e80028096410abddaae2556e4c61b59f"
-  version = "v1.3.1"
+  packages = [
+    "metrics",
+    "metrics/prometheus"
+  ]
+  revision = "4267858c0679cd4e47cefed8d7f70fd386cfb567"
+  version = "v1.4.0"
 
 [[projects]]
   name = "go.uber.org/atomic"
@@ -863,6 +866,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f0c64b2155e39aa72d7afc0faf6335192f562861a03b9660de554e7d04a1984b"
+  inputs-digest = "84305928edb60bcf003fe356bfe5e55a008875090f84c34afd8ff4b06d9dd124"
   solver-name = "gps-cdcl"
   solver-version = 1

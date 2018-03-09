@@ -96,7 +96,7 @@ func prepare(opts *Options, r io.Reader) *serverParams {
 // If an error occurred durring the receiver's construction, that error will be
 // returned immedietaly. Otherwise, run will return the non-nill error from the
 // the first server that terminates.
-func (params *serverParams) Run() error {
+func (params *serverParams) Run(context.Context) error {
 	if params.err != nil && len(params.err) > 0 {
 		return utilerrors.NewAggregate(params.err)
 	}
@@ -125,7 +125,7 @@ func (params *serverParams) Run() error {
 // Close will gracefully terminate http(s) server(s) that were bootstrapped
 // according to the reciever's configuration. More details here:
 // https://github.com/golang/go/blob/master/src/net/http/server.go#L2545-L2561
-func (params *serverParams) Close() error {
+func (params *serverParams) Close(error) error {
 	if err := closeServer(params.options.Logger, params.secureServer, params.options.Name, "HTTPS"); err != nil {
 		params.err = append(params.err, err)
 	}

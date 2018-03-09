@@ -21,6 +21,7 @@
 package apikeybinding
 
 import (
+	"context"
 	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
@@ -53,8 +54,13 @@ func NewApiKeyBindingController(apikeybindings informers.ApiKeyBindingInformer) 
 	return ctlr
 }
 
-func (ctlr *ApiKeyBindingController) Run(stopCh <-chan struct{}) {
-	ctlr.apikeybindings.Informer().Run(stopCh)
+func (ctlr *ApiKeyBindingController) Run(ctx context.Context) error {
+	ctlr.apikeybindings.Informer().Run(ctx.Done())
+	return nil
+}
+
+func (ctlr *ApiKeyBindingController) Close(error) error {
+	return nil
 }
 
 func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {

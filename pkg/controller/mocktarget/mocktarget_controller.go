@@ -21,6 +21,7 @@
 package mocktarget
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -52,8 +53,13 @@ func NewMockTargetController(mocktargets informers.MockTargetInformer) *MockTarg
 	return ctlr
 }
 
-func (ctlr *MockTargetController) Run(stopCh <-chan struct{}) {
-	ctlr.mocktargets.Informer().Run(stopCh)
+func (ctlr *MockTargetController) Run(ctx context.Context) error {
+	ctlr.mocktargets.Informer().Run(ctx.Done())
+	return nil
+}
+
+func (ctlr *MockTargetController) Close(error) error {
+	return nil
 }
 
 func (ctlr *MockTargetController) mockTargetAdd(obj interface{}) {
