@@ -59,7 +59,7 @@ grafana:
   dashboardImports:
     enabled: true
     dashboards:
-      kanali.json: https://foo.bar.com
+      kanali.json: "https://github.com/northwesternmutual/kanali/blob/kanali.io/v2alpha1/grafana.json"
   server:
     service:
       type: NodePort
