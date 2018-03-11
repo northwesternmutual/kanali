@@ -18,22 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package crds
 
 import (
@@ -44,7 +28,6 @@ import (
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsv1beta1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
@@ -52,7 +35,7 @@ import (
 
 func init() {
 	// In order to speed up tests, we're going to overwrite some packages variables
-	retries, interval, factor = 1, 1*time.Millisecond, 1.0
+	crdEstablishedNumRetries, crdEstablishedRetryInterval, crdEstablishedRetryFactor = 1, 1*time.Millisecond, 1.0
 }
 
 var establishedCondition = apiextensionsv1beta1.CustomResourceDefinitionCondition{
@@ -119,41 +102,7 @@ func assertErrors(expected, actual error) bool {
 	return actual == nil
 }
 
-func TestEnsureCRDs(t *testing.T) {
-	tests := []struct {
-		name          string
-		crds          []*apiextensionsv1beta1.CustomResourceDefinition
-		expectedError error
-	}{
-		{
-			name: "aggregate errors",
-			crds: []*apiextensionsv1beta1.CustomResourceDefinition{newCRD("foos.bar.io").NewOrDie(), newCRD("bars.foo.io").NewOrDie()},
-			expectedError: utilerrors.NewAggregate([]error{
-				errors.New("the CustomResourceDefinition bars.foo.io was not established within a reasonable amount of time"),
-				errors.New("the CustomResourceDefinition foos.bar.io was not established within a reasonable amount of time"),
-			}),
-		},
-		{
-			name:          "single established",
-			crds:          []*apiextensionsv1beta1.CustomResourceDefinition{newCRD("foos.bar.io").Condition(establishedCondition).NewOrDie()},
-			expectedError: nil,
-		},
-		{
-			name:          "mulitple established",
-			crds:          []*apiextensionsv1beta1.CustomResourceDefinition{newCRD("foos.bar.io").Condition(establishedCondition).NewOrDie(), newCRD("bars.foo.io").Condition(establishedCondition).NewOrDie()},
-			expectedError: nil,
-		},
-	}
-
-	for _, test := range tests {
-		cli := apiextensionsv1beta1client.NewSimpleClientset()
-		if err := EnsureCRDs(cli.ApiextensionsV1beta1(), test.crds...); !assertErrors(test.expectedError, err) {
-			t.Errorf("%v expected %v, got %v", test.name, test.expectedError, err)
-		}
-	}
-}
-
-func TestEnsureCRD(t *testing.T) {
+func TestWaitForEstablished(t *testing.T) {
 	tests := []struct {
 		name          string
 		crd           *apiextensionsv1beta1.CustomResourceDefinition
@@ -178,7 +127,8 @@ func TestEnsureCRD(t *testing.T) {
 
 	for _, test := range tests {
 		cli := apiextensionsv1beta1client.NewSimpleClientset()
-		if err := ensureCRD(cli.ApiextensionsV1beta1(), test.crd); !assertErrors(test.expectedError, err) {
+		cli.ApiextensionsV1beta1().CustomResourceDefinitions().Create(test.crd)
+		if err := WaitForEstablished(cli.ApiextensionsV1beta1(), test.crd, nil); !assertErrors(test.expectedError, err) {
 			t.Errorf("%v expected %v, got %v", test.name, test.expectedError, err)
 		}
 	}

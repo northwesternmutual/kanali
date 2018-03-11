@@ -67,8 +67,7 @@ func Metrics(next http.Handler) http.Handler {
 			zap.Int(tags.HTTPResponseStatusCode, rec.Code),
 		)
 
-		metrics.RequestLatency.WithLabelValues(r.Method).Observe(getReqDuration(startTime, endTime))
-		metrics.RequestCount.WithLabelValues(strconv.Itoa(rec.Code), r.Method).Inc()
+		metrics.RequestLatency.WithLabelValues(strconv.Itoa(rec.Code), r.Method).Observe(getReqDuration(startTime, endTime))
 
 		if err := utils.TransferResponse(rec, w); err != nil {
 			logger.Error(fmt.Sprintf("error writing response: %s", err))

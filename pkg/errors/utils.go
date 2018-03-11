@@ -32,7 +32,7 @@ func ToJSON(err error) (Error, []byte) {
 		e = err.(Error)
 	}
 	return e, []byte(fmt.Sprintf(
-		`{"status":%d,"message":"%s","code":%d,"details":"%s"}`,
+		`{"status":%d,"message":"%s","code":%02d,"details":"%s"}`,
 		e.Status,
 		e.Message,
 		e.Code,

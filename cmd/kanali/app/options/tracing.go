@@ -26,14 +26,14 @@ import (
 
 func init() {
 	KanaliGatewayOptions.Add(
-		FlagTracingConfig,
+		FlagTracingConfigFile,
 	)
 }
 
 var (
-	// FlagTracingConfig specifies the endpoint to the Jaeger server
-	FlagTracingConfig = flags.Flag{
-		Long:  "tracing.config",
+	// FlagTracingConfigFile specifies the endpoint to the Jaeger server
+	FlagTracingConfigFile = flags.Flag{
+		Long:  "tracing.config_file",
 		Short: "",
 		Value: "tracer.yaml",
 		Usage: "Location of config file for Jaeger.",

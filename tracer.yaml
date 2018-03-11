@@ -1,9 +1,0 @@
-# https://godoc.org/github.com/uber/jaeger-client-go/config#Configuration
----
-sampler:
-  type: const
-  samplingServerURL: jaeger-all-in-one-agent.default.svc.cluster.local
-  param: 1
-reporter:
-  logSpans: true
-  localAgentHostPort: jaeger-all-in-one-agent.default.svc.cluster.local:5775

@@ -30,14 +30,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: kanali
-  namespace: default
-
----
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: kanali
-  name: kanali
-  namespace: default
+  namespace: {{default "default" .Values.kanali.namespace}}

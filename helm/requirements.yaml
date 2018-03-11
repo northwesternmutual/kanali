@@ -1,21 +1,18 @@
 ---
 
-# dependencies:
-# - name: prometheus
-#   version: 5.0.1
-#   repository: https://kubernetes-charts.storage.googleapis.com/
-#   condition: metrics.enabled
-#   tags:
-#   - prometheus
-# - name: grafana
-#   version: 0.5.0
-#   repository: https://kubernetes-charts.storage.googleapis.com/
-#   condition: metrics.enabled
-#   tags:
-#   - grafana
-# - name: jaeger
-#   version: 0.2.0
-#   repository: https://kubernetes-charts-incubator.storage.googleapis.com/
-#   condition: jaeger.enabled
-#   tags:
-#   - jaeger
+dependencies:
+- name: prometheus
+  version: 5.4.1
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  tags:
+  - metrics
+- name: grafana
+  version: 0.8.0
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  tags:
+  - metrics
+- name: jaeger
+  version: 0.2.0
+  repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+  tags:
+  - tracing

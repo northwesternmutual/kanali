@@ -47,7 +47,7 @@ type tracerParams struct {
 
 func New() (*tracerParams, error) {
 
-	cfg, err := parseConfig(viper.GetString(options.FlagTracingConfig.GetLong()))
+	cfg, err := parseConfig(viper.GetString(options.FlagTracingConfigFile.GetLong()))
 	if err != nil {
 		return nil, err
 	}

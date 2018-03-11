@@ -31,11 +31,6 @@ var (
 		Namespace: namespace,
 		Name:      "http_request_latency_milliseconds",
 		Help:      "Latency of HTTP requests.",
-	}, []string{"method"})
-	RequestCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Name:      "http_request_count",
-		Help:      "Count of all HTTP requests.",
 	}, []string{"code", "method"})
 	RequestInFlightCount = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: namespace,
@@ -52,7 +47,6 @@ var (
 func init() {
 	prometheus.MustRegister(
 		RequestLatency,
-		RequestCount,
 		RequestInFlightCount,
 		LoggingCount,
 	)

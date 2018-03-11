@@ -30,6 +30,9 @@ func init() {
 		FlagServerInsecurePort,
 		FlagServerInsecureBindAddress,
 		FlagServerSecureBindAddress,
+		FlagServerTLSCertFile,
+		FlagServerTLSKeyFile,
+		FlagServerTLSCaFile,
 	)
 }
 
@@ -61,5 +64,26 @@ var (
 		Short: "",
 		Value: "0.0.0.0",
 		Usage: "Network address that Kanali will listen on for incoming requests.",
+	}
+	// FlagServerTLSCertFile specifies the path to x509 certificate for HTTPS servers.
+	FlagServerTLSCertFile = flags.Flag{
+		Long:  "server.tls.cert_file",
+		Short: "c",
+		Value: "",
+		Usage: "Path to x509 certificate for HTTPS servers.",
+	}
+	// FlagServerTLSKeyFile pecifies the path to x509 private key matching --tls-cert-file
+	FlagServerTLSKeyFile = flags.Flag{
+		Long:  "server.tls.key_file",
+		Short: "k",
+		Value: "",
+		Usage: "Path to x509 private key matching --tls.cert_file.",
+	}
+	// FlagServerTLSCaFile specifies the path to x509 certificate authority bundle for mutual TLS
+	FlagServerTLSCaFile = flags.Flag{
+		Long:  "server.tls.ca_file",
+		Short: "",
+		Value: "",
+		Usage: "Path to x509 certificate authority bundle for mutual TLS.",
 	}
 )

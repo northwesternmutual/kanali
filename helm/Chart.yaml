@@ -1,6 +1,6 @@
 ---
 
-appVersion: v2.0.0-alpha
+appVersion: v2.0.0-rc1
 name: kanali
 version: 0.0.1
 description: A Kanali Helm chart for Kubernetes

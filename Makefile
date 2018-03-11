@@ -21,7 +21,7 @@ $(BINARY): $(ALL_SRC) unit_test lint codegen_verify
 
 .PHONY: unit_test
 unit_test:
-	@bash -c "set -e; set -o pipefail; $(GOTEST) $(SRC_PACKAGES) | $(COLORIZE)"
+	@bash -c "set -e; set -o pipefail; $(GOTEST) $(PACKAGES) | $(COLORIZE)"
 
 .PHONY: e2e_test
 e2e_test:
@@ -42,7 +42,7 @@ fmt:
 
 .PHONY: cover
 cover:
-	@./hack/cover.sh $(shell go list $(PACKAGES))
+	@./hack/cover.sh $(shell go list $(NON_GENERATED_PACKAGES))
 	@go tool cover -html=cover.out -o cover.html
 
 .PHONY: binary
@@ -64,7 +64,7 @@ install_ci: install
 	go get github.com/wadey/gocovmerge
 	go get github.com/mattn/goveralls
 	go get golang.org/x/tools/cmd/cover
-	go get github.com/golang/lint/golint
+	go get golang.org/x/lint/golint
 	go get github.com/kisielk/errcheck
 
 .PHONY: codegen_verify

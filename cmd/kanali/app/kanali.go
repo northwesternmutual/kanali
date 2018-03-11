@@ -48,6 +48,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/store/core/v1"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
 	"github.com/northwesternmutual/kanali/pkg/utils"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
 func Run(sigCtx context.Context) error {
@@ -63,16 +64,16 @@ func Run(sigCtx context.Context) error {
 	k8sFactory := informers.NewSharedInformerFactory(k8sClientset, 5*time.Minute)
 	v1.SetGlobalInterface(k8sFactory.Core().V1())
 
-	if err := crds.EnsureCRDs(crdClientset.ApiextensionsV1beta1(),
-		v2CRDs.ApiProxyCRD,
-		v2CRDs.ApiKeyCRD,
-		v2CRDs.ApiKeyBindingCRD,
-		v2CRDs.MockTargetCRD,
+	if err := crds.EnsureCRDs(
+		crdClientset.ApiextensionsV1beta1(),
+		[]*apiextensionsv1beta1.CustomResourceDefinition{
+			v2CRDs.ApiProxyCRD,
+			v2CRDs.ApiKeyCRD,
+			v2CRDs.ApiKeyBindingCRD,
+			v2CRDs.MockTargetCRD,
+		}, nil,
 	); err != nil {
-		logger.Fatal(err.Error())
 		return err
-	} else {
-		logger.Info("all customresourcedefinitions successfully created")
 	}
 
 	decryptionKey, err := utils.LoadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
@@ -92,9 +93,9 @@ func Run(sigCtx context.Context) error {
 		SecureAddr:   viper.GetString(options.FlagServerSecureBindAddress.GetLong()),
 		InsecurePort: viper.GetInt(options.FlagServerInsecurePort.GetLong()),
 		SecurePort:   viper.GetInt(options.FlagServerSecurePort.GetLong()),
-		TLSKey:       viper.GetString(options.FlagTLSKeyFile.GetLong()),
-		TLSCert:      viper.GetString(options.FlagTLSCertFile.GetLong()),
-		TLSCa:        viper.GetString(options.FlagTLSCaFile.GetLong()),
+		TLSKey:       viper.GetString(options.FlagServerTLSKeyFile.GetLong()),
+		TLSCert:      viper.GetString(options.FlagServerTLSCertFile.GetLong()),
+		TLSCa:        viper.GetString(options.FlagServerTLSCaFile.GetLong()),
 		Handler: chain.New().Add(
 			middleware.Correlation,
 			middleware.Metrics,
@@ -112,8 +113,8 @@ func Run(sigCtx context.Context) error {
 
 	metricsServer := server.Prepare(&server.Options{
 		Name:         "prometheus",
-		InsecureAddr: viper.GetString(options.FlagPrometheusServerBindAddress.GetLong()),
-		InsecurePort: viper.GetInt(options.FlagPrometheusServerPort.GetLong()),
+		InsecureAddr: viper.GetString(options.FlagPrometheusServerInsecureBindAddress.GetLong()),
+		InsecurePort: viper.GetInt(options.FlagPrometheusServerInsecurePort.GetLong()),
 		Handler:      promhttp.Handler(),
 		Logger:       logger.Sugar(),
 	})

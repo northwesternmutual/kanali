@@ -140,14 +140,21 @@ $ cd kanali
 
 ## Helm
 
-[Helm](https://github.com/kubernetes/helm) is a tool for managing Kubernetes charts. Charts are packages of pre-configured Kubernetes resources. Install Kanali along with Grafana, Influxdb, and Jaeger by using the following commands:
-
 ```sh
-$ which helm || curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh | bash
-$ helm init
-$ ./scripts/helm-permissions.sh
-$ kubectl get pods # wait until all pods are up and running
+# Bootstrap a local Kubernetes environment.
+$ minikube start
+# Add incubator repo as some of our dependencies live here.
+$ helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
+# Create RBAC policies for Helm.
+$ ./hack/helm-rbac.yaml
+# Bootstrap Helm.
+$ helm init --service-account tiller
+# Wait for Helm to finish deploying.
+$ kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
+# Deploy Kanali and its dependencies.
 $ helm install ./helm --name kanali
+# Open Grafana
+$ minikube service kanali-grafana
 ```
 
 ## Manual

@@ -33,6 +33,7 @@ type representJSONMatcher struct {
 	expected interface{}
 }
 
+// RepresentJSONifiedObject
 func RepresentJSONifiedObject(expected interface{}) types.GomegaMatcher {
 	return &representJSONMatcher{
 		expected: expected,

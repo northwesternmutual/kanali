@@ -26,24 +26,40 @@ import (
 
 func init() {
 	KanaliGatewayOptions.Add(
-		FlagPrometheusServerPort,
-		FlagPrometheusServerBindAddress,
+		FlagPrometheusServerSecurePort,
+		FlagPrometheusServerInsecurePort,
+		FlagPrometheusServerInsecureBindAddress,
+		FlagPrometheusServerSecureBindAddress,
 	)
 }
 
 var (
-	// FlagPrometheusServerPort sets the port that the Prometheus server will listen on for incoming requests
-	FlagPrometheusServerPort = flags.Flag{
-		Long:  "prometheus.port",
+	// FlagPrometheusServerSecurePort sets the port that Kanali will listen on for incoming requests
+	FlagPrometheusServerSecurePort = flags.Flag{
+		Long:  "prometheus.secure_port",
 		Short: "",
-		Value: 8000,
-		Usage: "Sets the port that the Prometheus server will listen on for incoming requests.",
+		Value: 0,
+		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
-	// FlagPrometheusServerBindAddress specifies the network address that the Prometheus server will listen on for incoming requests
-	FlagPrometheusServerBindAddress = flags.Flag{
-		Long:  "prometheus.bind_address",
+	// FlagPrometheusServerInsecurePort sets the port that Kanali will listen on for incoming requests
+	FlagPrometheusServerInsecurePort = flags.Flag{
+		Long:  "prometheus.insecure_port",
+		Short: "",
+		Value: 0,
+		Usage: "Sets the port that Kanali will listen on for incoming requests.",
+	}
+	// FlagPrometheusServerInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests
+	FlagPrometheusServerInsecureBindAddress = flags.Flag{
+		Long:  "prometheus.insecure_bind_address",
 		Short: "",
 		Value: "0.0.0.0",
-		Usage: "Network address that the Prometheus server will listen on for incoming requests.",
+		Usage: "Network address that Kanali will listen on for incoming requests.",
+	}
+	// FlagPrometheusServerSecureBindAddress specifies the network address that Kanali will listen on for incoming requests
+	FlagPrometheusServerSecureBindAddress = flags.Flag{
+		Long:  "prometheus.secure_bind_address",
+		Short: "",
+		Value: "0.0.0.0",
+		Usage: "Network address that Kanali will listen on for incoming requests.",
 	}
 )
