@@ -58,8 +58,9 @@ prometheus:
 grafana:
   dashboardImports:
     enabled: true
-    dashboards:
+    dashboards: {
       kanali.json: "https://grafana.com/api/dashboards/5045/revisions/5/download"
+    }
   server:
     service:
       type: NodePort
