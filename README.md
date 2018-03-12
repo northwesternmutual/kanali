@@ -141,20 +141,7 @@ $ cd kanali
 ## Helm
 
 ```sh
-# Bootstrap a local Kubernetes environment.
-$ minikube start
-# Add incubator repo as some of our dependencies live here.
-$ helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
-# Create RBAC policies for Helm.
-$ ./hack/helm-rbac.yaml
-# Bootstrap Helm.
-$ helm init --service-account tiller
-# Wait for Helm to finish deploying.
-$ kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
-# Deploy Kanali and its dependencies.
-$ helm install ./helm --name kanali
-# Open Grafana
-$ minikube service kanali-grafana
+$ ./hack/helm-up.sh
 ```
 
 ## Manual

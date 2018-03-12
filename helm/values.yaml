@@ -69,6 +69,8 @@ grafana:
     installPlugins: grafana-piechart-panel
     setDatasource:
       enabled: true
+      restartPolicy: OnFailure
+      backoffLimit: 3
       datasource:
         name: prometheus
         url: http://kanali-prometheus-server.default.svc.cluster.local
