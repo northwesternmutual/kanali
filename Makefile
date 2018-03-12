@@ -19,6 +19,10 @@ COLORIZE               = sed ''/PASS/s//$(PASS)/'' | sed ''/FAIL/s//$(FAIL)/''
 
 $(BINARY): $(ALL_SRC) unit_test lint codegen_verify
 
+.PHONY: up
+up:
+	./hack/kanali-up.sh
+
 .PHONY: unit_test
 unit_test:
 	@bash -c "set -e; set -o pipefail; $(GOTEST) $(PACKAGES) | $(COLORIZE)"

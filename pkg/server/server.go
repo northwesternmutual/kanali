@@ -66,7 +66,7 @@ func Prepare(opts *Options) *serverParams {
 	f, err := os.Open(opts.TLSCa)
 	if err != nil && len(opts.TLSCa) > 0 {
 		return &serverParams{err: []error{err}}
-	} else {
+	} else if err == nil && len(opts.TLSCa) > 0 {
 		defer func() {
 			if err := f.Close(); err != nil {
 				opts.Logger.Error(fmt.Sprintf("error closing %s: %s", opts.Name, err))

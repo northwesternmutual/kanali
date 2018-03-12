@@ -40,7 +40,7 @@ func InitViper(appName string) error {
 	viper.AddConfigPath("/etc/" + appName + "/")
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix(appName)
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	if err := viper.ReadInConfig(); err != nil {
 		log.WithContext(nil).Warn(err.Error())
 	}

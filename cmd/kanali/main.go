@@ -29,7 +29,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	_ "github.com/apache/thrift/lib/go/thrift"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app"
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/flags"
@@ -62,6 +61,8 @@ func startCmdRun(cmd *cobra.Command, args []string) {
 		log.WithContext(nil).Fatal(err.Error())
 		os.Exit(1)
 	}
+
+	flags.LogFlags(cmd.Flags())
 
 	ctx := server.SetupSignalHandler()
 	if val, ok := viper.Get(options.FlagProcessLogLevel.GetLong()).(log.Level); ok {
