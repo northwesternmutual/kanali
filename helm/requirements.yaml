@@ -12,7 +12,7 @@ dependencies:
   tags:
   - metrics
 - name: jaeger
-  version: 0.2.0
+  version: 0.3.7
   repository: https://kubernetes-charts-incubator.storage.googleapis.com/
   tags:
   - tracing

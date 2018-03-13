@@ -78,6 +78,14 @@ func (b *ApiProxyBuilder) WithTargetBackendStaticService(name string, port int) 
 	return b
 }
 
+func (b *ApiProxyBuilder) WithTargetBackendDynamicService(port int, labels ...v2.Label) *ApiProxyBuilder {
+	b.curr.Spec.Target.Backend.Service = &v2.Service{
+		Port:   int64(port),
+		Labels: labels,
+	}
+	return b
+}
+
 func (b *ApiProxyBuilder) WithSecret(name string) *ApiProxyBuilder {
 	b.curr.Spec.Target.SSL = &v2.SSL{
 		SecretName: name,

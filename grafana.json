@@ -3022,6 +3022,5 @@
   },
   "timezone": "browser",
   "title": "Kanali",
-  "description": "A Kubernetes Native API Management Solution.",
-  "version": 1
+  "description": "A Kubernetes Native API Management Solution."
 }

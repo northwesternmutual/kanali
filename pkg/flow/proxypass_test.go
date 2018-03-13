@@ -19,3 +19,127 @@
 // THE SOFTWARE.
 
 package flow
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/labels"
+
+	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/test/builder"
+)
+
+func TestGetServiceLabelSet(t *testing.T) {
+	tests := []struct {
+		proxy    *v2.ApiProxy
+		headers  http.Header
+		labels   labels.Set
+		defaults map[string]string
+	}{
+		{
+			proxy: builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080,
+				v2.Label{Name: "foo", Value: "bar"},
+			).NewOrDie(),
+			headers: nil,
+			labels: map[string]string{
+				"foo": "bar",
+			},
+			defaults: make(map[string]string),
+		},
+		{
+			proxy:    builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080).NewOrDie(),
+			headers:  nil,
+			labels:   map[string]string{},
+			defaults: make(map[string]string),
+		},
+		{
+			proxy: builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080,
+				v2.Label{Name: "foo", Value: "bar"},
+				v2.Label{Name: "bar", Header: "foo"},
+			).NewOrDie(),
+			headers: make(http.Header),
+			labels: map[string]string{
+				"foo": "bar",
+				"bar": "",
+			},
+			defaults: make(map[string]string),
+		},
+		{
+			proxy: builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080,
+				v2.Label{Name: "foo", Value: "bar"},
+				v2.Label{Name: "bar", Header: "foo"},
+			).NewOrDie(),
+			headers: http.Header(map[string][]string{
+				"Foo": {"car"},
+			}),
+			labels: map[string]string{
+				"foo": "bar",
+				"bar": "car",
+			},
+			defaults: make(map[string]string),
+		},
+		{
+			proxy: builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080,
+				v2.Label{Name: "bar", Header: "foo"},
+			).NewOrDie(),
+			headers: http.Header(map[string][]string{
+				"Foo": {"car"},
+			}),
+			labels: map[string]string{
+				"bar": "car",
+			},
+			defaults: make(map[string]string),
+		},
+		{
+			proxy: builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080,
+				v2.Label{Name: "foo", Value: "bar"},
+				v2.Label{Name: "bar", Header: "foo"},
+			).NewOrDie(),
+			headers: make(http.Header),
+			labels: map[string]string{
+				"foo": "bar",
+				"bar": "default",
+			},
+			defaults: map[string]string{
+				"foo": "default",
+			},
+		},
+		{
+			proxy: builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080,
+				v2.Label{Name: "foo", Value: "bar"},
+				v2.Label{Name: "bar", Header: "foo"},
+			).NewOrDie(),
+			headers: http.Header(map[string][]string{
+				"Foo": {"car"},
+			}),
+			labels: map[string]string{
+				"foo": "bar",
+				"bar": "car",
+			},
+			defaults: map[string]string{
+				"foo": "default",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.labels, getServiceLabelSet(test.proxy, test.headers, test.defaults))
+	}
+}
+
+func BenchmarkGetServiceLabelSet(b *testing.B) {
+	proxy := builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080,
+		v2.Label{Name: "foo", Value: "bar"},
+		v2.Label{Name: "bar", Header: "foo"},
+	).NewOrDie()
+	headers := make(http.Header)
+	defaults := map[string]string{
+		"foo": "default",
+	}
+
+	for n := 0; n < b.N; n++ {
+		getServiceLabelSet(proxy, headers, defaults)
+	}
+}

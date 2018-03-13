@@ -386,7 +386,9 @@ func (step proxyPassStep) serviceDetails() (string, string, error) {
 		scheme = "http"
 	}
 
-	services, err := coreV1.Interface().Services().Lister().Services(step.proxy.GetNamespace()).List(labels.SelectorFromSet(getServiceLabelSet(step.proxy, step.originalReq.Header)))
+	services, err := coreV1.Interface().Services().Lister().Services(step.proxy.GetNamespace()).List(labels.SelectorFromSet(
+		getServiceLabelSet(step.proxy, step.originalReq.Header, viper.GetStringMapString(options.FlagProxyDefaultHeaderValues.GetLong())),
+	))
 	if err != nil || len(services) < 1 {
 		switch e := err.(type) {
 		case *k8sErrors.StatusError:
@@ -495,11 +497,15 @@ func copyBuffer(ctx context.Context, dst io.Writer, src io.Reader, buf []byte) (
 	}
 }
 
-func getServiceLabelSet(proxy *v2.ApiProxy, reqHeaders http.Header) labels.Set {
-	ls := map[string]string{}
-	for _, label := range proxy.Spec.Target.Backend.Service.Labels {
+func getServiceLabelSet(p *v2.ApiProxy, h http.Header, defaults map[string]string) labels.Set {
+	ls := make(map[string]string, len(p.Spec.Target.Backend.Service.Labels))
+	for _, label := range p.Spec.Target.Backend.Service.Labels {
 		if len(label.Header) > 0 {
-			ls[label.Name] = reqHeaders.Get(label.Header)
+			val := h.Get(label.Header)
+			if val == "" {
+				val = defaults[label.Header]
+			}
+			ls[label.Name] = val
 		} else {
 			ls[label.Name] = label.Value
 		}

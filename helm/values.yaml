@@ -56,11 +56,6 @@ prometheus:
           target_label: kubernetes_name
 
 grafana:
-  dashboardImports:
-    enabled: true
-    dashboards: {
-      kanali.json: "https://grafana.com/api/dashboards/5045/revisions/5/download"
-    }
   server:
     service:
       type: NodePort
@@ -78,10 +73,18 @@ grafana:
         access: proxy
         isDefault: true
 
-# jaeger:
-#   tags:
-#     cassandra: false
-#     elasticsearch: true
+jaeger:
+  cassandra:
+    config:
+      max_heap_size: 1024M
+      heap_new_size: 256M
+    resources:
+      requests:
+        memory: 2048Mi
+        cpu: 0.4
+      limits:
+        memory: 2048Mi
+        cpu: 0.4
 
 kanali:
   namespace: default
@@ -106,4 +109,4 @@ kanali:
 
 tags:
   metrics: true
-  tracing: false
+  tracing: true

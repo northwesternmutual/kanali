@@ -140,7 +140,12 @@ $ cd kanali
 
 ## Helm
 
+K
+
 ```sh
+# Bootstrap local Kubernetes cluster.
+$ minikube start
+# Deploy Kanali and its optional dependencies.
 $ ./hack/helm-up.sh
 ```
 
