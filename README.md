@@ -1,4 +1,6 @@
-# Kanali
+<p align="center">
+<img src="logo/logo_with_name.png" alt="Kanali" title="Kanali" width="50%" />
+</p>
 
 [![Travis](https://img.shields.io/travis/northwesternmutual/kanali/kanali.io%2Fv2alpha1.svg)](https://travis-ci.org/northwesternmutual/kanali)
 [![Coveralls](https://img.shields.io/coveralls/northwesternmutual/kanali/kanali.io%2Fv2alpha1.svg)](https://coveralls.io/github/northwesternmutual/kanali)
