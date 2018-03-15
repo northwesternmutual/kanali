@@ -8,7 +8,9 @@
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/northwesternmutual/kanali)
 [![Go Report Card](https://goreportcard.com/badge/github.com/northwesternmutual/kanali)](https://goreportcard.com/report/github.com/northwesternmutual/kanali)
 
-Kanali is an efficient [Kubernetes](https://kubernetes.io/) ingress proxy with robust API management capabilities. Built using native Kubernetes constructs, Kanali gives you all the capabilities you need when exposing services in production without the need for multiple tools to accomplish them. Here are some notable features:
+Kanali is a lightweight, [Kubernetes](https://kubernetes.io/) native API management gateway that together with network policies provide a robust, open source solution to Kubernetes ingress, API management, and API security.
+
+Notable features:
 
 * **Kubernetes Native:** Kanali extends the Kubernetes API by using [Custom Resource Definitions](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#customresourcedefinitions), allowing Kanali to be configured and used in the same way as native Kubernetes resources.
 * **Performance Centric:** As a middleware component, Kanali is developed with performance as the highest priority! You could instantly improve your application's network performance by using Kanali.
