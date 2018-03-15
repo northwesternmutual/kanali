@@ -1,7 +1,8 @@
 ALL_SRC                = $(shell find . -name "*.go" | grep -v -e vendor)
 BINARY                 = $(shell echo $${PWD\#\#*/})
 PACKAGES               = $(shell go list ./... | grep -v -E 'vendor')
-NON_GENERATED_PACKAGES = $(shell go list ./... | grep -v -E 'vendor|client|apis') # TODO: By excluding /apis/, we are excluding types.go which is a non-generated file.
+NON_GEN_PKGS           = $(shell go list ./... | grep -v -E 'vendor|client|apis') # TODO: By excluding /apis/, we are excluding types.go which is a non-generated file.
+NON_GEN_NON_TEST_PKGS  = $(shell go list ./... | grep -v -E 'vendor|client|apis')
 RACE                   = -race
 GOTEST                 = go test -v $(RACE)
 GOLINT                 = golint
@@ -25,7 +26,7 @@ up:
 
 .PHONY: unit_test
 unit_test:
-	@bash -c "set -e; set -o pipefail; $(GOTEST) $(PACKAGES) | $(COLORIZE)"
+	@bash -c "set -e; set -o pipefail; $(GOTEST) $(NON_GEN_NON_TEST_PKGS) | $(COLORIZE)"
 
 .PHONY: e2e_test
 e2e_test:
@@ -46,7 +47,7 @@ fmt:
 
 .PHONY: cover
 cover:
-	@./hack/cover.sh $(shell go list $(NON_GENERATED_PACKAGES))
+	@./hack/cover.sh $(NON_GEN_NON_TEST_PKGS)
 	@go tool cover -html=cover.out -o cover.html
 
 .PHONY: binary

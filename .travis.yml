@@ -2,24 +2,16 @@ sudo: required
 
 language: go
 
-matrix:
-  include:
-  - go: 1.10
-    env:
-    - TESTS=true
-    - COVERAGE=true
-  - go: 1.10
-    env:
-    - E2E_TEST=true
-    - K8S_VERSION=v1.9.0
+- go: 1.10
+  env:
+  - TESTS=true
+  - COVERAGE=true
 
 services:
 - docker
 
 env:
   global:
-  # This moves Kubernetes specific config files.
-  - CHANGE_MINIKUBE_NONE_USER=true
   # Shortened commit sha
   - COMMIT=${TRAVIS_COMMIT::8}
   # Docker username
@@ -28,15 +20,11 @@ env:
   - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
 
 install:
-# install dependencies
 - make install_ci
-# build and push docker image tagged with this commit sha (used in e2e tests)
-- if [ "$E2E_TEST" == true ]; then bash ./hack/build-docker-images.sh ; fi
 
 script:
-- if [ "$TESTS" == true ]; then make test_ci ; fi
-- if [ "$E2E_TEST" == true ]; then make e2e_test ; fi
+- if [ "$TESTS" == true ]; then make unit_test; fi
 
 after_success:
+- if [ "$COVERAGE" == true ]; then make cover; fi
 - if [ "$COVERAGE" == true ]; then travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true ; else echo 'skipping coverage'; fi
-# - if [ "$TESTS" == true ]; then bash ./travis/build-docker-images.sh ; fi
