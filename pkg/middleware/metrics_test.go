@@ -21,21 +21,42 @@
 package middleware
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
+
+	"github.com/northwesternmutual/kanali/pkg/log"
+	"github.com/northwesternmutual/kanali/pkg/tags"
 )
+
+func TestMetrics(t *testing.T) {
+	lvl := zap.NewAtomicLevelAt(zapcore.DebugLevel)
+	core, logs := observer.New(lvl)
+	defer log.SetLogger(zap.New(core)).Restore()
+
+	rec := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/foo", nil)
+	msg := "message"
+	http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		Metrics(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.WriteHeader(http.StatusTeapot)
+			rw.Write([]byte(msg))
+		})).ServeHTTP(rw, req)
+		assert.Equal(t, 1, logs.FilterMessage("request details").Len())
+		assert.Equal(t, 1, logs.FilterField(zap.String(tags.HTTPRequestMethod, "GET")).Len())
+		assert.Equal(t, 1, logs.FilterField(zap.Int(tags.HTTPResponseStatusCode, http.StatusTeapot)).Len())
+		assert.Equal(t, msg, rec.Body.String())
+		assert.Equal(t, http.StatusTeapot, rec.Code)
+	}).ServeHTTP(rec, req)
+}
 
 func TestGetRequDuration(t *testing.T) {
 	t0, t1 := time.Date(2018, time.January, 1, 2, 3, 4, 1000000, time.Local), time.Date(2018, time.January, 1, 2, 3, 4, 256000000, time.Local)
 	assert.Equal(t, float64(255), getReqDuration(t0, t1))
-}
-
-func TestGetRemoteAddr(t *testing.T) {
-	assert.Equal(t, "", getRemoteAddr(""))
-	assert.Equal(t, "1.2.3.4", getRemoteAddr("1.2.3.4"))
-	assert.Equal(t, "1.2.3.4", getRemoteAddr("1.2.3.4:8080"))
-	assert.Equal(t, "foo", getRemoteAddr("foo"))
-	assert.Equal(t, "[::]:8080", getRemoteAddr("[::]:8080"))
 }

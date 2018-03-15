@@ -24,9 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -35,10 +33,6 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/metrics"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"github.com/northwesternmutual/kanali/pkg/utils"
-)
-
-var (
-	ipRegex = regexp.MustCompile("^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$")
 )
 
 // Metrics is a middleware that will log and report metrics
@@ -60,7 +54,7 @@ func Metrics(next http.Handler) http.Handler {
 		logger := log.WithContext(r.Context())
 
 		logger.Info("request details",
-			zap.String(tags.HTTPRequestRemoteAddress, getRemoteAddr(r.RemoteAddr)),
+			zap.String(tags.HTTPRequestRemoteAddress, r.RemoteAddr),
 			zap.String(tags.HTTPRequestMethod, r.Method),
 			zap.String(tags.HTTPRequestURLPath, utils.ComputeURLPath(r.URL)),
 			zap.String(tags.HTTPRequestDuration, fmt.Sprintf("%gms", getReqDuration(startTime, endTime))),
@@ -73,18 +67,6 @@ func Metrics(next http.Handler) http.Handler {
 			logger.Error(fmt.Sprintf("error writing response: %s", err))
 		}
 	})
-}
-
-// getRemoteAddr return a parsed remote address. There is not defined format for
-// http.Request.RemoteAddr which is why this function is required.
-func getRemoteAddr(addr string) string {
-	if len(addr) < 1 {
-		return addr
-	}
-	if potentialIPAddr := strings.Split(addr, ":")[0]; ipRegex.MatchString(potentialIPAddr) {
-		return potentialIPAddr
-	}
-	return addr
 }
 
 func getReqDuration(start, finish time.Time) float64 {
