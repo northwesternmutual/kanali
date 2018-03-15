@@ -1,6 +1,9 @@
 # Kanali
 
-[![Travis](https://img.shields.io/travis/northwesternmutual/kanali/kanali.io%2Fv2alpha1.svg)](https://travis-ci.org/northwesternmutual/kanali) [![Coveralls](https://img.shields.io/coveralls/northwesternmutual/kanali/master.svg)](https://coveralls.io/github/northwesternmutual/kanali) [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://github.com/northwesternmutual/kanali/tree/master/docs/docs.md) [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io) [![Tutorial](https://img.shields.io/badge/tutorial-postman-orange.svg)](http://tutorial.kanali.io) [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/northwesternmutual/kanali)
+[![Travis](https://img.shields.io/travis/northwesternmutual/kanali/kanali.io%2Fv2alpha1.svg)](https://travis-ci.org/northwesternmutual/kanali)
+[![Coveralls](https://img.shields.io/coveralls/northwesternmutual/kanali/kanali.io%2Fv2alpha1.svg)](https://coveralls.io/github/northwesternmutual/kanali)
+[![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/northwesternmutual/kanali)
 [![Go Report Card](https://goreportcard.com/badge/github.com/northwesternmutual/kanali)](https://goreportcard.com/report/github.com/northwesternmutual/kanali)
 
 Kanali is an efficient [Kubernetes](https://kubernetes.io/) ingress proxy with robust API management capabilities. Built using native Kubernetes constructs, Kanali gives you all the capabilities you need when exposing services in production without the need for multiple tools to accomplish them. Here are some notable features:
