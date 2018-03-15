@@ -2,10 +2,12 @@ sudo: required
 
 language: go
 
-- go: 1.10
-  env:
-  - TESTS=true
-  - COVERAGE=true
+matrix:
+  include:
+  - go: 1.10
+    env:
+    - TESTS=true
+    - COVERAGE=true
 
 services:
 - docker
