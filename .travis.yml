@@ -4,7 +4,7 @@ language: go
 
 matrix:
   include:
-  - go: "1.10"
+  - go: '1.10'
     env:
     - TESTS=true
     - COVERAGE=true
@@ -14,11 +14,8 @@ services:
 
 env:
   global:
-  # Shortened commit sha
   - COMMIT=${TRAVIS_COMMIT::8}
-  # Docker username
   - secure: kqPYySZHukKk79buA26c9staHoX7roMpp13aalARyDKoz8qdfgcCLMfBkAjI3OpIYRpqZHQlla67YBCrBgINA6ahoUm4AQF2nK7P7ll3ZM/VHwjxY6DY+wN7sSlMotBwu6qSkoCs34U8Vd1c6uCjNmDlGGgeTAY2WlLAnHNAe8FVNlYKX3fb2MOolKeLuZLh36VPbrF1409WyUFU79C20CMfN5X0sq13xOqwWJHjOaYF+wnEoOsFGt62lqGmBWXEwTOfFRKwVrYleDhR+LU0onW7k12KHydrAcI4j41mDfi0GUmLYPgCdyoffcyPNbdu6ZjmDEhF3ZSl9QXVoaSaEDIOinnbi9WJvmTRa1pE8rvB2VVz+pGB1V24aYMKZreSdkuCtFfJ1UxklW88312NcItPBVJbInY4Kqn/gMA9BwFMtzCD+pBpR06r83P3iOFs7zvzxTnuuBQ+TJUMw8PQBaRlgrDyrFY/9ORHgSGCSrquPg6nVMcxvHQoU4ugkC6fbSqnivq7TEYHTfKcUEVpLqqK+pdfB1qqCo2nAtfsViRPV2c5BXg5JyJT0uBIjukPnt7k/sJ3BOex1PAow0lgsURyy3JnRf8qAg4h28cZBBhTZCj3ovyC9TH9pcI/46EqmP7Yqs1L0UTReOG8+0cHT+d8wxECnWI8PjqN20rGWw8=
-  # Docker password
   - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
 
 install:
@@ -29,4 +26,9 @@ script:
 
 after_success:
 - if [ "$COVERAGE" == true ]; then make cover; fi
-- if [ "$COVERAGE" == true ]; then travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true ; else echo 'skipping coverage'; fi
+- if [ "$COVERAGE" == true ]; then travis_retry goveralls -coverprofile=cover.out
+  -service=travis-ci || true ; else echo 'skipping coverage'; fi
+
+notifications:
+  slack:
+    secure: nSsvnXKxyHMyxvZs5bdwqzW0hJhdg+Xl+8lVu2aRGfdQENg557rs/vkKOlXxT4oke7YZKxQ3oj6cyuQhcC3rpX59HD7naD9RcOqBkPYsfzxRrBaxzTUb+AaBHBUrX+fbw571idS41bz2ORSb/4+ao+7+TpRCcq8bMGq3gyblR2oK64DvavNnU4MYIopeIo8nAI1CUDe34uKVLgeSEeqqqgSLtl5qHY6xfFOyjZZYGtFyBkPKuZBNTs410l64qRD0CxdjtT625wmNwI+6IJg6RN20MqD66Tw0eFajI+S03WazDl4HQzSL95KoMaApeb4ppOwgxoFflvuBe1DBfQVC4/N7A6KxPz8K3EAYBbBOt98hY9j3YTTlUrHeck0QSlNyWtgDIjNdLG/BWv7L/gwFR+LRs9gvoZVL++mFkGKWAEumUtQbPIOgJlCsJyiu/jYlAWfwraLgDQiocDO6eNp1O/TViip/DxsPaOSwMZnDNz2n/zstaKCORe4zF4oZQoHWoHlxVawcV4iYQ/zDhn14MXgeZ2qc1oyJjj5NuNu3jbwSFJIQVYkgGL/nIOGNI4FxQFWg294tu9OueQmrO0SwR0gguzdQrWYx7a1CA3nbxib+8xo9eOSLl8jOtFDF6u/DVL6zvKstaahL5LkPpPRLM8m/uGtCCdd70EOv5bhw06Q=
