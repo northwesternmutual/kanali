@@ -28,6 +28,10 @@ Find complete documentation at [kanali.io](https://kanali.io).
 
 Try our [interactive tutorial](https://kanali.io/tutorial).
 
+## Media
+
+[KubeCon 2017](https://youtu.be/--LSmvCKVSs)
+
 ## Contributing
 See [CONTRIBUTING](CONTRIBUTING.md) for details on submitting patches and the contribution workflow.
 
