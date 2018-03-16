@@ -37,4 +37,4 @@ See [CONTRIBUTING](CONTRIBUTING.md) for details on submitting patches and the co
 
 ## Support
 
-Before filing an issue, make sure you visit our [troubleshooting guide]().
+Before [filing an issue](https://github.com/northwesternmutual/kanali/issues/new), make sure you visit our [troubleshooting guide]().
