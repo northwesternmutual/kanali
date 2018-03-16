@@ -13,14 +13,14 @@ Kanali is a lightweight, [Kubernetes](https://kubernetes.io/) native API managem
 Notable features:
 
 * **Kubernetes Native:** Kanali extends the Kubernetes API by using [Custom Resource Definitions](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#customresourcedefinitions), allowing Kanali to be configured and used in the same way as native Kubernetes resources.
-* **Performance Centric:** As a middleware component, Kanali is developed with performance as the highest priority! You could instantly improve your application's network performance by using Kanali.
-* **Powerful, Decoupled Plugin Framework:** Need to perform complex transformations or integrations with a legacy system? Kanali provides a framework allowing developers to create, integrate, and version control custom plugins without every touching the Kanali codebase. Read more about plugins [here](https://github.com/northwesternmutual/kanali/blob/master/PLUGIN_GUIDE.md).
-* **User-Defined Configurations:** Kanali gives you complete control over declaratively configuring how your proxy behaves. Need mutual TLS, dynamic service discovery, mock responses, etc.? No problem! Kanali makes it easy!
-* **Robust API Management:** Fine grained API key authorization, quota policies, rate limiting, etc., these are some of the built in API management capabilities that Kanali provides. In addition, it follows native Kubernetes patterns for API key creation and binding making it easy and secure to control access to your proxy.
-* **Analytics & Monitoring:** Kanali uses [Grafana](https://grafana.com/) and [Prometheus](https://prometheus.io/) to provide a customizable and visually appealing experience so that you can get real time alerting and visualization around Kanali's metrics. Find out more [here](#analytics-and-monitoring)!
-* **Production Ready:** [Northwestern Mutual](https://www.northwesternmutual.com/) uses Kanali in Production to proxy, manage, and secure all Kubernetes hosted services.
-* **Easy Installation:** Kanali does not rely on an external database, infrastructure agents or workers, dedicated servers, etc. Kanali is deployed in the same manner as any other service in Kubernetes. Find installation instructions [here](#installation)
-* **Open Tracing Integration:** Kanali integrates with [Open Tracing](http://opentracing.io/), hosted by the [Cloud Native Foundation](https://www.cncf.io/), which provides consistent, expressive, vendor-neutral APIs allowing you to trace the entire lifecycle of a request. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system open sourced by Uber Technologies and recently accepted into the Cloud Native Foundation, is supported out of the box to provide a visual representation for your traces.
+* **Performance Centric:** As a middleware component, Kanali is developed with performance as the highest priority!
+* **Plugin Framework:** Need to perform complex transformations or integrations with a legacy system? Kanali provides a framework allowing developers to create, integrate, and version control custom plugins.
+* **User-Defined Configurations:** Kanali gives you control over declaratively configuring how your proxy behaves. Need mutual TLS, dynamic service discovery, mock responses, etc.? Kanali makes it easy!
+* **Robust API Management:** Fine grained API key authorization, JWT validation, quota policies, rate limiting, etc., these are some of the built in API management capabilities that Kanali provides.
+* **Analytics & Monitoring:** Kanali integrates with [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) to provide a robust set of metrics and a customizable dashboard so that you can monitor the performance of your APIs in real time.
+* **Production Ready:** [Northwestern Mutual](https://www.northwesternmutual.com/) uses Kanali in production at scale for all of its API management needs in their cloud native stack.
+* **Cloud Native Deployment:** Kanali is deployed using native Kubernetes constructs which is assisted by an included [Helm](https://helm.sh/) chart.
+* **Open Tracing Integration:** Kanali integrates with [Open Tracing](http://opentracing.io/), a vendor-neutral open standard for distributed tracing. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system, is supported out of the box to provide a visual representation for your traces.
 
 ## Getting Started
 
@@ -37,4 +37,4 @@ See [CONTRIBUTING](CONTRIBUTING.md) for details on submitting patches and the co
 
 ## Support
 
-Before [filing an issue](https://github.com/northwesternmutual/kanali/issues/new), make sure you visit our [troubleshooting guide]().
+Before [filing an issue](https://github.com/northwesternmutual/kanali/issues/new), please visit our [troubleshooting guide]().
