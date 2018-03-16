@@ -20,7 +20,7 @@ Notable features:
 * **Analytics & Monitoring:** Kanali integrates with [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) to provide a robust set of metrics and a customizable dashboard so that you can monitor the performance of your APIs in real time.
 * **Production Ready:** [Northwestern Mutual](https://www.northwesternmutual.com/) uses Kanali in production at scale for all of its API management needs in their cloud native stack.
 * **Cloud Native Deployment:** Kanali is deployed using native Kubernetes constructs which is assisted by an included [Helm](https://helm.sh/) chart.
-* **Open Tracing Integration:** Kanali integrates with [Open Tracing](http://opentracing.io/), a vendor-neutral open standard for distributed tracing. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system, is supported out of the box to provide a visual representation for your traces.
+* **Open Tracing Integration:** Kanali integrates with [OpenTracing](http://opentracing.io/), a vendor-neutral open standard for distributed tracing. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system, is supported out of the box to provide a visual representation for your traces.
 
 ## Getting Started
 
