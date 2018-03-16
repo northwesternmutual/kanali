@@ -18,39 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package run
+package controller
 
 import (
-	"context"
-	"fmt"
+	"crypto/rsa"
 
-	"github.com/oklog/run"
-
-	"github.com/northwesternmutual/kanali/pkg/log"
+	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions"
+	"github.com/northwesternmutual/kanali/pkg/controller/apikey"
+	"github.com/northwesternmutual/kanali/pkg/controller/apikeybinding"
+	"github.com/northwesternmutual/kanali/pkg/controller/apiproxy"
+	"github.com/northwesternmutual/kanali/pkg/controller/mocktarget"
 )
 
-type Group struct {
-	group run.Group
-}
+func InitEventHandlers(f externalversions.SharedInformerFactory, decryptionKey *rsa.PrivateKey) {
+	kanaliV2Informer := f.Kanali().V2()
 
-const (
-	Always = true
-)
-
-func (g *Group) Add(ctx context.Context, condition bool, name string, r Runnable) {
-	if !condition {
-		return
-	}
-
-	g.group.Add(func() error {
-		return r.Run(ctx)
-	}, func(err error) {
-		if err := r.Close(err); err != nil {
-			log.WithContext(ctx).Error(fmt.Sprintf("error closing %s: %s", name, err))
-		}
-	})
-}
-
-func (g *Group) Run() error {
-	return g.group.Run()
+	kanaliV2Informer.ApiKeys().Informer().AddEventHandler(apikey.NewController(decryptionKey))
+	kanaliV2Informer.ApiKeyBindings().Informer().AddEventHandler(apikeybinding.NewController())
+	kanaliV2Informer.ApiProxies().Informer().AddEventHandler(apiproxy.NewController())
+	kanaliV2Informer.MockTargets().Informer().AddEventHandler(mocktarget.NewController())
 }

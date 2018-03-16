@@ -18,39 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package run
+package apikey
 
 import (
-	"context"
-	"fmt"
+	"testing"
 
-	"github.com/oklog/run"
+	"github.com/stretchr/testify/assert"
 
-	"github.com/northwesternmutual/kanali/pkg/log"
+	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned/fake"
 )
 
-type Group struct {
-	group run.Group
+func TestNewApiKeyController(t *testing.T) {
+	externalversions.NewSharedInformerFactory(fake.NewSimpleClientset().KanaliV2().ApiKeys(), 5*time.Minute)
 }
 
-const (
-	Always = true
-)
+func TestApiKeyAdd(t *testing.T) {
 
-func (g *Group) Add(ctx context.Context, condition bool, name string, r Runnable) {
-	if !condition {
-		return
-	}
-
-	g.group.Add(func() error {
-		return r.Run(ctx)
-	}, func(err error) {
-		if err := r.Close(err); err != nil {
-			log.WithContext(ctx).Error(fmt.Sprintf("error closing %s: %s", name, err))
-		}
-	})
 }
 
-func (g *Group) Run() error {
-	return g.group.Run()
+func TestApiKeyUpdate(t *testing.T) {
+
+}
+
+func TestApiKeyDelete(t *testing.T) {
+
+}
+
+func TestDecryptApiKey(t *testing.T) {
+
 }

@@ -21,60 +21,30 @@
 package apikey
 
 import (
-	"context"
 	"crypto/rsa"
 	"errors"
-	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
-	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"go.uber.org/zap"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 
 	rsautils "github.com/northwesternmutual/kanali/pkg/rsa"
 )
 
-type ApiKeyController struct {
-	apikeys       informers.ApiKeyInformer
+type apiKeyController struct {
 	decryptionKey *rsa.PrivateKey
-	clientset     *versioned.Clientset
 }
 
-func NewApiKeyController(apikeys informers.ApiKeyInformer, clientset *versioned.Clientset, decryptionKey *rsa.PrivateKey) *ApiKeyController {
-
-	ctlr := &ApiKeyController{
+func NewController(decryptionKey *rsa.PrivateKey) cache.ResourceEventHandler {
+	return &apiKeyController{
 		decryptionKey: decryptionKey,
-		clientset:     clientset,
 	}
-
-	ctlr.apikeys = apikeys
-	apikeys.Informer().AddEventHandlerWithResyncPeriod(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    ctlr.apiKeyAdd,
-			UpdateFunc: ctlr.apiKeyUpdate,
-			DeleteFunc: ctlr.apiKeyDelete,
-		},
-		5*time.Minute,
-	)
-
-	return ctlr
 }
 
-func (ctlr *ApiKeyController) Run(ctx context.Context) error {
-	ctlr.apikeys.Informer().Run(ctx.Done())
-	return nil
-}
-
-func (ctlr *ApiKeyController) Close(error) error {
-	return nil
-}
-
-func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
+func (ctlr *apiKeyController) OnAdd(obj interface{}) {
 	logger := log.WithContext(nil)
 	key, ok := obj.(*v2.ApiKey)
 	if !ok || key == nil {
@@ -83,9 +53,6 @@ func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
 	}
 	keyClone, err := ctlr.decryptApiKey(key)
 	if err != nil {
-		if err := ctlr.clientset.KanaliV2().ApiKeys().Delete(key.GetName(), &v1.DeleteOptions{}); err != nil {
-			logger.Error(err.Error())
-		}
 		logger.Error(err.Error())
 		return
 	}
@@ -95,7 +62,7 @@ func (ctlr *ApiKeyController) apiKeyAdd(obj interface{}) {
 	).Debug("added ApiKey")
 }
 
-func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
+func (ctlr *apiKeyController) OnUpdate(old interface{}, new interface{}) {
 	logger := log.WithContext(nil)
 	newKey, ok := new.(*v2.ApiKey)
 	if !ok {
@@ -109,17 +76,11 @@ func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
 	}
 	newKeyClone, err := ctlr.decryptApiKey(newKey)
 	if err != nil {
-		if err := ctlr.clientset.KanaliV2().ApiKeys().Delete(newKeyClone.GetName(), &v1.DeleteOptions{}); err != nil {
-			logger.Error(err.Error())
-		}
 		logger.Error(err.Error())
 		return
 	}
 	oldKeyClone, err := ctlr.decryptApiKey(oldKey)
 	if err != nil {
-		if err := ctlr.clientset.KanaliV2().ApiKeys().Delete(oldKeyClone.GetName(), &v1.DeleteOptions{}); err != nil {
-			logger.Error(err.Error())
-		}
 		logger.Error(err.Error())
 		return
 	}
@@ -129,7 +90,7 @@ func (ctlr *ApiKeyController) apiKeyUpdate(old interface{}, new interface{}) {
 	).Debug("updated ApiKey")
 }
 
-func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
+func (ctlr *apiKeyController) OnDelete(obj interface{}) {
 	logger := log.WithContext(nil)
 	key, ok := obj.(*v2.ApiKey)
 	if !ok {
@@ -148,7 +109,7 @@ func (ctlr *ApiKeyController) apiKeyDelete(obj interface{}) {
 	}
 }
 
-func (ctlr *ApiKeyController) decryptApiKey(key *v2.ApiKey) (*v2.ApiKey, error) {
+func (ctlr *apiKeyController) decryptApiKey(key *v2.ApiKey) (*v2.ApiKey, error) {
 	if ctlr.decryptionKey == nil {
 		return nil, errors.New("decryption key not present")
 	}

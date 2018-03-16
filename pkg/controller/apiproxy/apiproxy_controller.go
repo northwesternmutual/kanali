@@ -21,11 +21,7 @@
 package apiproxy
 
 import (
-	"context"
-	"time"
-
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
@@ -33,37 +29,13 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-type ApiProxyController struct {
-	apiproxies informers.ApiProxyInformer
+type apiProxyController struct{}
+
+func NewController() cache.ResourceEventHandler {
+	return &apiProxyController{}
 }
 
-func NewApiProxyController(apiproxies informers.ApiProxyInformer) *ApiProxyController {
-
-	ctlr := &ApiProxyController{}
-
-	ctlr.apiproxies = apiproxies
-	apiproxies.Informer().AddEventHandlerWithResyncPeriod(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    ctlr.apiProxyAdd,
-			UpdateFunc: ctlr.apiProxyUpdate,
-			DeleteFunc: ctlr.apiProxyDelete,
-		},
-		5*time.Minute,
-	)
-
-	return ctlr
-}
-
-func (ctlr *ApiProxyController) Run(ctx context.Context) error {
-	ctlr.apiproxies.Informer().Run(ctx.Done())
-	return nil
-}
-
-func (ctlr *ApiProxyController) Close(error) error {
-	return nil
-}
-
-func (ctlr *ApiProxyController) apiProxyAdd(obj interface{}) {
+func (ctlr *apiProxyController) OnAdd(obj interface{}) {
 	logger := log.WithContext(nil)
 	proxy, ok := obj.(*v2.ApiProxy)
 	if !ok {
@@ -77,7 +49,7 @@ func (ctlr *ApiProxyController) apiProxyAdd(obj interface{}) {
 	}
 }
 
-func (ctlr *ApiProxyController) apiProxyUpdate(old interface{}, new interface{}) {
+func (ctlr *apiProxyController) OnUpdate(old interface{}, new interface{}) {
 	logger := log.WithContext(nil)
 	oldProxy, ok := old.(*v2.ApiProxy)
 	if !ok {
@@ -96,7 +68,7 @@ func (ctlr *ApiProxyController) apiProxyUpdate(old interface{}, new interface{})
 	).Debug("updated ApiProxy")
 }
 
-func (ctlr *ApiProxyController) apiProxyDelete(obj interface{}) {
+func (ctlr *apiProxyController) OnDelete(obj interface{}) {
 	logger := log.WithContext(nil)
 	proxy, ok := obj.(*v2.ApiProxy)
 	if !ok {

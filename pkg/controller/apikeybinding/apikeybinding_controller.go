@@ -21,11 +21,7 @@
 package apikeybinding
 
 import (
-	"context"
-	"time"
-
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
@@ -33,37 +29,13 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-type ApiKeyBindingController struct {
-	apikeybindings informers.ApiKeyBindingInformer
+type apiKeyBindingController struct{}
+
+func NewController() cache.ResourceEventHandler {
+	return &apiKeyBindingController{}
 }
 
-func NewApiKeyBindingController(apikeybindings informers.ApiKeyBindingInformer) *ApiKeyBindingController {
-
-	ctlr := &ApiKeyBindingController{}
-
-	ctlr.apikeybindings = apikeybindings
-	apikeybindings.Informer().AddEventHandlerWithResyncPeriod(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    ctlr.apiKeyBindingAdd,
-			UpdateFunc: ctlr.apiKeyBindingUpdate,
-			DeleteFunc: ctlr.apiKeyBindingDelete,
-		},
-		5*time.Minute,
-	)
-
-	return ctlr
-}
-
-func (ctlr *ApiKeyBindingController) Run(ctx context.Context) error {
-	ctlr.apikeybindings.Informer().Run(ctx.Done())
-	return nil
-}
-
-func (ctlr *ApiKeyBindingController) Close(error) error {
-	return nil
-}
-
-func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
+func (ctlr *apiKeyBindingController) OnAdd(obj interface{}) {
 	logger := log.WithContext(nil)
 	binding, ok := obj.(*v2.ApiKeyBinding)
 	if !ok {
@@ -77,7 +49,7 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingAdd(obj interface{}) {
 	)
 }
 
-func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new interface{}) {
+func (ctlr *apiKeyBindingController) OnUpdate(old interface{}, new interface{}) {
 	logger := log.WithContext(nil)
 	newBinding, ok := new.(*v2.ApiKeyBinding)
 	if !ok {
@@ -96,7 +68,7 @@ func (ctlr *ApiKeyBindingController) apiKeyBindingUpdate(old interface{}, new in
 	).Debug("updated ApiKeyBinding")
 }
 
-func (ctlr *ApiKeyBindingController) apiKeyBindingDelete(obj interface{}) {
+func (ctlr *apiKeyBindingController) OnDelete(obj interface{}) {
 	logger := log.WithContext(nil)
 	binding, ok := obj.(*v2.ApiKeyBinding)
 	if !ok {

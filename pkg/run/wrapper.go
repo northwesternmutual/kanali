@@ -23,24 +23,25 @@ package run
 import (
 	"context"
 
-	"k8s.io/client-go/tools/cache"
+	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/internalinterfaces"
 )
 
-type informerWrapper struct {
-	informer cache.SharedInformer
+type sharedInformerWrapper struct {
+	factory internalinterfaces.SharedInformerFactory
 }
 
-func InformerWrapper(c cache.SharedInformer) Runnable {
-	return &informerWrapper{
-		informer: c,
+func SharedInformerWrapper(c internalinterfaces.SharedInformerFactory) Runnable {
+	return &sharedInformerWrapper{
+		factory: c,
 	}
 }
 
-func (w *informerWrapper) Run(ctx context.Context) error {
-	w.informer.Run(ctx.Done())
+func (w *sharedInformerWrapper) Run(ctx context.Context) error {
+	w.factory.Start(ctx.Done())
+	<-ctx.Done()
 	return nil
 }
 
-func (w *informerWrapper) Close(error) error {
+func (w *sharedInformerWrapper) Close(error) error {
 	return nil
 }

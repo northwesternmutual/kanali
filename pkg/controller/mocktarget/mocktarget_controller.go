@@ -21,48 +21,21 @@
 package mocktarget
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
-	informers "github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"k8s.io/client-go/tools/cache"
 )
 
-type MockTargetController struct {
-	mocktargets informers.MockTargetInformer
+type mockTargetController struct{}
+
+func NewController() cache.ResourceEventHandler {
+	return &mockTargetController{}
 }
 
-func NewMockTargetController(mocktargets informers.MockTargetInformer) *MockTargetController {
-
-	ctlr := &MockTargetController{}
-
-	ctlr.mocktargets = mocktargets
-	mocktargets.Informer().AddEventHandlerWithResyncPeriod(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    ctlr.mockTargetAdd,
-			UpdateFunc: ctlr.mockTargetUpdate,
-			DeleteFunc: ctlr.mockTargetDelete,
-		},
-		5*time.Minute,
-	)
-
-	return ctlr
-}
-
-func (ctlr *MockTargetController) Run(ctx context.Context) error {
-	ctlr.mocktargets.Informer().Run(ctx.Done())
-	return nil
-}
-
-func (ctlr *MockTargetController) Close(error) error {
-	return nil
-}
-
-func (ctlr *MockTargetController) mockTargetAdd(obj interface{}) {
+func (ctlr *mockTargetController) OnAdd(obj interface{}) {
 	logger := log.WithContext(nil)
 	target, ok := obj.(*v2.MockTarget)
 	if !ok {
@@ -76,7 +49,7 @@ func (ctlr *MockTargetController) mockTargetAdd(obj interface{}) {
 	}
 }
 
-func (ctlr *MockTargetController) mockTargetUpdate(old interface{}, new interface{}) {
+func (ctlr *mockTargetController) OnUpdate(old interface{}, new interface{}) {
 	logger := log.WithContext(nil)
 	oldTarget, ok := old.(*v2.MockTarget)
 	if !ok {
@@ -95,7 +68,7 @@ func (ctlr *MockTargetController) mockTargetUpdate(old interface{}, new interfac
 	}
 }
 
-func (ctlr *MockTargetController) mockTargetDelete(obj interface{}) {
+func (ctlr *mockTargetController) OnDelete(obj interface{}) {
 	logger := log.WithContext(nil)
 	target, ok := obj.(*v2.MockTarget)
 	if !ok {

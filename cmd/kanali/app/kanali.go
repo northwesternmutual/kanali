@@ -26,18 +26,17 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
+	"k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/chain"
 	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
 	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions"
-	"github.com/northwesternmutual/kanali/pkg/controller/apikey"
-	"github.com/northwesternmutual/kanali/pkg/controller/apikeybinding"
-	"github.com/northwesternmutual/kanali/pkg/controller/apiproxy"
-	"github.com/northwesternmutual/kanali/pkg/controller/mocktarget"
+	"github.com/northwesternmutual/kanali/pkg/controller"
 	"github.com/northwesternmutual/kanali/pkg/crds"
 	v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/log"
@@ -45,14 +44,25 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/middleware"
 	"github.com/northwesternmutual/kanali/pkg/run"
 	"github.com/northwesternmutual/kanali/pkg/server"
-	"github.com/northwesternmutual/kanali/pkg/store/core/v1"
+	//storev1 "github.com/northwesternmutual/kanali/pkg/store/core/v1"
+	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/internalinterfaces"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
 	"github.com/northwesternmutual/kanali/pkg/utils"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
+var (
+	resyncPeriod = 5 * time.Minute
+)
+
 func Run(sigCtx context.Context) error {
-	logger := log.WithContext(nil)
+	logger := log.WithContext(sigCtx)
+
+	decryptionKey, err := utils.LoadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
+	if err != nil {
+		logger.Fatal(err.Error())
+		return err
+	}
 
 	crdClientset, kanaliClientset, k8sClientset, err := createClientsets()
 	if err != nil {
@@ -60,9 +70,22 @@ func Run(sigCtx context.Context) error {
 		return err
 	}
 
-	kanaliFactory := externalversions.NewSharedInformerFactory(kanaliClientset, 5*time.Minute)
-	k8sFactory := informers.NewSharedInformerFactory(k8sClientset, 5*time.Minute)
-	v1.SetGlobalInterface(k8sFactory.Core().V1())
+	// we need to create a tempory shared informer specific to the kubernetes clientset
+	// so that we can merge it into one shared index informer later.
+	coreV1SharedInformer := informers.NewSharedInformerFactory(k8sClientset, resyncPeriod).Core().V1()
+
+	sharedInformer := externalversions.NewSharedInformerFactory(kanaliClientset, resyncPeriod)
+	sharedInformer.InformerFor(&v1.Service{}, internalinterfaces.NewInformerFunc(func(i versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+		return coreV1SharedInformer.Services().Informer()
+	}))
+	sharedInformer.InformerFor(&v1.Secret{}, internalinterfaces.NewInformerFunc(func(i versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+		return coreV1SharedInformer.Secrets().Informer()
+	}))
+
+	controller.InitEventHandlers(sharedInformer, decryptionKey)
+
+	// TODO: this is messy
+	//storev1.SetGlobalInterface(k8sFactory.Core().V1())
 
 	if err := crds.EnsureCRDs(
 		crdClientset.ApiextensionsV1beta1(),
@@ -73,12 +96,6 @@ func Run(sigCtx context.Context) error {
 			v2CRDs.MockTargetCRD,
 		}, nil,
 	); err != nil {
-		return err
-	}
-
-	decryptionKey, err := utils.LoadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
-	if err != nil {
-		logger.Fatal(err.Error())
 		return err
 	}
 
@@ -119,30 +136,15 @@ func Run(sigCtx context.Context) error {
 		Logger:       logger.Sugar(),
 	})
 
-	var g run.Group
-
 	ctx, cancel := context.WithCancel(sigCtx)
 
-	g.Add(ctx, "apiproxy controller", apiproxy.NewApiProxyController(kanaliFactory.Kanali().V2().ApiProxies()))
-	g.Add(ctx, "apikey controller", apikey.NewApiKeyController(kanaliFactory.Kanali().V2().ApiKeys(), kanaliClientset, decryptionKey))
-	g.Add(ctx, "apikeybinding controller", apikeybinding.NewApiKeyBindingController(kanaliFactory.Kanali().V2().ApiKeyBindings()))
-	g.Add(ctx, "mocktarget controller", mocktarget.NewMockTargetController(kanaliFactory.Kanali().V2().MockTargets()))
-	g.Add(ctx, "service informer", run.InformerWrapper(k8sFactory.Core().V1().Services().Informer()))
-	g.Add(ctx, "secret informer", run.InformerWrapper(k8sFactory.Core().V1().Secrets().Informer()))
-
-	if tracerErr == nil {
-		g.Add(ctx, "tracer", tracer)
-	}
-
-	g.Add(ctx, metricsServer.Name(), metricsServer)
-	g.Add(ctx, gatewayServer.Name(), gatewayServer)
-
-	if viper.GetBool(options.FlagProfilingEnabled.GetLong()) {
-		g.Add(ctx, profilingServer.Name(), profilingServer)
-	}
-
-	g.Add(ctx, "parent process", run.MonitorContext(cancel))
-
+	var g run.Group
+	g.Add(ctx, run.Always, "shared index informer", run.SharedInformerWrapper(sharedInformer))
+	g.Add(ctx, tracerErr == nil, "tracer", tracer)
+	g.Add(ctx, run.Always, metricsServer.Name(), metricsServer)
+	g.Add(ctx, run.Always, gatewayServer.Name(), gatewayServer)
+	g.Add(ctx, viper.GetBool(options.FlagProfilingEnabled.GetLong()), profilingServer.Name(), profilingServer)
+	g.Add(ctx, run.Always, "parent process", run.MonitorContext(cancel))
 	return g.Run()
 }
 
@@ -171,6 +173,5 @@ func createClientsets() (
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
-	return crdClientset, kanaliClientset, k8sClientset, nil
+	return
 }
