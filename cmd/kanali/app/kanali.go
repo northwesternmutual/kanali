@@ -84,7 +84,7 @@ func Run(sigCtx context.Context) error {
 
 	controller.InitEventHandlers(sharedInformer, decryptionKey)
 
-	// TODO: this is messy
+	// TODO: This is messy in my opinion.
 	//storev1.SetGlobalInterface(k8sFactory.Core().V1())
 
 	if err := crds.EnsureCRDs(

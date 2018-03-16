@@ -21,19 +21,45 @@
 package apikey
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 
-	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned/fake"
+	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/pkg/log"
+	rsapkg "github.com/northwesternmutual/kanali/pkg/rsa"
+	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
+	"github.com/northwesternmutual/kanali/test/builder"
 )
 
-func TestNewApiKeyController(t *testing.T) {
-	externalversions.NewSharedInformerFactory(fake.NewSimpleClientset().KanaliV2().ApiKeys(), 5*time.Minute)
-}
-
 func TestApiKeyAdd(t *testing.T) {
+	lvl := zap.NewAtomicLevelAt(zapcore.DebugLevel)
+	core, logs := observer.New(lvl)
+	defer log.SetLogger(zap.New(core)).Restore()
 
+	priv, _ := rsa.GenerateKey(rand.Reader, 2048)
+	ctlr := NewController(priv)
+	encryptedKey, _ := rsapkg.Encrypt([]byte("abc123"), &priv.PublicKey, rsapkg.Base64Encode(), rsapkg.WithEncryptionLabel(rsapkg.EncryptionLabel))
+	apikey := builder.NewApiKey("foo").WithRevision(v2.RevisionStatusActive, encryptedKey).NewOrDie()
+
+	assert.True(t, store.ApiKeyStore().IsEmpty())
+	ctlr.OnAdd(apikey)
+	assert.Equal(t, 1, logs.FilterMessageSnippet("added").Len())
+	assert.NotNil(t, store.ApiKeyStore().Get("abc123"))
+
+	ctlr.OnAdd(builder.NewApiKey("bar").WithRevision(v2.RevisionStatusActive, []byte("foo")).NewOrDie())
+	assert.Equal(t, 1, logs.FilterMessageSnippet("illegal").Len())
+
+	ctlr.OnAdd(nil)
+	assert.Equal(t, 1, logs.FilterMessageSnippet("malformed").Len())
+
+	ctlr.OnAdd("foo")
+	assert.Equal(t, 2, logs.FilterMessageSnippet("malformed").Len())
 }
 
 func TestApiKeyUpdate(t *testing.T) {
