@@ -51,13 +51,9 @@ func (ctlr *apiProxyController) OnAdd(obj interface{}) {
 
 func (ctlr *apiProxyController) OnUpdate(old interface{}, new interface{}) {
 	logger := log.WithContext(nil)
-	oldProxy, ok := old.(*v2.ApiProxy)
-	if !ok {
-		logger.Error("received malformed ApiProxy from k8s apiserver")
-		return
-	}
-	newProxy, ok := new.(*v2.ApiProxy)
-	if !ok {
+	oldProxy, okOld := old.(*v2.ApiProxy)
+	newProxy, okNew := new.(*v2.ApiProxy)
+	if !okOld || !okNew {
 		logger.Error("received malformed ApiProxy from k8s apiserver")
 		return
 	}

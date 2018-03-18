@@ -37,7 +37,7 @@ import (
 	"github.com/northwesternmutual/kanali/test/builder"
 )
 
-func TestApiKeyAdd(t *testing.T) {
+func TestOnAdd(t *testing.T) {
 	lvl := zap.NewAtomicLevelAt(zapcore.DebugLevel)
 	core, logs := observer.New(lvl)
 	defer log.SetLogger(zap.New(core)).Restore()
@@ -63,7 +63,7 @@ func TestApiKeyAdd(t *testing.T) {
 	assert.Equal(t, 2, logs.FilterMessageSnippet("malformed").Len())
 }
 
-func TestApiKeyUpdate(t *testing.T) {
+func TestOnUpdate(t *testing.T) {
 	lvl := zap.NewAtomicLevelAt(zapcore.DebugLevel)
 	core, logs := observer.New(lvl)
 	defer log.SetLogger(zap.New(core)).Restore()
@@ -99,7 +99,7 @@ func TestApiKeyUpdate(t *testing.T) {
 	assert.Nil(t, store.ApiKeyStore().Get("abc123"))
 }
 
-func TestApiKeyDelete(t *testing.T) {
+func TestOnDelete(t *testing.T) {
 	lvl := zap.NewAtomicLevelAt(zapcore.DebugLevel)
 	core, logs := observer.New(lvl)
 	defer log.SetLogger(zap.New(core)).Restore()
