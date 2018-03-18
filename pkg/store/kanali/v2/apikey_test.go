@@ -56,6 +56,9 @@ func TestApiKeyStoreUpdate(t *testing.T) {
 	apiKeyTwoOld := getTestApiKey("example-two", "foo", v2.Revision{Data: "def456", Status: "active"}, v2.Revision{Data: "ghi789", Status: "active"})
 	apiKeyTwoNew := getTestApiKey("example-two", "foo", v2.Revision{Data: "jkl012", Status: "active"})
 
+	apiKeyThreeOld := getTestApiKey("example-three", "foo", v2.Revision{Data: "cba321", Status: "active"})
+	apiKeyThreeNew := getTestApiKey("example-three", "foo", v2.Revision{Data: "abc123", Status: "active"})
+
 	ApiKeyStore().Update(apiKeyOneOld, apiKeyOneNew)
 	ApiKeyStore().Update(apiKeyTwoOld, apiKeyTwoNew)
 
@@ -64,6 +67,11 @@ func TestApiKeyStoreUpdate(t *testing.T) {
 	assert.Equal(t, v2.ApiKey{}, apiKeyStore.keyMap["def456"])
 	assert.Equal(t, v2.ApiKey{}, apiKeyStore.keyMap["ghi789"])
 	assert.Equal(t, v2.ApiKey{}, apiKeyStore.keyMap["mno345"])
+
+	ApiKeyStore().Clear()
+	ApiKeyStore().Update(apiKeyThreeOld, apiKeyThreeNew)
+	assert.Equal(t, v2.ApiKey{}, apiKeyStore.keyMap["cba321"])
+	assert.Equal(t, *apiKeyThreeNew, apiKeyStore.keyMap["abc123"])
 }
 
 func TestApiKeyStoreClear(t *testing.T) {

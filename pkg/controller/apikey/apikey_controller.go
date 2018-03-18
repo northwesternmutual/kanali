@@ -64,13 +64,9 @@ func (ctlr *apiKeyController) OnAdd(obj interface{}) {
 
 func (ctlr *apiKeyController) OnUpdate(old interface{}, new interface{}) {
 	logger := log.WithContext(nil)
-	newKey, ok := new.(*v2.ApiKey)
-	if !ok {
-		logger.Error("received malformed ApiKey from k8s apiserver")
-		return
-	}
-	oldKey, ok := old.(*v2.ApiKey)
-	if !ok {
+	newKey, okNew := new.(*v2.ApiKey)
+	oldKey, okOld := old.(*v2.ApiKey)
+	if !okNew || !okOld {
 		logger.Error("received malformed ApiKey from k8s apiserver")
 		return
 	}

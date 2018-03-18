@@ -72,12 +72,15 @@ func (s *apiKeyFactory) Update(old, new *v2.ApiKey) {
 
 	for len(oldRevisions) > 0 && len(newRevisions) > 0 {
 		if oldRevisions[0].Data == newRevisions[0].Data {
-			s.keyMap[string(newRevisions[0].Data)] = *new
+			s.keyMap[newRevisions[0].Data] = *new
 			oldRevisions = oldRevisions[1:]
 			newRevisions = newRevisions[1:]
 		} else if oldRevisions[0].Data < newRevisions[0].Data {
 			delete(s.keyMap, oldRevisions[0].Data)
 			oldRevisions = oldRevisions[1:]
+		} else {
+			s.keyMap[newRevisions[0].Data] = *new
+			newRevisions = newRevisions[1:]
 		}
 	}
 
