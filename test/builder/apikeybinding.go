@@ -38,6 +38,10 @@ type RuleBuilder struct {
 	curr v2.Rule
 }
 
+type PathBuilder struct {
+	curr v2.Path
+}
+
 func NewApiKeyBinding(name, namespace string) *ApiKeyBindingBuilder {
 	return &ApiKeyBindingBuilder{
 		curr: v2.ApiKeyBinding{
@@ -69,8 +73,26 @@ func NewKeyAccess(keyName string) *KeyAccessBuilder {
 	}
 }
 
+func NewPathBuilder(path string, rule v2.Rule) *PathBuilder {
+	return &PathBuilder{
+		curr: v2.Path{
+			Path: path,
+			Rule: rule,
+		},
+	}
+}
+
+func (b *PathBuilder) NewOrDie() v2.Path {
+	return b.curr
+}
+
 func (b *KeyAccessBuilder) WithDefaultRule(rule v2.Rule) *KeyAccessBuilder {
 	b.curr.DefaultRule = rule
+	return b
+}
+
+func (b *KeyAccessBuilder) WithSubpaths(paths ...v2.Path) *KeyAccessBuilder {
+	b.curr.Subpaths = paths
 	return b
 }
 
