@@ -34,6 +34,11 @@ func (e Error) Error() string {
 	return e.Message
 }
 
+// String implements the stringer interface
+func (e Error) String() string {
+	return e.Message
+}
+
 var (
 	ErrorProxyNotFound                    = Error{http.StatusNotFound, "No ApiProxy resource was not found that matches the request.", 0, "More details coming soon!"}
 	ErrorUnknown                          = Error{http.StatusInternalServerError, "An unknown error occured.", 1, "More details coming soon!"}
