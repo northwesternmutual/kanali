@@ -24,12 +24,13 @@ import (
 	"context"
 	"net/http"
 
+	opentracing "github.com/opentracing/opentracing-go"
+
 	"github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/pkg/flow"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
-	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Gateway is an http.HandlerFunc that preforms the core functions of the Kanali gateway.

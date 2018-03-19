@@ -86,16 +86,16 @@ func (s *mockTargetFactory) Set(mt *v2.MockTarget) error {
 }
 
 func (s *mockTargetFactory) set(mt *v2.MockTarget) error {
+	if len(mt.Spec.Routes) < 1 {
+		return errors.New("MockTarget must contain at least one route")
+	}
+
 	if _, ok := s.mockRespTree[mt.GetNamespace()]; !ok {
 		s.mockRespTree[mt.GetNamespace()] = map[string]*routeNode{}
 	}
 	if _, ok := s.mockRespTree[mt.GetNamespace()][mt.GetName()]; !ok {
 		s.mockRespTree[mt.GetNamespace()][mt.GetName()] = &routeNode{}
 	}
-	if len(mt.Spec.Routes) < 1 {
-		return errors.New("MockTarget must contain at least one route")
-	}
-
 	s.mockRespTree[mt.GetNamespace()][mt.GetName()] = generateRouteTree(mt)
 	return nil
 }
@@ -168,7 +168,7 @@ func (s *mockTargetFactory) get(namespace, name, path, method string) *v2.Route 
 }
 
 func (n *routeNode) doGetRoute(path string) *v2.Route {
-	if len(n.children) == 0 || path == "" {
+	if len(n.children) == 0 {
 		return nil
 	}
 	if path[0] == '/' {

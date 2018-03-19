@@ -48,8 +48,8 @@ func NewMockTarget(name, namespace string) *MockTargetBuilder {
 	}
 }
 
-func (b *MockTargetBuilder) WithRoute(r v2.Route) *MockTargetBuilder {
-	b.curr.Spec.Routes = append(b.curr.Spec.Routes, r)
+func (b *MockTargetBuilder) WithRoute(r *v2.Route) *MockTargetBuilder {
+	b.curr.Spec.Routes = append(b.curr.Spec.Routes, *r)
 	return b
 }
 

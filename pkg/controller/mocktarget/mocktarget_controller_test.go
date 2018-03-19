@@ -39,7 +39,7 @@ func TestOnAdd(t *testing.T) {
 	defer store.MockTargetStore().Clear()
 
 	mocktarget := builder.NewMockTarget("foo", "bar").WithRoute(
-		*builder.NewRoute("/foo").WithMethods("GET").NewOrDie(),
+		builder.NewRoute("/foo").WithMethods("GET").NewOrDie(),
 	).NewOrDie()
 
 	NewController().OnAdd(nil)
@@ -56,10 +56,10 @@ func TestOnUpdate(t *testing.T) {
 	defer store.MockTargetStore().Clear()
 
 	mocktargetOld := builder.NewMockTarget("foo", "bar").WithRoute(
-		*builder.NewRoute("/foo").WithMethods("GET").NewOrDie(),
+		builder.NewRoute("/foo").WithMethods("GET").NewOrDie(),
 	).NewOrDie()
 	mocktargetNew := builder.NewMockTarget("foo", "bar").WithRoute(
-		*builder.NewRoute("/bar").WithMethods("GET").NewOrDie(),
+		builder.NewRoute("/bar").WithMethods("GET").NewOrDie(),
 	).NewOrDie()
 
 	NewController().OnUpdate(nil, nil)
@@ -81,7 +81,7 @@ func TestOnDelete(t *testing.T) {
 	defer store.MockTargetStore().Clear()
 
 	mocktarget := builder.NewMockTarget("foo", "bar").WithRoute(
-		*builder.NewRoute("/foo").WithMethods("GET").NewOrDie(),
+		builder.NewRoute("/foo").WithMethods("GET").NewOrDie(),
 	).NewOrDie()
 
 	NewController().OnDelete(nil)
