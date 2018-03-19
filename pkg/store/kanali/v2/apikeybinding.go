@@ -22,7 +22,7 @@ package v2
 
 import (
 	"errors"
-	"strings"
+	"regexp"
 	"sync"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
@@ -32,8 +32,7 @@ type ApiKeyBindingStoreInterface interface {
 	Set(apiKeyBinding *v2.ApiKeyBinding)
 	Update(old, new *v2.ApiKeyBinding)
 	Contains(namespace, binding string) bool
-	ContainsApiKey(namespace, binding, key string) bool
-	GetRuleAndRate(namespace, binding, key, target string) (*v2.Rule, *v2.Rate)
+	GetHightestPriorityRule(namespace, binding, key, target string) *v2.Rule
 	Delete(apiKeyBinding *v2.ApiKeyBinding) error
 	Clear()
 	IsEmpty() bool
@@ -41,21 +40,11 @@ type ApiKeyBindingStoreInterface interface {
 
 type apiKeyBindingFactory struct {
 	mutex            sync.RWMutex
-	apiKeyBindingMap map[string]map[string]map[string]structuredKey
-}
-
-type structuredKey struct {
-	key         v2.Key
-	subpathTree *subpathNode
-}
-
-type subpathNode struct {
-	children map[string]*subpathNode
-	value    *v2.Path
+	apiKeyBindingMap map[string]map[string]map[string]v2.Key
 }
 
 var (
-	apiKeyBindingStore = &apiKeyBindingFactory{sync.RWMutex{}, map[string]map[string]map[string]structuredKey{}}
+	apiKeyBindingStore = &apiKeyBindingFactory{sync.RWMutex{}, map[string]map[string]map[string]v2.Key{}}
 )
 
 func ApiKeyBindingStore() ApiKeyBindingStoreInterface {
@@ -105,21 +94,22 @@ func (s *apiKeyBindingFactory) Set(apiKeyBinding *v2.ApiKeyBinding) {
 func (s *apiKeyBindingFactory) set(apiKeyBinding *v2.ApiKeyBinding) {
 	// namespace is the first level
 	if _, ok := s.apiKeyBindingMap[apiKeyBinding.GetNamespace()]; !ok {
-		s.apiKeyBindingMap[apiKeyBinding.GetNamespace()] = map[string]map[string]structuredKey{}
+		s.apiKeyBindingMap[apiKeyBinding.GetNamespace()] = map[string]map[string]v2.Key{}
 	}
 
 	// binding is the second level
 	if _, ok := s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()]; !ok {
-		s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()] = map[string]structuredKey{}
+		s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()] = map[string]v2.Key{}
 	}
+
+	keys := make(map[string]v2.Key, len(apiKeyBinding.Spec.Keys))
 
 	// keys are the third level
 	for _, key := range apiKeyBinding.Spec.Keys {
-		s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()][key.Name] = structuredKey{
-			key:         key,
-			subpathTree: generateSubpathTree(key),
-		}
+		keys[key.Name] = key
 	}
+
+	s.apiKeyBindingMap[apiKeyBinding.GetNamespace()][apiKeyBinding.GetName()] = keys
 }
 
 func (s *apiKeyBindingFactory) Contains(namespace, binding string) bool {
@@ -133,32 +123,27 @@ func (s *apiKeyBindingFactory) contains(namespace, binding string) bool {
 	return ok
 }
 
-func (s *apiKeyBindingFactory) ContainsApiKey(namespace, binding, key string) bool {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	return s.containsApiKey(namespace, binding, key)
-}
-
-func (s *apiKeyBindingFactory) containsApiKey(namespace, binding, key string) bool {
-	_, ok := s.apiKeyBindingMap[namespace][binding][key]
-	return ok
-}
-
-// GetRuleAndRate retrieves the highest priority rule given:
+// GetHightestPriorityRule retrieves the highest priority rule given:
 //   1. namespace name
 //   2. binding name
 //   3. api key name
 //   4. target path
 // O(n), n => number of path segments in target path
-func (s *apiKeyBindingFactory) GetRuleAndRate(namespace, binding, key, target string) (*v2.Rule, *v2.Rate) {
+func (s *apiKeyBindingFactory) GetHightestPriorityRule(namespace, binding, key, target string) *v2.Rule {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
 	result, ok := s.apiKeyBindingMap[namespace][binding][key]
 	if !ok {
-		return nil, nil
+		return nil
 	}
-	return result.getHighestPriorityRule(target), &result.key.Rate
+	for _, subpath := range result.Subpaths {
+		if result, err := regexp.MatchString("^"+subpath.Path, target); err != nil || !result {
+			continue
+		}
+		return &subpath.Rule
+	}
+	return &result.DefaultRule
 }
 
 // Delete will remove an ApiKeyBinding
@@ -178,57 +163,4 @@ func (s *apiKeyBindingFactory) Delete(apiKeyBinding *v2.ApiKeyBinding) error {
 		delete(s.apiKeyBindingMap, apiKeyBinding.GetNamespace())
 	}
 	return nil
-}
-
-func generateSubpathTree(key v2.Key) *subpathNode {
-	root := &subpathNode{}
-
-	for _, subpath := range key.Subpaths {
-		if subpath.Path[0] == '/' {
-			root.doSetSubpath(strings.Split(subpath.Path[1:], "/"), subpath)
-		} else {
-			root.doSetSubpath(strings.Split(subpath.Path, "/"), subpath)
-		}
-	}
-
-	return root
-}
-
-func (n *subpathNode) doSetSubpath(pathSegments []string, subpath v2.Path) {
-	if n.children == nil {
-		n.children = map[string]*subpathNode{}
-	}
-	if n.children[pathSegments[0]] == nil {
-		n.children[pathSegments[0]] = &subpathNode{}
-	}
-	if len(pathSegments) < 2 {
-		n.children[pathSegments[0]].value = &subpath
-	} else {
-		n.children[pathSegments[0]].doSetSubpath(pathSegments[1:], subpath)
-	}
-}
-
-func (k structuredKey) getHighestPriorityRule(path string) *v2.Rule {
-	subpath := k.subpathTree.getSubpath(path)
-	if subpath == nil {
-		return &k.key.DefaultRule
-	}
-	return &subpath.Rule
-}
-
-func (n *subpathNode) getSubpath(path string) *v2.Path {
-	if len(n.children) == 0 || path == "" {
-		return nil
-	}
-	if path[0] == '/' {
-		path = path[1:]
-	}
-	for _, part := range strings.Split(path, "/") {
-		if n.children[part] == nil {
-			break
-		} else {
-			n = n.children[part]
-		}
-	}
-	return n.value
 }

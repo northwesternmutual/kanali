@@ -50,11 +50,7 @@ func TestApiKeyBindingStoreSet(t *testing.T) {
 
 	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]))
 	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]))
-	assert.Equal(t, testKeyOne, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].key)
-	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children))
-	assert.Equal(t, 1, len(apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].children))
-	assert.Equal(t, &testSubpathOne, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].value)
-	assert.Equal(t, &testSubpathTwo, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"].subpathTree.children["foo"].children["bar"].value)
+	assert.Equal(t, testKeyOne, apiKeyBindingStore.apiKeyBindingMap["foo"]["example-one"]["example-one"])
 }
 
 func TestApiKeyBindingStoreClear(t *testing.T) {
