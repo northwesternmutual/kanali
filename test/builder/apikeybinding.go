@@ -38,10 +38,6 @@ type RuleBuilder struct {
 	curr v2.Rule
 }
 
-// type PathBuilder struct {
-// 	curr v2.Path
-// }
-
 func NewApiKeyBinding(name, namespace string) *ApiKeyBindingBuilder {
 	return &ApiKeyBindingBuilder{
 		curr: v2.ApiKeyBinding{
