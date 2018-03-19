@@ -18,6 +18,7 @@ $ make install
 This project contains a robust suite of unit and end-to-end (e2e) tests. Instructions detailing how to execute these suites are given below:
 
 #### unit
+
 ```sh
 $ make unit_test
 ```
@@ -52,9 +53,6 @@ github.com/northwesternmutual/kanali
     kanali/
       app/            - Code for binary
       main.go
-    validator/
-      app/            - Code for binary
-      main.go
   examples/           - Examples of all resources in the kanali.io API group
   hack/               - Miscellaneous project scripts
   helm/               - Helm chart for Kanali
@@ -70,7 +68,7 @@ github.com/northwesternmutual/kanali
 This projects adheres to the following pattern when grouping imports in Go files:
 * imports from standard library
 * imports from other projects
-* imports from kanali project
+* imports from internal project
 
 In addition, imports in each group must be sorted by length. For example:
 ```go
