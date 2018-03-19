@@ -51,17 +51,13 @@ func (ctlr *apiKeyBindingController) OnAdd(obj interface{}) {
 
 func (ctlr *apiKeyBindingController) OnUpdate(old interface{}, new interface{}) {
 	logger := log.WithContext(nil)
-	newBinding, ok := new.(*v2.ApiKeyBinding)
-	if !ok {
+	newBinding, okNew := new.(*v2.ApiKeyBinding)
+	oldBinding, okOld := old.(*v2.ApiKeyBinding)
+	if !okNew || !okOld {
 		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 		return
 	}
-	oldBinding, ok := old.(*v2.ApiKeyBinding)
-	if !ok {
-		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
-		return
-	}
-	store.ApiKeyBindingStore().Update(newBinding, oldBinding)
+	store.ApiKeyBindingStore().Update(oldBinding, newBinding)
 	logger.With(
 		zap.String(tags.KanaliApiKeyBindingName, newBinding.GetName()),
 		zap.String(tags.KanaliApiKeyBindingNamespace, newBinding.GetNamespace()),
@@ -75,7 +71,7 @@ func (ctlr *apiKeyBindingController) OnDelete(obj interface{}) {
 		logger.Error("received malformed ApiKeyBinding from k8s apiserver")
 		return
 	}
-	if err := store.ApiKeyBindingStore().Delete(binding); err != nil {
+	if err := store.ApiKeyBindingStore().Delete(binding); err == nil {
 		logger.With(
 			zap.String(tags.KanaliApiKeyBindingName, binding.GetName()),
 			zap.String(tags.KanaliApiKeyBindingNamespace, binding.GetNamespace()),
