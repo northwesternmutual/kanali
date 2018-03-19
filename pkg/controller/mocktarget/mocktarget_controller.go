@@ -51,13 +51,9 @@ func (ctlr *mockTargetController) OnAdd(obj interface{}) {
 
 func (ctlr *mockTargetController) OnUpdate(old interface{}, new interface{}) {
 	logger := log.WithContext(nil)
-	oldTarget, ok := old.(*v2.MockTarget)
-	if !ok {
-		logger.Error("received malformed MockTarget from k8s apiserver")
-		return
-	}
-	newTarget, ok := new.(*v2.MockTarget)
-	if !ok {
+	oldTarget, okOld := old.(*v2.MockTarget)
+	newTarget, okNew := new.(*v2.MockTarget)
+	if !okOld || !okNew {
 		logger.Error("received malformed MockTarget from k8s apiserver")
 		return
 	}

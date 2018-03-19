@@ -155,6 +155,9 @@ func (s *mockTargetFactory) get(namespace, name, path, method string) *v2.Route 
 	}
 
 	route := root.doGetRoute(path)
+	if route == nil {
+		return nil
+	}
 
 	for _, m := range route.Methods {
 		if strings.EqualFold(m, method) {
