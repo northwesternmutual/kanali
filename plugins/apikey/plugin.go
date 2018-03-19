@@ -27,7 +27,6 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	//"github.com/northwesternmutual/kanali/pkg/metrics"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	kanaliErrors "github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/pkg/log"
@@ -46,6 +45,12 @@ type ApiKeyFactory struct{}
 func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, w *httptest.ResponseRecorder, r *http.Request) error {
 	logger := log.WithContext(r.Context())
 
+	// do not continue if an OPTION request
+	if strings.ToUpper(r.Method) == "OPTIONS" {
+		logger.Debug("api key validation is not preformed for OPTIONS requests")
+		return next()
+	}
+
 	p := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
 	if p == nil {
 		logger.Info(kanaliErrors.ErrorProxyNotFound.String())
@@ -53,12 +58,6 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 	}
 
 	span := opentracing.SpanFromContext(ctx)
-
-	// do not continue if an OPTION request
-	if strings.ToUpper(r.Method) == "OPTIONS" {
-		logger.Debug("api key validation is not preformed for OPTIONS requests")
-		return next()
-	}
 
 	// extract the api key
 	apiKeyText, err := extractApiKey(r.Header)
@@ -83,7 +82,9 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 	logger.Debug("ApiKey resource details",
 		zap.String(tags.KanaliApiKeyName, apiKeyObj.ObjectMeta.Name),
 	)
-	span.SetTag(tags.KanaliApiKeyName, apiKeyObj.ObjectMeta.Name)
+	if span != nil {
+		span.SetTag(tags.KanaliApiKeyName, apiKeyObj.ObjectMeta.Name)
+	}
 
 	if !store.ApiKeyBindingStore().Contains(p.ObjectMeta.Namespace, cfg.ApiKeyBindingName) {
 		logger.Info("ApiKeyBinding resource not found",
@@ -93,8 +94,10 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 		return kanaliErrors.ErrorApiKeyUnauthorized
 	}
 
-	span.SetTag(tags.KanaliApiKeyBindingName, cfg.ApiKeyBindingName)
-	span.SetTag(tags.KanaliApiKeyBindingNamespace, p.ObjectMeta.Namespace)
+	if span != nil {
+		span.SetTag(tags.KanaliApiKeyBindingName, cfg.ApiKeyBindingName)
+		span.SetTag(tags.KanaliApiKeyBindingNamespace, p.ObjectMeta.Namespace)
+	}
 	logger.Info("ApiKeyBinding resource details",
 		zap.String(tags.KanaliApiKeyBindingName, cfg.ApiKeyBindingName),
 		zap.String(tags.KanaliApiKeyBindingNamespace, p.ObjectMeta.Namespace),
@@ -155,6 +158,10 @@ func next() error {
 }
 
 func extractApiKey(reqHeaders http.Header) (string, error) {
+	if reqHeaders == nil {
+		return "", errors.New("headers is nil")
+	}
+
 	apiKeyText := reqHeaders.Get("apikey")
 	if len(apiKeyText) < 1 {
 		return "", errors.New("expected the apikey header to contain an api key value")

@@ -20,243 +20,231 @@
 
 package apikey
 
-// import (
-//   "os"
-//   "fmt"
-//   "testing"
-// )
+import (
+	"context"
+	"net/http"
+	"net/url"
+	"testing"
 
-// func TestOnRequest(t *testing.T) {
-// 	assert := assert.New(t)
-//
-// 	assert.Nil(Plugin.OnRequest(context.Background(), &metrics.Metrics{}, getTestAPIProxy(), &http.Request{
-// 		Method: "OPTIONS",
-// 	}, opentracing.StartSpan("test span")))
-// 	assert.Nil(Plugin.OnRequest(context.Background(), &metrics.Metrics{}, getTestAPIProxy(), &http.Request{
-// 		Method: "options",
-// 	}, opentracing.StartSpan("test span")))
-//
-// 	assert.Equal("apikey not found in request", Plugin.OnRequest(context.Background(), &metrics.Metrics{}, spec.APIProxy{}, &http.Request{}, opentracing.StartSpan("test span")).Error(), "should have thrown error")
-//
-// 	viper.SetDefault(flagPluginsAPIKeyHeaderKey.GetLong(), "apikey")
-//
-// 	u, _ := url.Parse("http://host.com/api/v1/accounts")
-//
-// 	assert.Equal("apikey not found in k8s cluster", Plugin.OnRequest(context.Background(), &metrics.Metrics{}, getTestAPIProxy(), &http.Request{
-// 		Header: http.Header{
-// 			"Apikey": []string{"myapikey"},
-// 		},
-// 		URL: u,
-// 	}, opentracing.StartSpan("test span")).Error(), "should have thrown error")
-//
-// 	apikeyStore := spec.KeyStore
-// 	apikeyStore.Set(getTestAPIKey())
-//
-// 	assert.Equal("no binding found for associated APIProxy", Plugin.OnRequest(context.Background(), &metrics.Metrics{}, getTestAPIProxy(), &http.Request{
-// 		Header: http.Header{
-// 			"Apikey": []string{"myapikey"},
-// 		},
-// 		URL: u,
-// 	}, opentracing.StartSpan("test span")).Error(), "should have thrown error")
-//
-// 	binding := getTestAPIKeyBinding()
-// 	binding.Spec.Keys = []spec.Key{}
-// 	apikeybindingStore := spec.BindingStore
-// 	apikeybindingStore.Set(binding)
-//
-// 	assert.Equal("api key not authorized for this proxy", Plugin.OnRequest(context.Background(), &metrics.Metrics{}, getTestAPIProxy(), &http.Request{
-// 		Header: http.Header{
-// 			"Apikey": []string{"myapikey"},
-// 		},
-// 		URL: u,
-// 	}, opentracing.StartSpan("test span")).Error(), "should have thrown error")
-//
-// 	spec.KanaliEndpoints = &api.Endpoints{
-// 		TypeMeta:   unversioned.TypeMeta{},
-// 		ObjectMeta: api.ObjectMeta{},
-// 		Subsets: []api.EndpointSubset{
-// 			{
-// 				Addresses: []api.EndpointAddress{
-// 					{
-// 						IP: "1.2.3.4",
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-//
-// 	apikeybindingStore.Set(getTestAPIKeyBinding())
-// 	assert.Nil(Plugin.OnRequest(context.Background(), &metrics.Metrics{}, getTestAPIProxy(), &http.Request{
-// 		Header: http.Header{
-// 			"Apikey": []string{"myapikey"},
-// 		},
-// 		URL: u,
-// 	}, opentracing.StartSpan("test span")), "apikey should be authorized")
-// }
-//
-// func TestOnResponse(t *testing.T) {
-// 	assert := assert.New(t)
-// 	assert.Nil(Plugin.OnResponse(context.Background(), &metrics.Metrics{}, spec.APIProxy{}, &http.Request{}, nil, opentracing.StartSpan("test span")))
-// }
-//
-// func TestValidateAPIKey(t *testing.T) {
-// 	assert := assert.New(t)
-//
-// 	assert.True(validateAPIKey(spec.Rule{
-// 		Global: true,
-// 		Granular: &spec.GranularProxy{
-// 			Verbs: []string{},
-// 		},
-// 	}, "GET"), "rule should be authorized")
-//
-// 	assert.True(validateAPIKey(spec.Rule{
-// 		Global: true,
-// 		Granular: &spec.GranularProxy{
-// 			Verbs: []string{
-// 				"GET",
-// 			},
-// 		},
-// 	}, "GET"), "rule should be authorized")
-//
-// 	assert.True(validateAPIKey(spec.Rule{
-// 		Global: false,
-// 		Granular: &spec.GranularProxy{
-// 			Verbs: []string{
-// 				"GET",
-// 			},
-// 		},
-// 	}, "GET"), "rule should be authorized")
-//
-// 	assert.True(validateAPIKey(spec.Rule{
-// 		Global: true,
-// 		Granular: &spec.GranularProxy{
-// 			Verbs: []string{
-// 				"POST",
-// 			},
-// 		},
-// 	}, "GET"), "rule should be authorized")
-//
-// 	assert.False(validateAPIKey(spec.Rule{
-// 		Global: false,
-// 		Granular: &spec.GranularProxy{
-// 			Verbs: []string{
-// 				"POST",
-// 			},
-// 		},
-// 	}, "GET"), "rule should not be authorized")
-// }
-//
-// func TestValidateGranularRules(t *testing.T) {
-// 	assert := assert.New(t)
-//
-// 	assert.True(validateGranularRules("GET", &spec.GranularProxy{
-// 		Verbs: []string{
-// 			"GET",
-// 		},
-// 	}), "http method should be authorized")
-//
-// 	assert.True(validateGranularRules("get", &spec.GranularProxy{
-// 		Verbs: []string{
-// 			"GET",
-// 			"POST",
-// 			"PUT",
-// 		},
-// 	}), "http method should be authorized")
-//
-// 	assert.True(validateGranularRules("put", &spec.GranularProxy{
-// 		Verbs: []string{
-// 			"GET",
-// 			"POST",
-// 			"PUT",
-// 		},
-// 	}), "http method should be authorized")
-//
-// 	assert.False(validateGranularRules("GET", &spec.GranularProxy{
-// 		Verbs: []string{
-// 			"POST",
-// 		},
-// 	}), "http method should be authorized")
-//
-// 	assert.False(validateGranularRules("get", &spec.GranularProxy{
-// 		Verbs: []string{
-// 			"POST",
-// 			"PUT",
-// 		},
-// 	}), "http method should be authorized")
-//
-// 	assert.False(validateGranularRules("", &spec.GranularProxy{
-// 		Verbs: []string{
-// 			"POST",
-// 		},
-// 	}), "http method should be authorized")
-//
-// 	assert.False(validateGranularRules("HTTP", &spec.GranularProxy{
-// 		Verbs: []string{
-// 			"POST",
-// 		},
-// 	}), "http method should be authorized")
-// }
-//
-// func getTestAPIProxy() spec.APIProxy {
-//
-// 	return spec.APIProxy{
-// 		TypeMeta: unversioned.TypeMeta{},
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "APIProxyone",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIProxySpec{
-// 			Path:   "/api/v1/accounts",
-// 			Target: "/",
-// 			Service: spec.Service{
-// 				Name:      "my-service",
-// 				Namespace: "foo",
-// 				Port:      8080,
-// 			},
-// 			Plugins: []spec.Plugin{
-// 				{
-// 					Name: "apikey",
-// 				},
-// 			},
-// 		},
-// 	}
-//
-// }
-//
-// func getTestAPIKey() spec.APIKey {
-//
-// 	return spec.APIKey{
-// 		TypeMeta: unversioned.TypeMeta{},
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "apikeyone",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIKeySpec{
-// 			APIKeyData: "myapikey",
-// 		},
-// 	}
-//
-// }
-//
-// func getTestAPIKeyBinding() spec.APIKeyBinding {
-//
-// 	return spec.APIKeyBinding{
-// 		TypeMeta: unversioned.TypeMeta{},
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:      "apikeybindingone",
-// 			Namespace: "foo",
-// 		},
-// 		Spec: spec.APIKeyBindingSpec{
-// 			APIProxyName: "APIProxyone",
-// 			Keys: []spec.Key{
-// 				{
-// 					Name: "apikeyone",
-// 					DefaultRule: spec.Rule{
-// 						Global: true,
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-//
-// }
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
+
+	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/pkg/log"
+	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
+	"github.com/northwesternmutual/kanali/pkg/tags"
+	"github.com/northwesternmutual/kanali/test/builder"
+)
+
+func TestOnRequest(t *testing.T) {
+	core, _ := observer.New(zap.NewAtomicLevelAt(zapcore.DebugLevel))
+	defer log.SetLogger(zap.New(core)).Restore()
+	defer store.ApiProxyStore().Clear()
+
+	assert.Nil(t, Plugin.OnRequest(context.Background(), nil, nil, &http.Request{
+		Method: "OPTIONS",
+	}))
+	assert.Nil(t, Plugin.OnRequest(context.Background(), nil, nil, &http.Request{
+		Method: "options",
+	}))
+
+	apiproxy := builder.NewApiProxy("foo", "bar").WithSourcePath("/foo").WithTargetBackendEndpoint("http://foo.bar.com").NewOrDie()
+	u, _ := url.Parse("/foo/bar")
+	assert.NotNil(t, Plugin.OnRequest(context.Background(), nil, nil, &http.Request{
+		URL: u,
+	}))
+
+	store.ApiProxyStore().Set(apiproxy)
+	assert.NotNil(t, Plugin.OnRequest(context.Background(), nil, nil, &http.Request{
+		URL: u,
+	}))
+
+	headers := make(http.Header)
+	headers.Add("apikey", "foo")
+	assert.NotNil(t, Plugin.OnRequest(context.Background(), nil, nil, &http.Request{
+		Header: headers,
+		URL:    u,
+	}))
+
+	apikey := builder.NewApiKey("foo").WithRevision(v2.RevisionStatusActive, []byte("")).NewOrDie()
+	apikey.Spec.Revisions[0].Data = "foo"
+	store.ApiKeyStore().Set(apikey)
+
+	assert.NotNil(t, Plugin.OnRequest(context.Background(), nil, nil, &http.Request{
+		Header: headers,
+		URL:    u,
+	}))
+
+	assert.NotNil(t, Plugin.OnRequest(context.Background(), map[string]string{
+		"apiKeyBindingName": "foo",
+	}, nil, &http.Request{
+		Header: headers,
+		URL:    u,
+	}))
+
+	store.ApiKeyBindingStore().Set(builder.NewApiKeyBinding("foo", "bar").WithKeys(
+		builder.NewKeyAccess("bar").WithDefaultRule(
+			builder.NewRule().WithGlobal().NewOrDie(),
+		).NewOrDie(),
+	).NewOrDie())
+
+	assert.NotNil(t, Plugin.OnRequest(context.Background(), map[string]string{
+		"apiKeyBindingName": "foo",
+	}, nil, &http.Request{
+		Header: headers,
+		URL:    u,
+	}))
+
+	store.ApiKeyBindingStore().Set(builder.NewApiKeyBinding("foo", "bar").WithKeys(
+		builder.NewKeyAccess("foo").WithDefaultRule(
+			builder.NewRule().WithGlobal().NewOrDie(),
+		).NewOrDie(),
+	).NewOrDie())
+
+	sp := mocktracer.New().StartSpan("mock").(*mocktracer.MockSpan)
+	assert.Nil(t, Plugin.OnRequest(opentracing.ContextWithSpan(context.Background(), sp), map[string]string{
+		"apiKeyBindingName": "foo",
+	}, nil, &http.Request{
+		Header: headers,
+		URL:    u,
+	}))
+	assert.Equal(t, "foo", sp.Tag(tags.KanaliApiKeyName))
+	assert.Equal(t, "foo", sp.Tag(tags.KanaliApiKeyBindingName))
+	assert.Equal(t, "bar", sp.Tag(tags.KanaliApiKeyBindingNamespace))
+
+	store.ApiKeyBindingStore().Set(builder.NewApiKeyBinding("foo", "bar").WithKeys(
+		builder.NewKeyAccess("foo").WithDefaultRule(
+			builder.NewRule().NewOrDie(),
+		).NewOrDie(),
+	).NewOrDie())
+
+	assert.NotNil(t, Plugin.OnRequest(context.Background(), map[string]string{
+		"apiKeyBindingName": "foo",
+	}, nil, &http.Request{
+		Header: headers,
+		URL:    u,
+	}))
+}
+
+func TestOnResponse(t *testing.T) {
+	assert.Nil(t, Plugin.OnResponse(context.Background(), nil, nil, nil))
+}
+
+func TestValidateApiKey(t *testing.T) {
+	assert.False(t, validateApiKey(nil, ""))
+
+	assert.True(t, validateApiKey(&v2.Rule{
+		Global: true,
+		Granular: v2.GranularProxy{
+			Verbs: []string{},
+		},
+	}, "GET"), "rule should be authorized")
+
+	assert.True(t, validateApiKey(&v2.Rule{
+		Global: true,
+		Granular: v2.GranularProxy{
+			Verbs: []string{
+				"GET",
+			},
+		},
+	}, "GET"), "rule should be authorized")
+
+	assert.True(t, validateApiKey(&v2.Rule{
+		Global: false,
+		Granular: v2.GranularProxy{
+			Verbs: []string{
+				"GET",
+			},
+		},
+	}, "GET"), "rule should be authorized")
+
+	assert.True(t, validateApiKey(&v2.Rule{
+		Global: true,
+		Granular: v2.GranularProxy{
+			Verbs: []string{
+				"POST",
+			},
+		},
+	}, "GET"), "rule should be authorized")
+
+	assert.False(t, validateApiKey(&v2.Rule{
+		Global: false,
+		Granular: v2.GranularProxy{
+			Verbs: []string{
+				"POST",
+			},
+		},
+	}, "GET"), "rule should not be authorized")
+}
+
+func TestValidateGranularRules(t *testing.T) {
+	assert.False(t, validateGranularRules("GET", v2.GranularProxy{
+		Verbs: []string{},
+	}))
+
+	assert.True(t, validateGranularRules("GET", v2.GranularProxy{
+		Verbs: []string{
+			"GET",
+		},
+	}), "http method should be authorized")
+
+	assert.True(t, validateGranularRules("get", v2.GranularProxy{
+		Verbs: []string{
+			"GET",
+			"POST",
+			"PUT",
+		},
+	}), "http method should be authorized")
+
+	assert.True(t, validateGranularRules("put", v2.GranularProxy{
+		Verbs: []string{
+			"GET",
+			"POST",
+			"PUT",
+		},
+	}), "http method should be authorized")
+
+	assert.False(t, validateGranularRules("GET", v2.GranularProxy{
+		Verbs: []string{
+			"POST",
+		},
+	}), "http method should be authorized")
+
+	assert.False(t, validateGranularRules("get", v2.GranularProxy{
+		Verbs: []string{
+			"POST",
+			"PUT",
+		},
+	}), "http method should be authorized")
+
+	assert.False(t, validateGranularRules("", v2.GranularProxy{
+		Verbs: []string{
+			"POST",
+		},
+	}), "http method should be authorized")
+
+	assert.False(t, validateGranularRules("HTTP", v2.GranularProxy{
+		Verbs: []string{
+			"POST",
+		},
+	}), "http method should be authorized")
+}
+
+func TestExtractApiKey(t *testing.T) {
+	headers := make(http.Header)
+	headers.Add("apikey", "foo")
+
+	result, _ := extractApiKey(headers)
+	assert.Equal(t, "foo", result)
+
+	_, err := extractApiKey(nil)
+	assert.NotNil(t, err)
+
+	headers.Set("apikey", "")
+	_, err = extractApiKey(headers)
+	assert.NotNil(t, err)
+}
