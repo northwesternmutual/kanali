@@ -25,30 +25,36 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
-	"strings"
+
+	"github.com/northwesternmutual/kanali/pkg/utils/pool"
 )
 
-// ComputeTargetPath calcuates the target or destination path based on the incoming path,
-// desired target path prefix and the assicated proxy
-//
-//
-func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
-	var buffer bytes.Buffer
+// ComputeTargetPath calculates the path to be used when
+// proxying to an upstream service.
+func ComputeTargetPath(source, target, actual string) string {
+	w := pool.GetBuffer()
+	defer pool.PutBuffer(w)
 
-	if len(strings.SplitAfter(requestPath, proxyPath)) == 0 {
-		buffer.WriteString("/")
-	} else if proxyTarget != "/" {
-		buffer.WriteString(proxyTarget)
+	return doComputeTargetPath(w, source, target, actual)
+}
+
+func doComputeTargetPath(b *bytes.Buffer, source, target, actual string) string {
+	var i int
+
+	for i < len(source) && actual[i] == source[i] {
+		i++
 	}
 
-	buffer.WriteString(strings.SplitAfter(requestPath, proxyPath)[1])
-
-	if len(buffer.Bytes()) == 0 {
-		return "/"
+	for j := 0; j < len(target); j++ {
+		b.WriteByte(target[j])
 	}
 
-	return buffer.String()
+	for i < len(actual) {
+		b.WriteByte(actual[i])
+		i++
+	}
+
+	return b.String()
 }
 
 // ComputeURLPath will correct a URL path that might be valid but not ideally formatted
@@ -56,26 +62,38 @@ func ComputeURLPath(u *url.URL) string {
 	return NormalizeURLPath(u.EscapedPath())
 }
 
+// NormalizeURLPath normalizes a path in the following ways:
+// 1. remove duplicate slashes
+// 2. remove trailing slash
+// 3. ensure leading slash
 func NormalizeURLPath(path string) string {
-	if len(path) < 1 {
-		return "/"
+	w := pool.GetBuffer()
+	defer pool.PutBuffer(w)
+
+	return doNormalizeURLPath(w, path)
+}
+
+func doNormalizeURLPath(b *bytes.Buffer, path string) string {
+	var i int
+
+	b.WriteByte('/')
+
+	if len(path) > 0 && path[0] == '/' {
+		i++
 	}
 
-	path = regexp.MustCompile(`/{2,}`).ReplaceAllString(path, "/")
-
-	if strings.HasSuffix(path, "/") {
-		path = path[:len(path)-1]
+	for i < len(path) {
+		if path[i] != '/' || path[i-1] != '/' {
+			b.WriteByte(path[i])
+		}
+		i++
 	}
 
-	if len(path) < 1 {
-		return "/"
+	result := b.String()
+	if len(result) > 1 && result[len(result)-1] == '/' {
+		return result[:len(result)-1]
 	}
-
-	if path[0] != '/' {
-		path = "/" + path
-	}
-
-	return path
+	return result
 }
 
 func TransferResponse(from *httptest.ResponseRecorder, to http.ResponseWriter) error {

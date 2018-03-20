@@ -27,27 +27,103 @@ import (
 )
 
 func TestComputeTargetPath(t *testing.T) {
-	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/foo/bar", "", "/foo/bar")))
-	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/", "/foo/bar")))
-	assert.Equal(t, "/foo", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/foo", "/foo/bar")))
-	assert.Equal(t, "/foo/bar", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar")))
-	assert.Equal(t, "/bar", NormalizeURLPath(ComputeTargetPath("/foo/bar", "", "/foo/bar/bar")))
-	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts")))
-	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/")))
-	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/")))
-	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/")))
-	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/")))
-	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts")))
-	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/", "", "/")))
-	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/", "/", "/")))
+	tests := []struct {
+		source, target, actual, expected string
+	}{
+		{
+			source:   "/foo",
+			target:   "/car",
+			actual:   "/foo/bar",
+			expected: "/car/bar",
+		},
+		{
+			source:   "/",
+			target:   "/car",
+			actual:   "/",
+			expected: "/car",
+		},
+		{
+			source:   "/",
+			target:   "/",
+			actual:   "/",
+			expected: "/",
+		},
+		{
+			source:   "",
+			target:   "",
+			actual:   "",
+			expected: "",
+		},
+		{
+			source:   "/foo/bar",
+			target:   "/",
+			actual:   "/foo/bar",
+			expected: "/",
+		},
+		{
+			source:   "/foo/bar",
+			target:   "/foo",
+			actual:   "/foo/bar",
+			expected: "/foo",
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.expected, ComputeTargetPath(test.source, test.target, test.actual))
+	}
+}
+
+func BenchmarkComputeTargetPath(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		ComputeTargetPath("/foo", "/car", "/foo/bar")
+	}
 }
 
 func TestNormalizeURLPath(t *testing.T) {
-	assert.Equal(t, "/foo/bar", NormalizeURLPath("foo////bar"))
-	assert.Equal(t, "/foo", NormalizeURLPath("foo"))
-	assert.Equal(t, "/foo", NormalizeURLPath("foo////"))
-	assert.Equal(t, "/foo/bar", NormalizeURLPath("///foo////bar//"))
-	assert.Equal(t, "/", NormalizeURLPath(""))
-	assert.Equal(t, "/", NormalizeURLPath("////"))
-	assert.Equal(t, "/https%3A%2F%2Fgoogle.com", NormalizeURLPath("/////https%3A%2F%2Fgoogle.com"))
+	tests := []struct {
+		path, expected string
+	}{
+		{
+			path:     "",
+			expected: "/",
+		},
+		{
+			path:     "////",
+			expected: "/",
+		},
+		{
+			path:     "foo////bar",
+			expected: "/foo/bar",
+		},
+		{
+			path:     "foo",
+			expected: "/foo",
+		},
+		{
+			path:     "foo////",
+			expected: "/foo",
+		},
+		{
+			path:     "foo/",
+			expected: "/foo",
+		},
+		{
+			path:     "///foo////bar//",
+			expected: "/foo/bar",
+		},
+		{
+			path:     "/////https%3A%2F%2Fgoogle.com",
+			expected: "/https%3A%2F%2Fgoogle.com",
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.expected, NormalizeURLPath(test.path))
+	}
+}
+
+func BenchmarkNormalizeURLPath(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		NormalizeURLPath("///foo////bar//")
+	}
 }
