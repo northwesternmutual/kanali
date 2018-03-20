@@ -21,6 +21,9 @@
 package utils
 
 import (
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -126,4 +129,31 @@ func BenchmarkNormalizeURLPath(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		NormalizeURLPath("///foo////bar//")
 	}
+}
+
+func TestTransferResponse(t *testing.T) {
+	headers := make(http.Header)
+	headers.Add("foo", "bar")
+
+	from := httptest.NewRecorder()
+	from.Code = 200
+	from.HeaderMap = headers
+	_, err := from.Write([]byte("foo"))
+	assert.Nil(t, err)
+
+	to := httptest.NewRecorder()
+	assert.Nil(t, TransferResponse(from, to))
+	result := to.Result()
+	body, _ := ioutil.ReadAll(result.Body)
+
+	assert.Equal(t, from.Code, result.StatusCode)
+	assert.Equal(t, from.HeaderMap, result.Header)
+	assert.Equal(t, "foo", string(body))
+}
+
+func TestCopyHeader(t *testing.T) {
+	original := http.Header(map[string][]string{
+		"Foo": {"bar"},
+	})
+	assert.Equal(t, original, CloneHTTPHeader(original))
 }
