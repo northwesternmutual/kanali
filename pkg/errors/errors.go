@@ -39,21 +39,25 @@ func (e Error) String() string {
 	return e.Message
 }
 
+const (
+	moreDetails = "Visit https://kanali.io/docs/errorcodes for more details."
+)
+
 var (
-	ErrorProxyNotFound                    = Error{http.StatusNotFound, "No ApiProxy resource was not found that matches the request.", 0, "More details coming soon!"}
-	ErrorUnknown                          = Error{http.StatusInternalServerError, "An unknown error occured.", 1, "More details coming soon!"}
-	ErrorMockTargetNotFound               = Error{http.StatusNotFound, "No MockTarget resource was not found that matches the request.", 2, "More details coming soon!"}
-	ErrorCouldNotLoadPlugin               = Error{http.StatusInternalServerError, "Could not open or load plugin.", 3, "More details coming soon!"}
-	ErrorCouldNotLookupPluginSymbol       = Error{http.StatusInternalServerError, "Could not lookup plugin symbol.", 4, "More details coming soon!"}
-	ErrorPluginIncorrectInterface         = Error{http.StatusInternalServerError, "Plugin does not implement the correct interface.", 5, "More details coming soon!"}
-	ErrorKubernetesSecretError            = Error{http.StatusInternalServerError, "Could not retreive Kubernetes TLS secret.", 6, "More details coming soon!"}
-	ErrorCreateKeyPair                    = Error{http.StatusInternalServerError, "Could not create x509 key pair.", 7, "More details coming soon!"}
-	ErrorBadGateway                       = Error{http.StatusBadGateway, "Could not get a valid or any response from the upstream server.", 8, "More details coming soon!"}
-	ErrorKubernetesServiceError           = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, "More details coming soon!"}
-	ErrorNoMatchingServices               = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, "More details coming soon!"}
-	ErrorPluginRuntimeError               = Error{http.StatusInternalServerError, "Plugin threw a runtime error.", 10, "More details coming soon!"}
-	ErrorApiProxyBackendEndpointMalformed = Error{http.StatusInternalServerError, "The ApiProxy endpoint backend is malformed.", 11, "More details coming soon!"}
-	ErrorForbidden                        = Error{http.StatusForbidden, "My lips are sealed.", 12, "More details coming soon!"}
-	ErrorApiKeyUnauthorized               = Error{http.StatusUnauthorized, "Api key is not authorized.", 13, "More details coming soon!"}
-	ErrorTooManyRequests                  = Error{http.StatusTooManyRequests, "The Api key you are using has exceeded its rate limit.", 14, "More details coming soon!"}
+	ErrorProxyNotFound                    = Error{http.StatusNotFound, "No ApiProxy resource was not found that matches the request.", 0, moreDetails}
+	ErrorUnknown                          = Error{http.StatusInternalServerError, "An unknown error occured.", 1, moreDetails}
+	ErrorMockTargetNotFound               = Error{http.StatusNotFound, "No MockTarget resource was not found that matches the request.", 2, moreDetails}
+	ErrorCouldNotLoadPlugin               = Error{http.StatusInternalServerError, "Could not open or load plugin.", 3, moreDetails}
+	ErrorCouldNotLookupPluginSymbol       = Error{http.StatusInternalServerError, "Could not lookup plugin symbol.", 4, moreDetails}
+	ErrorPluginIncorrectInterface         = Error{http.StatusInternalServerError, "Plugin does not implement the correct interface.", 5, moreDetails}
+	ErrorKubernetesSecretError            = Error{http.StatusInternalServerError, "Could not retreive Kubernetes TLS secret.", 6, moreDetails}
+	ErrorCreateKeyPair                    = Error{http.StatusInternalServerError, "Could not create x509 key pair.", 7, moreDetails}
+	ErrorBadGateway                       = Error{http.StatusBadGateway, "Could not get a valid or any response from the upstream server.", 8, moreDetails}
+	ErrorKubernetesServiceError           = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, moreDetails}
+	ErrorNoMatchingServices               = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, moreDetails}
+	ErrorPluginRuntimeError               = Error{http.StatusInternalServerError, "Plugin threw a runtime error.", 10, moreDetails}
+	ErrorApiProxyBackendEndpointMalformed = Error{http.StatusInternalServerError, "The ApiProxy endpoint backend is malformed.", 11, moreDetails}
+	ErrorForbidden                        = Error{http.StatusForbidden, "My lips are sealed.", 12, moreDetails}
+	ErrorApiKeyUnauthorized               = Error{http.StatusUnauthorized, "Api key is not authorized.", 13, moreDetails}
+	ErrorTooManyRequests                  = Error{http.StatusTooManyRequests, "The Api key you are using has exceeded its rate limit.", 14, moreDetails}
 )

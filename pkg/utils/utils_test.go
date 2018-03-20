@@ -20,43 +20,34 @@
 
 package utils
 
-// import (
-// 	"testing"
-//
-// 	"github.com/stretchr/testify/assert"
-// )
-//
-// func TestComputeTargetPath(t *testing.T) {
-// 	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/foo/bar", "", "/foo/bar")))
-// 	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/", "/foo/bar")))
-// 	assert.Equal(t, "/foo", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/foo", "/foo/bar")))
-// 	assert.Equal(t, "/foo/bar", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar")))
-// 	assert.Equal(t, "/bar", NormalizeURLPath(ComputeTargetPath("/foo/bar", "", "/foo/bar/bar")))
-// 	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts")))
-// 	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/")))
-// 	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/")))
-// 	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/")))
-// 	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/")))
-// 	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts")))
-// 	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/", "", "/")))
-// 	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/", "/", "/")))
-// }
-//
-// func TestAbsPath(t *testing.T) {
-// 	p, _ := GetAbsPath("/")
-// 	assert.Equal(t, "", p)
-// 	p, _ = GetAbsPath("/foo/")
-// 	assert.Equal(t, "/foo", p)
-// 	p, _ = GetAbsPath("//")
-// 	assert.Equal(t, "", p)
-// }
-//
-// func TestNormalizeURLPath(t *testing.T) {
-// 	assert.Equal(t, "/foo/bar", NormalizeURLPath("foo////bar"))
-// 	assert.Equal(t, "/foo", NormalizeURLPath("foo"))
-// 	assert.Equal(t, "/foo", NormalizeURLPath("foo////"))
-// 	assert.Equal(t, "/foo/bar", NormalizeURLPath("///foo////bar//"))
-// 	assert.Equal(t, "/", NormalizeURLPath(""))
-// 	assert.Equal(t, "/", NormalizeURLPath("////"))
-// 	assert.Equal(t, "/https%3A%2F%2Fgoogle.com", NormalizeURLPath("/////https%3A%2F%2Fgoogle.com"))
-// }
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestComputeTargetPath(t *testing.T) {
+	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/foo/bar", "", "/foo/bar")))
+	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/", "/foo/bar")))
+	assert.Equal(t, "/foo", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/foo", "/foo/bar")))
+	assert.Equal(t, "/foo/bar", NormalizeURLPath(ComputeTargetPath("/foo/bar", "/foo", "/foo/bar/bar")))
+	assert.Equal(t, "/bar", NormalizeURLPath(ComputeTargetPath("/foo/bar", "", "/foo/bar/bar")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "/", "/api/v1/example-two/accounts/")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two", "", "/api/v1/example-two/accounts/")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "/", "/api/v1/example-two/accounts/")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts/")))
+	assert.Equal(t, "/accounts", NormalizeURLPath(ComputeTargetPath("/api/v1/example-two/", "", "/api/v1/example-two/accounts")))
+	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/", "", "/")))
+	assert.Equal(t, "/", NormalizeURLPath(ComputeTargetPath("/", "/", "/")))
+}
+
+func TestNormalizeURLPath(t *testing.T) {
+	assert.Equal(t, "/foo/bar", NormalizeURLPath("foo////bar"))
+	assert.Equal(t, "/foo", NormalizeURLPath("foo"))
+	assert.Equal(t, "/foo", NormalizeURLPath("foo////"))
+	assert.Equal(t, "/foo/bar", NormalizeURLPath("///foo////bar//"))
+	assert.Equal(t, "/", NormalizeURLPath(""))
+	assert.Equal(t, "/", NormalizeURLPath("////"))
+	assert.Equal(t, "/https%3A%2F%2Fgoogle.com", NormalizeURLPath("/////https%3A%2F%2Fgoogle.com"))
+}

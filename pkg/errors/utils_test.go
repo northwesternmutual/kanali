@@ -37,5 +37,5 @@ func TestToJSON(t *testing.T) {
 
 	e, d = ToJSON(untyped)
 	assert.Equal(t, e, ErrorUnknown)
-	assert.Equal(t, d, []byte(`{"status":500,"message":"An unknown error occured.","code":01,"details":"More details coming soon!"}`))
+	assert.Equal(t, d, []byte(`{"status":500,"message":"An unknown error occured.","code":01,"details":"`+moreDetails+`"}`))
 }

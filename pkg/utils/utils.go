@@ -22,22 +22,17 @@ package utils
 
 import (
 	"bytes"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"regexp"
 	"strings"
-
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // ComputeTargetPath calcuates the target or destination path based on the incoming path,
 // desired target path prefix and the assicated proxy
+//
+//
 func ComputeTargetPath(proxyPath, proxyTarget, requestPath string) string {
 	var buffer bytes.Buffer
 
@@ -81,27 +76,6 @@ func NormalizeURLPath(path string) string {
 	}
 
 	return path
-}
-
-func LoadDecryptionKey(location string) (*rsa.PrivateKey, error) {
-	// read in private key
-	keyBytes, err := ioutil.ReadFile(location)
-	if err != nil {
-		return nil, err
-	}
-	// create a pem block from the private key provided
-	block, _ := pem.Decode(keyBytes)
-	// parse the pem block into a private key
-	return x509.ParsePKCS1PrivateKey(block.Bytes)
-}
-
-func GetRestConfig(location string) (*rest.Config, error) {
-	if len(location) > 0 {
-		// user has specified a path to their own kubeconfig file so we'll use that
-		return clientcmd.BuildConfigFromFlags("", location)
-	}
-	// use the in cluster config as the user has not specified their own
-	return rest.InClusterConfig()
 }
 
 func TransferResponse(from *httptest.ResponseRecorder, to http.ResponseWriter) error {

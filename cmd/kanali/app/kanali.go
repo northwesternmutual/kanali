@@ -30,7 +30,9 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/chain"
@@ -42,12 +44,12 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/log"
 	_ "github.com/northwesternmutual/kanali/pkg/metrics"
 	"github.com/northwesternmutual/kanali/pkg/middleware"
+	"github.com/northwesternmutual/kanali/pkg/rsa"
 	"github.com/northwesternmutual/kanali/pkg/run"
 	"github.com/northwesternmutual/kanali/pkg/server"
 	//storev1 "github.com/northwesternmutual/kanali/pkg/store/core/v1"
 	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/internalinterfaces"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
-	"github.com/northwesternmutual/kanali/pkg/utils"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
@@ -58,7 +60,7 @@ var (
 func Run(sigCtx context.Context) error {
 	logger := log.WithContext(sigCtx)
 
-	decryptionKey, err := utils.LoadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
+	decryptionKey, err := rsa.LoadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
 	if err != nil {
 		logger.Fatal(err.Error())
 		return err
@@ -154,7 +156,7 @@ func createClientsets() (
 	k8sClientset *kubernetes.Clientset,
 	err error,
 ) {
-	config, err := utils.GetRestConfig(viper.GetString(options.FlagKubernetesKubeConfig.GetLong()))
+	config, err := getRestConfig(viper.GetString(options.FlagKubernetesKubeConfig.GetLong()))
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -174,4 +176,13 @@ func createClientsets() (
 		return nil, nil, nil, err
 	}
 	return
+}
+
+func getRestConfig(location string) (*rest.Config, error) {
+	if len(location) > 0 {
+		// user has specified a path to their own kubeconfig file so we'll use that
+		return clientcmd.BuildConfigFromFlags("", location)
+	}
+	// use the in cluster config as the user has not specified their own
+	return rest.InClusterConfig()
 }
