@@ -37,6 +37,12 @@ import (
 	"github.com/northwesternmutual/kanali/test/builder"
 )
 
+type errorReader struct{}
+
+func (r *errorReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("foo bar car")
+}
+
 func TestGetTLSConfigFromReader(t *testing.T) {
 	// mimic a cert template
 	tmpl := builder.CreateGenericCertificateTemplate()
@@ -60,6 +66,9 @@ func TestGetTLSConfigFromReader(t *testing.T) {
 	assert.NotNil(t, err)
 
 	_, err = getTLSConfigFromReader(nil)
+	assert.NotNil(t, err)
+
+	_, err = getTLSConfigFromReader(new(errorReader))
 	assert.NotNil(t, err)
 }
 
@@ -114,6 +123,17 @@ func TestPrepare(t *testing.T) {
 	assert.Nil(t, params.err)
 	assert.NotNil(t, params.secureServer)
 	assert.NotNil(t, params.insecureServer)
+}
+
+func TestIsEnabled(t *testing.T) {
+	assert.False(t, (&serverParams{
+		err: []error{errors.New("foo")},
+	}).IsEnabled())
+	assert.True(t, (&serverParams{
+		options: &Options{
+			InsecurePort: 1,
+		},
+	}).IsEnabled())
 }
 
 func TestRun(t *testing.T) {
