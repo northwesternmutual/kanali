@@ -26,20 +26,12 @@ import (
 
 func init() {
 	KanaliGatewayOptions.Add(
-		FlagProfilingEnabled,
 		FlagProfilingInsecurePort,
 		FlagProfilingInsecureBindAddress,
 	)
 }
 
 var (
-	// FlagProfilingEnabled sets the port that Kanali will listen on for incoming requests
-	FlagProfilingEnabled = flags.Flag{
-		Long:  "profiling.enabled",
-		Short: "",
-		Value: true,
-		Usage: "Sets the port that Kanali will listen on for incoming requests.",
-	}
 	// FlagProfilingInsecurePort sets the port that Kanali will listen on for incoming requests
 	FlagProfilingInsecurePort = flags.Flag{
 		Long:  "profiling.insecure_port",

@@ -21,13 +21,21 @@
 package flow
 
 import (
+	"crypto/tls"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/test/builder"
 )
 
@@ -144,10 +152,6 @@ func BenchmarkGetServiceLabelSet(b *testing.B) {
 	}
 }
 
-func TestCopyBuffer(t *testing.T) {
-
-}
-
 func TestCopyHeader(t *testing.T) {
 	original := http.Header(map[string][]string{
 		"Foo": {"bar"},
@@ -156,4 +160,199 @@ func TestCopyHeader(t *testing.T) {
 	assert.Equal(t, 0, len(copy))
 	copyHeader(copy, original)
 	assert.Equal(t, 1, len(copy))
+}
+
+func TestConfigureTLS(t *testing.T) {
+	core, _ := observer.New(zap.NewAtomicLevelAt(zapcore.DebugLevel))
+	defer log.SetLogger(zap.New(core)).Restore()
+
+	tlsAssets := builder.NewTLSBuilder(nil, nil).NewOrDie()
+
+	tests := []struct {
+		config *tls.Config
+		err    bool
+		step   proxyPassStep
+		prep   func(proxyPassStep)
+	}{
+		{
+			config: nil,
+			err:    false,
+			step: proxyPassStep{
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("http://foo.bar.com").NewOrDie(),
+			},
+		},
+		{
+			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithInsecure().WithVerify().NewOrDie(),
+			err:    false,
+			step: proxyPassStep{
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").NewOrDie(),
+			},
+		},
+		{
+			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithInsecure().WithVerify().NewOrDie(),
+			err:    false,
+			step: proxyPassStep{
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("").NewOrDie(),
+			},
+		},
+		{
+			config: nil,
+			err:    true,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+		},
+		{
+			config: nil,
+			err:    true,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+			prep: func(step proxyPassStep) {
+				step.v1Interface.Secrets().Informer().GetStore().Add(
+					builder.NewSecretBuilder("foo", "bar").NewOrDie(),
+				)
+			},
+		},
+		{
+			config: nil,
+			err:    true,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+			prep: func(step proxyPassStep) {
+				step.v1Interface.Secrets().Informer().GetStore().Add(
+					builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").NewOrDie(),
+				)
+			},
+		},
+		{
+			config: nil,
+			err:    true,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+			prep: func(step proxyPassStep) {
+				step.v1Interface.Secrets().Informer().GetStore().Add(
+					builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").WithData("tls.key", []byte("foo")).WithData("tls.crt", []byte("bar")).NewOrDie(),
+				)
+			},
+		},
+		{
+			config: nil,
+			err:    true,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+			prep: func(step proxyPassStep) {
+				step.v1Interface.Secrets().Informer().GetStore().Add(
+					builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").WithData("tls.key", []byte("foo")).WithData("tls.ca", []byte("bar")).NewOrDie(),
+				)
+			},
+		},
+		{
+			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithKeyPair(tlsAssets.ServerCert, tlsAssets.ServerKey).WithInsecure().WithVerify().NewOrDie(),
+			err:    false,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+			prep: func(step proxyPassStep) {
+				step.v1Interface.Secrets().Informer().GetStore().Add(
+					builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").WithData("tls.key", tlsAssets.ServerKey).WithData("tls.crt", tlsAssets.ServerCert).NewOrDie(),
+				)
+			},
+		},
+		{
+			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithKeyPair(tlsAssets.ServerCert, tlsAssets.ServerKey).WithInsecure().WithVerify().NewOrDie(),
+			err:    false,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+			prep: func(step proxyPassStep) {
+				step.v1Interface.Secrets().Informer().GetStore().Add(
+					builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").WithAnnotation("kanali.io/key", "foo.bar").WithAnnotation("kanali.io/cert", "bar.foo").WithData("foo.bar", tlsAssets.ServerKey).WithData("bar.foo", tlsAssets.ServerCert).NewOrDie(),
+				)
+			},
+		},
+		{
+			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithCustomCA(tlsAssets.CACert).WithInsecure().WithVerify().NewOrDie(),
+			err:    false,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+			prep: func(step proxyPassStep) {
+				step.v1Interface.Secrets().Informer().GetStore().Add(
+					builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").WithData("tls.ca", tlsAssets.CACert).NewOrDie(),
+				)
+			},
+		},
+		{
+			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithCustomCA(tlsAssets.CACert).WithInsecure().WithVerify().NewOrDie(),
+			err:    false,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+			},
+			prep: func(step proxyPassStep) {
+				step.v1Interface.Secrets().Informer().GetStore().Add(
+					builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").WithAnnotation("kanali.io/ca", "foo.bar").WithData("foo.bar", tlsAssets.CACert).NewOrDie(),
+				)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		if test.prep != nil {
+			test.prep(test.step)
+		}
+		cfg, err := test.step.configureTLS()
+		if !test.err {
+			assert.Nil(t, err)
+			if cfg != nil {
+				assert.Equal(t, test.config.RootCAs, cfg.RootCAs)
+				assert.Equal(t, test.config.InsecureSkipVerify, cfg.InsecureSkipVerify)
+				assert.Equal(t, test.config.Certificates, cfg.Certificates)
+				if test.config.VerifyPeerCertificate != nil {
+					assert.NotNil(t, cfg.VerifyPeerCertificate)
+				} else {
+					assert.Nil(t, cfg.VerifyPeerCertificate)
+				}
+			} else {
+				assert.Nil(t, test.config)
+			}
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
 }

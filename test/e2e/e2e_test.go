@@ -23,7 +23,9 @@ package e2e
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -40,6 +42,8 @@ func init() {
 }
 
 func TestE2E(t *testing.T) {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	flag.VisitAll(func(f *flag.Flag) {
 		fmt.Printf("%s=%s\n", f.Name, f.Value)
 	})

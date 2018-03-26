@@ -24,7 +24,6 @@ kanali start \
   --server.insecure_port=8080 \
   --server.insecure_bind_address="0.0.0.0" \
   --kubernetes.kubeconfig=$HOME/.kube/config \
-  --profiling.enabled \
   --profiling.insecure_port=9090 \
   --profiling.insecure_bind_address="0.0.0.0" \
   --prometheus.insecure_port=9000 \

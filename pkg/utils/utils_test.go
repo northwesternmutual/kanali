@@ -118,6 +118,10 @@ func TestNormalizeURLPath(t *testing.T) {
 			path:     "/////https%3A%2F%2Fgoogle.com",
 			expected: "/https%3A%2F%2Fgoogle.com",
 		},
+		{
+			path:     "/foo",
+			expected: "/foo",
+		},
 	}
 
 	for _, test := range tests {

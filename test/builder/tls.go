@@ -23,6 +23,7 @@ package builder
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"math/big"
@@ -34,8 +35,56 @@ type tlsBuilder struct {
 	curr tlsAssets
 }
 
+type tlsConfigBuilder struct {
+	curr tls.Config
+}
+
 type tlsAssets struct {
 	CACert, CAKey, ServerCert, ServerKey []byte
+}
+
+func NewTLSConfigBuilder() *tlsConfigBuilder {
+	return &tlsConfigBuilder{
+		curr: tls.Config{},
+	}
+}
+
+func (b *tlsConfigBuilder) WithSystemRoots() *tlsConfigBuilder {
+	roots, _ := x509.SystemCertPool()
+	b.curr.RootCAs = roots
+	return b
+}
+
+func (b *tlsConfigBuilder) WithCustomCA(ca []byte) *tlsConfigBuilder {
+	b.curr.RootCAs.AppendCertsFromPEM(ca)
+	return b
+}
+
+func (b *tlsConfigBuilder) WithKeyPair(cert, key []byte) *tlsConfigBuilder {
+	pair, _ := tls.X509KeyPair(cert, key)
+	if b.curr.Certificates == nil {
+		b.curr.Certificates = []tls.Certificate{pair}
+	} else {
+		b.curr.Certificates = append(b.curr.Certificates, pair)
+	}
+	return b
+}
+
+func (b *tlsConfigBuilder) WithVerify() *tlsConfigBuilder {
+	b.curr.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+		return nil
+	}
+	return b
+}
+
+func (b *tlsConfigBuilder) WithInsecure() *tlsConfigBuilder {
+	b.curr.InsecureSkipVerify = true
+	return b
+}
+
+func (b *tlsConfigBuilder) NewOrDie() *tls.Config {
+	b.curr.BuildNameToCertificate()
+	return &b.curr
 }
 
 func NewTLSBuilder(dnsNames []string, ips []net.IP) *tlsBuilder {

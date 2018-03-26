@@ -40,16 +40,17 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	corev1 "k8s.io/client-go/informers/core/v1"
 
 	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/errors"
 	"github.com/northwesternmutual/kanali/pkg/log"
-	coreV1 "github.com/northwesternmutual/kanali/pkg/store/core/v1"
 	store "github.com/northwesternmutual/kanali/pkg/store/kanali/v2"
 	"github.com/northwesternmutual/kanali/pkg/tags"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
 	"github.com/northwesternmutual/kanali/pkg/utils"
+	tlsutils "github.com/northwesternmutual/kanali/pkg/utils/tls"
 )
 
 // httpClient allows for mocking an http client to assist in testing
@@ -59,6 +60,7 @@ type httpClient interface {
 
 type proxyPassStep struct {
 	logger               *zap.Logger
+	v1Interface          corev1.Interface
 	span                 opentracing.Span
 	proxy                *v2.ApiProxy
 	originalReq          *http.Request
@@ -68,6 +70,12 @@ type proxyPassStep struct {
 	originalRespWriter   http.ResponseWriter
 	err                  error
 }
+
+var (
+	defaultTLSCertKey = "tls.crt"
+	defaultTLSKeyKey  = "tls.key"
+	defaultTLSCAKey   = "tls.ca"
+)
 
 // Hop-by-hop headers. These are removed when sent to the backend.
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
@@ -83,8 +91,10 @@ var hopHeaders = []string{
 	"Upgrade",
 }
 
-func ProxyPassStep() Step {
-	return proxyPassStep{}
+func ProxyPassStep(i corev1.Interface) Step {
+	return proxyPassStep{
+		v1Interface: i,
+	}
 }
 
 func (step proxyPassStep) Name() string {
@@ -316,64 +326,91 @@ func (step proxyPassStep) writeResponse() proxyPassStep {
 }
 
 func (step proxyPassStep) configureTLS() (*tls.Config, error) {
-
 	logger := log.WithContext(step.originalReq.Context())
 
-	if step.proxy.Spec.Target.SSL == nil {
+	// determine whether tls is needed at all
+	if strings.ToLower(step.upstreamReq.URL.Scheme) != "https" {
+		logger.Debug(fmt.Sprintf("tls is not needed for scheme %s", step.upstreamReq.URL.Scheme))
 		return nil, nil
 	}
 
-	secret, err := coreV1.Interface().Secrets().Lister().Secrets(step.proxy.GetNamespace()).Get(step.proxy.Spec.Target.SSL.SecretName)
+	// start with root ca bundle from the current system pool
+	pool, err := x509.SystemCertPool()
 	if err != nil {
-		switch e := err.(type) {
-		case *k8sErrors.StatusError:
-			logger.Info("secret not found")
-			if e.ErrStatus.Reason == metav1.StatusReasonNotFound {
-				return nil, nil
-			}
-		default:
+		return nil, err
+	}
+	config := &tls.Config{
+		RootCAs: pool,
+	}
+
+	if step.proxy.Spec.Target.SSL != nil && len(step.proxy.Spec.Target.SSL.SecretName) > 0 {
+		secret, err := step.v1Interface.Secrets().Lister().Secrets(step.proxy.GetNamespace()).Get(step.proxy.Spec.Target.SSL.SecretName)
+		if err != nil {
+			err := fmt.Errorf("secret %s not found in %s namesapce", step.proxy.Spec.Target.SSL.SecretName, step.proxy.GetNamespace())
 			logger.Error(err.Error())
-			return nil, errors.ErrorKubernetesSecretError
+			return nil, err
 		}
-	}
 
-	if secret.Type != v1.SecretTypeTLS {
-		return nil, nil
-	}
+		if !metav1.HasAnnotation(secret.ObjectMeta, "kanali.io/enabled") || secret.ObjectMeta.GetAnnotations()["kanali.io/enabled"] != "true" {
+			err := fmt.Errorf("secret %s in %s namespaces exists - however, due to the annotations, kanali doesn't have permission to use this secret", step.proxy.Spec.Target.SSL.SecretName, step.proxy.GetNamespace())
+			logger.Info(err.Error())
+			return nil, err
+		}
 
-	tlsConfig := &tls.Config{}
-	caCertPool := x509.NewCertPool()
+		cert, key := getCertKey(secret)
+		ca := getCA(secret)
 
-	// server side tls must be configured
-	cert, err := x509KeyPair(secret)
-	if err != nil {
-		logger.Error(err.Error())
-		return nil, errors.ErrorCreateKeyPair
-	}
-	tlsConfig.Certificates = []tls.Certificate{*cert}
+		if cert == nil && key == nil && ca == nil {
+			return nil, fmt.Errorf("secret does not contain any valid data")
+		}
 
-	if secret.Data["tls.ca"] != nil {
-		caCertPool.AppendCertsFromPEM(secret.Data["tls.ca"])
-	}
-
-	if !viper.GetBool(options.FlagProxyTLSCommonNameValidation.GetLong()) {
-		tlsConfig.InsecureSkipVerify = true
-		tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-			opts := x509.VerifyOptions{
-				Roots: caCertPool,
-			}
-			cert, err := x509.ParseCertificate(rawCerts[0])
+		if cert != nil && key != nil && len(cert) > 0 && len(key) > 0 {
+			pair, err := tls.X509KeyPair(cert, key)
 			if err != nil {
-				return err
+				logger.Error(err.Error())
+				return nil, errors.ErrorCreateKeyPair
 			}
-			_, err = cert.Verify(opts)
-			return err
+			config.Certificates = []tls.Certificate{pair}
+		}
+
+		if ca != nil {
+			if ok := config.RootCAs.AppendCertsFromPEM(ca); !ok {
+				return nil, fmt.Errorf("could not append certificate to pool")
+			}
 		}
 	}
 
-	tlsConfig.RootCAs = caCertPool
-	tlsConfig.BuildNameToCertificate()
-	return tlsConfig, nil
+	// check if common name or sans validation should be performed
+	if !viper.GetBool(options.FlagProxyTLSCommonNameValidation.GetLong()) {
+		config.InsecureSkipVerify = true
+		config.VerifyPeerCertificate = tlsutils.VerifyPeerCertificate(config.RootCAs)
+	}
+
+	config.BuildNameToCertificate()
+	return config, nil
+}
+
+func getCertKey(secret *v1.Secret) (cert, key []byte) {
+	if metav1.HasAnnotation(secret.ObjectMeta, "kanali.io/cert") {
+		cert = secret.Data[secret.GetAnnotations()["kanali.io/cert"]]
+	} else {
+		cert = secret.Data[defaultTLSCertKey]
+	}
+
+	if metav1.HasAnnotation(secret.ObjectMeta, "kanali.io/key") {
+		key = secret.Data[secret.GetAnnotations()["kanali.io/key"]]
+	} else {
+		key = secret.Data[defaultTLSKeyKey]
+	}
+
+	return
+}
+
+func getCA(secret *v1.Secret) []byte {
+	if metav1.HasAnnotation(secret.ObjectMeta, "kanali.io/ca") {
+		return secret.Data[secret.GetAnnotations()["kanali.io/ca"]]
+	}
+	return secret.Data[defaultTLSCAKey]
 }
 
 func (step proxyPassStep) serviceDetails() (string, string, error) {
@@ -386,7 +423,7 @@ func (step proxyPassStep) serviceDetails() (string, string, error) {
 		scheme = "http"
 	}
 
-	services, err := coreV1.Interface().Services().Lister().Services(step.proxy.GetNamespace()).List(labels.SelectorFromSet(
+	services, err := step.v1Interface.Services().Lister().Services(step.proxy.GetNamespace()).List(labels.SelectorFromSet(
 		getServiceLabelSet(step.proxy, step.originalReq.Header, viper.GetStringMapString(options.FlagProxyDefaultHeaderValues.GetLong())),
 	))
 	if err != nil || len(services) < 1 {

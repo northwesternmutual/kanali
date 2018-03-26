@@ -28,14 +28,14 @@ import (
 )
 
 func TestToJSON(t *testing.T) {
-	typed := Error{404, "message", 01, "details"}
+	typed := Error{404, "message", 1, "details"}
 	untyped := errors.New("untyped")
 
 	e, d := ToJSON(typed)
 	assert.Equal(t, e, typed)
-	assert.Equal(t, d, []byte(`{"status":404,"message":"message","code":01,"details":"details"}`))
+	assert.Equal(t, d, []byte(`{"status":404,"message":"message","code":1,"details":"details"}`))
 
 	e, d = ToJSON(untyped)
 	assert.Equal(t, e, ErrorUnknown)
-	assert.Equal(t, d, []byte(`{"status":500,"message":"An unknown error occured.","code":01,"details":"`+moreDetails+`"}`))
+	assert.Equal(t, d, []byte(`{"status":500,"message":"An unknown error occured.","code":1,"details":"`+moreDetails+`"}`))
 }

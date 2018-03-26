@@ -77,7 +77,7 @@ var (
 		Long:  "server.tls.key_file",
 		Short: "k",
 		Value: "",
-		Usage: "Path to x509 private key matching --tls.cert_file.",
+		Usage: "Path to x509 private key matching --server.tls.cert_file.",
 	}
 	// FlagServerTLSCaFile specifies the path to x509 certificate authority bundle for mutual TLS
 	FlagServerTLSCaFile = flags.Flag{

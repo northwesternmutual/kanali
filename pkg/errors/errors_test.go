@@ -27,6 +27,6 @@ import (
 )
 
 func TestError(t *testing.T) {
-	e := Error{404, "message", 01, "details"}
+	e := Error{404, "message", 1, "details"}
 	assert.Equal(t, "message", e.Error())
 }

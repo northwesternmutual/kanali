@@ -119,11 +119,18 @@ func (params *serverParams) Run(context.Context) error {
 		})
 	}
 	err := g.Wait()
-	if err != http.ErrServerClosed {
+	if err != nil && err != http.ErrServerClosed {
 		params.options.Logger.Error(err.Error())
 		return err
 	}
 	return nil
+}
+
+func (params *serverParams) IsEnabled() bool {
+	if params.err != nil && len(params.err) > 0 {
+		return false
+	}
+	return params.options.InsecurePort > 0 || params.options.SecurePort > 0
 }
 
 // Name returns the name of the server

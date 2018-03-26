@@ -192,6 +192,9 @@ func (cfg *deployConfig) deploySecret(svc *v1.Service) (*v1.Secret, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      Name,
 			Namespace: cfg.namespace,
+			Annotations: map[string]string{
+				"kanali.io/enabled": "true",
+			},
 		},
 		Type: v1.SecretTypeTLS,
 		Data: map[string][]byte{

@@ -23,6 +23,6 @@ go test -v -race $E2E_SOURCE \
   -$E2E_PREFIX.kanali.image.tag $E2E_KANALI_IMAGE_TAG \
   -$E2E_PREFIX.project.commit_sha $E2E_PROJECT_COMMIT_SHA \
   -$GINKGO_PREFIX.slowSpecThreshold=60 \
-  -$GINKGO_PREFIX.flakeAttempts=2 \
+  -$GINKGO_PREFIX.flakeAttempts=1 \
   -$GINKGO_PREFIX.progress=true \
   -$GINKGO_PREFIX.randomizeAllSpecs=true

@@ -82,7 +82,7 @@ func (t *tempLogger) Restore() {
 }
 
 // SetLevel dynamically sets the logging level.
-func SetLevel(lvl Level) {
+func SetLevel(lvl *Level) {
 	if err := wrappedLogger.level.UnmarshalText([]byte(lvl.String())); err != nil {
 		wrappedLogger.zap.Warn(fmt.Sprintf("error setting lot level: %s", err))
 	}

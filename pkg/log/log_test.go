@@ -38,7 +38,8 @@ func TestInit(t *testing.T) {
 
 func TestSetLevel(t *testing.T) {
 	assert.False(t, wrappedLogger.zap.Core().Enabled(zapcore.DebugLevel))
-	SetLevel(DebugLevel)
+	lvl := DebugLevel
+	SetLevel(&lvl)
 	assert.True(t, wrappedLogger.zap.Core().Enabled(zapcore.DebugLevel))
 }
 

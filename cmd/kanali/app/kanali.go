@@ -38,6 +38,7 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/chain"
 	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
 	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions"
+	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/internalinterfaces"
 	"github.com/northwesternmutual/kanali/pkg/controller"
 	"github.com/northwesternmutual/kanali/pkg/crds"
 	v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
@@ -47,8 +48,6 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/rsa"
 	"github.com/northwesternmutual/kanali/pkg/run"
 	"github.com/northwesternmutual/kanali/pkg/server"
-	//storev1 "github.com/northwesternmutual/kanali/pkg/store/core/v1"
-	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/internalinterfaces"
 	"github.com/northwesternmutual/kanali/pkg/tracer"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
@@ -86,9 +85,6 @@ func Run(sigCtx context.Context) error {
 
 	controller.InitEventHandlers(sharedInformer, decryptionKey)
 
-	// TODO: This is messy in my opinion.
-	//storev1.SetGlobalInterface(k8sFactory.Core().V1())
-
 	if err := crds.EnsureCRDs(
 		crdClientset.ApiextensionsV1beta1(),
 		[]*apiextensionsv1beta1.CustomResourceDefinition{
@@ -98,6 +94,7 @@ func Run(sigCtx context.Context) error {
 			v2CRDs.MockTargetCRD,
 		}, nil,
 	); err != nil {
+		logger.Fatal(err.Error())
 		return err
 	}
 
@@ -118,7 +115,7 @@ func Run(sigCtx context.Context) error {
 		Handler: chain.New().Add(
 			middleware.Correlation,
 			middleware.Metrics,
-		).Link(middleware.Gateway),
+		).Link(middleware.Gateway(coreV1SharedInformer)),
 		Logger: logger.Sugar(),
 	})
 
@@ -143,9 +140,9 @@ func Run(sigCtx context.Context) error {
 	var g run.Group
 	g.Add(ctx, run.Always, "shared index informer", run.SharedInformerWrapper(sharedInformer))
 	g.Add(ctx, tracerErr == nil, "tracer", tracer)
-	g.Add(ctx, run.Always, metricsServer.Name(), metricsServer)
+	g.Add(ctx, metricsServer.IsEnabled(), metricsServer.Name(), metricsServer)
 	g.Add(ctx, run.Always, gatewayServer.Name(), gatewayServer)
-	g.Add(ctx, viper.GetBool(options.FlagProfilingEnabled.GetLong()), profilingServer.Name(), profilingServer)
+	g.Add(ctx, profilingServer.IsEnabled(), profilingServer.Name(), profilingServer)
 	g.Add(ctx, run.Always, "parent process", run.MonitorContext(cancel))
 	return g.Run()
 }

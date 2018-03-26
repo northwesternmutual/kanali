@@ -46,12 +46,12 @@ const (
 var (
 	ErrorProxyNotFound                    = Error{http.StatusNotFound, "No ApiProxy resource was not found that matches the request.", 0, moreDetails}
 	ErrorUnknown                          = Error{http.StatusInternalServerError, "An unknown error occured.", 1, moreDetails}
-	ErrorMockTargetNotFound               = Error{http.StatusNotFound, "No MockTarget resource was not found that matches the request.", 2, moreDetails}
-	ErrorCouldNotLoadPlugin               = Error{http.StatusInternalServerError, "Could not open or load plugin.", 3, moreDetails}
-	ErrorCouldNotLookupPluginSymbol       = Error{http.StatusInternalServerError, "Could not lookup plugin symbol.", 4, moreDetails}
-	ErrorPluginIncorrectInterface         = Error{http.StatusInternalServerError, "Plugin does not implement the correct interface.", 5, moreDetails}
-	ErrorKubernetesSecretError            = Error{http.StatusInternalServerError, "Could not retreive Kubernetes TLS secret.", 6, moreDetails}
-	ErrorCreateKeyPair                    = Error{http.StatusInternalServerError, "Could not create x509 key pair.", 7, moreDetails}
+	ErrorMockTargetNotFound               = Error{http.StatusNotFound, "No MockTarget resource was not found that matches the request.", 02, moreDetails}
+	ErrorCouldNotLoadPlugin               = Error{http.StatusInternalServerError, "Could not open or load plugin.", 03, moreDetails}
+	ErrorCouldNotLookupPluginSymbol       = Error{http.StatusInternalServerError, "Could not lookup plugin symbol.", 04, moreDetails}
+	ErrorPluginIncorrectInterface         = Error{http.StatusInternalServerError, "Plugin does not implement the correct interface.", 05, moreDetails}
+	ErrorKubernetesSecretError            = Error{http.StatusInternalServerError, "Could not retreive Kubernetes TLS secret.", 06, moreDetails}
+	ErrorCreateKeyPair                    = Error{http.StatusInternalServerError, "Could not create x509 key pair.", 07, moreDetails}
 	ErrorBadGateway                       = Error{http.StatusBadGateway, "Could not get a valid or any response from the upstream server.", 8, moreDetails}
 	ErrorKubernetesServiceError           = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, moreDetails}
 	ErrorNoMatchingServices               = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, moreDetails}

@@ -282,8 +282,8 @@ func (cfg *deployConfig) deployPod() (*v1.Pod, error) {
 	}
 	secureArgs := []string{
 		fmt.Sprintf("--server.secure_port=%d", SecurePort),
-		"--tls.cert_file=/etc/kanali/pki/tls.crt",
-		"--tls.key_file=/etc/kanali/pki/tls.key",
+		"--server.tls.cert_file=/etc/kanali/pki/tls.crt",
+		"--server.tls.key_file=/etc/kanali/pki/tls.key",
 	}
 
 	tlsProjectedVolume := v1.VolumeProjection{
@@ -351,7 +351,7 @@ func (cfg *deployConfig) deployPod() (*v1.Pod, error) {
 	case deploy.TLSTypeMutual:
 		args = append(args, secureArgs...)
 		args = append(args,
-			"--tls.ca_file=/etc/kanali/pki/tls.ca",
+			"--server.tls.ca_file=/etc/kanali/pki/tls.ca",
 		)
 		volumes[0].VolumeSource.Projected.Sources = append(volumes[0].VolumeSource.Projected.Sources, tlsProjectedVolume)
 		port = SecurePort
