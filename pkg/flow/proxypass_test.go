@@ -271,7 +271,7 @@ func TestConfigureTLS(t *testing.T) {
 			},
 		},
 		{
-			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithKeyPair(tlsAssets.ServerCert, tlsAssets.ServerKey).WithInsecure().WithVerify().NewOrDie(),
+			config: builder.NewTLSConfigBuilder().WithKeyPair(tlsAssets.ServerCert, tlsAssets.ServerKey).WithInsecure().WithVerify().NewOrDie(),
 			err:    false,
 			step: proxyPassStep{
 				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
@@ -286,7 +286,7 @@ func TestConfigureTLS(t *testing.T) {
 			},
 		},
 		{
-			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithKeyPair(tlsAssets.ServerCert, tlsAssets.ServerKey).WithInsecure().WithVerify().NewOrDie(),
+			config: builder.NewTLSConfigBuilder().WithKeyPair(tlsAssets.ServerCert, tlsAssets.ServerKey).WithInsecure().WithVerify().NewOrDie(),
 			err:    false,
 			step: proxyPassStep{
 				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
@@ -301,7 +301,7 @@ func TestConfigureTLS(t *testing.T) {
 			},
 		},
 		{
-			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithCustomCA(tlsAssets.CACert).WithInsecure().WithVerify().NewOrDie(),
+			config: builder.NewTLSConfigBuilder().WithCustomCA(tlsAssets.CACert).WithInsecure().WithVerify().NewOrDie(),
 			err:    false,
 			step: proxyPassStep{
 				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
@@ -316,7 +316,7 @@ func TestConfigureTLS(t *testing.T) {
 			},
 		},
 		{
-			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithCustomCA(tlsAssets.CACert).WithInsecure().WithVerify().NewOrDie(),
+			config: builder.NewTLSConfigBuilder().WithCustomCA(tlsAssets.CACert).WithInsecure().WithVerify().NewOrDie(),
 			err:    false,
 			step: proxyPassStep{
 				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
@@ -328,6 +328,16 @@ func TestConfigureTLS(t *testing.T) {
 				step.v1Interface.Secrets().Informer().GetStore().Add(
 					builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").WithAnnotation("kanali.io/ca", "foo.bar").WithData("foo.bar", tlsAssets.CACert).NewOrDie(),
 				)
+			},
+		},
+		{
+			config: builder.NewTLSConfigBuilder().WithSystemRoots().WithInsecure().WithVerify().NewOrDie(),
+			err:    false,
+			step: proxyPassStep{
+				v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").NewOrDie(),
 			},
 		},
 	}
@@ -354,5 +364,21 @@ func TestConfigureTLS(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+	}
+}
+
+func BenchmarkConfigureTLS(b *testing.B) {
+	tlsAssets := builder.NewTLSBuilder(nil, nil).NewOrDie()
+	step := proxyPassStep{
+		v1Interface: informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1(),
+		originalReq: builder.NewHTTPRequest().NewOrDie(),
+		upstreamReq: builder.NewHTTPRequest().WithHost("https://foo.bar.com").NewOrDie(),
+		proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+	}
+	step.v1Interface.Secrets().Informer().GetStore().Add(
+		builder.NewSecretBuilder("foo", "bar").WithAnnotation("kanali.io/enabled", "true").WithAnnotation("kanali.io/ca", "foo.bar").WithData("foo.bar", tlsAssets.CACert).NewOrDie(),
+	)
+	for i := 0; i < b.N; i++ {
+		step.configureTLS()
 	}
 }

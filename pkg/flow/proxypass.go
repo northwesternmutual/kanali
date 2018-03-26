@@ -334,16 +334,10 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 		return nil, nil
 	}
 
-	// start with root ca bundle from the current system pool
-	pool, err := x509.SystemCertPool()
-	if err != nil {
-		return nil, err
-	}
-	config := &tls.Config{
-		RootCAs: pool,
-	}
+	config := new(tls.Config)
 
 	if step.proxy.Spec.Target.SSL != nil && len(step.proxy.Spec.Target.SSL.SecretName) > 0 {
+		config.RootCAs = x509.NewCertPool()
 		secret, err := step.v1Interface.Secrets().Lister().Secrets(step.proxy.GetNamespace()).Get(step.proxy.Spec.Target.SSL.SecretName)
 		if err != nil {
 			err := fmt.Errorf("secret %s not found in %s namesapce", step.proxy.Spec.Target.SSL.SecretName, step.proxy.GetNamespace())
@@ -378,6 +372,12 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 				return nil, fmt.Errorf("could not append certificate to pool")
 			}
 		}
+	} else {
+		pool, err := tlsutils.GetSystemCertPool()
+		if err != nil {
+			return nil, err
+		}
+		config.RootCAs = pool
 	}
 
 	// check if common name or sans validation should be performed

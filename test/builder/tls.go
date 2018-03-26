@@ -45,7 +45,9 @@ type tlsAssets struct {
 
 func NewTLSConfigBuilder() *tlsConfigBuilder {
 	return &tlsConfigBuilder{
-		curr: tls.Config{},
+		curr: tls.Config{
+			RootCAs: x509.NewCertPool(),
+		},
 	}
 }
 
