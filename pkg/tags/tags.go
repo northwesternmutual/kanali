@@ -75,4 +75,7 @@ const (
 
 	HTTPServerBindAddress = "http.server.bind_address"
 	HTTPServerPort        = "http.server.port"
+
+	KubernetesSecretName      = "kubernetes.secret.name"
+	KubernetesSecretNamespace = "kubernetes.secret.namespace"
 )

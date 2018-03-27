@@ -21,50 +21,36 @@
 package builder
 
 import (
-	"net/http"
-	"net/url"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type HTTPRequestBuilder struct {
-	curr http.Request
+type serviceBuilder struct {
+	curr v1.Service
 }
 
-func NewHTTPRequest() *HTTPRequestBuilder {
-	return &HTTPRequestBuilder{
-		curr: http.Request{
-			Header: make(http.Header),
-			URL:    &url.URL{},
+func NewServiceBuilder(name, namespace string) *serviceBuilder {
+	return &serviceBuilder{
+		curr: v1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+				Labels:    map[string]string{},
+			},
 		},
 	}
 }
 
-func (b *HTTPRequestBuilder) WithMethod(method string) *HTTPRequestBuilder {
-	b.curr.Method = method
+func (b *serviceBuilder) WithClusterIP(ip string) *serviceBuilder {
+	b.curr.Spec.ClusterIP = ip
 	return b
 }
 
-func (b *HTTPRequestBuilder) WithHeader(key string, values ...string) *HTTPRequestBuilder {
-	if b.curr.Header == nil {
-		b.curr.Header = map[string][]string{}
-	}
-	for _, val := range values {
-		b.curr.Header.Add(key, val)
-	}
+func (b *serviceBuilder) WithLabel(key, val string) *serviceBuilder {
+	b.curr.ObjectMeta.Labels[key] = val
 	return b
 }
 
-func (b *HTTPRequestBuilder) WithHost(host string) *HTTPRequestBuilder {
-	u, _ := url.Parse(host)
-	b.curr.URL.Scheme = u.Scheme
-	b.curr.URL.Host = u.Host
-	return b
-}
-
-func (b *HTTPRequestBuilder) WithPath(path string) *HTTPRequestBuilder {
-	b.curr.URL.Path = path
-	return b
-}
-
-func (b *HTTPRequestBuilder) NewOrDie() *http.Request {
+func (b *serviceBuilder) NewOrDie() *v1.Service {
 	return &b.curr
 }

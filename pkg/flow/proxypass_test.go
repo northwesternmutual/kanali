@@ -23,9 +23,11 @@ package flow
 import (
 	"crypto/tls"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -34,6 +36,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 
+	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/test/builder"
@@ -380,5 +383,117 @@ func BenchmarkConfigureTLS(b *testing.B) {
 	)
 	for i := 0; i < b.N; i++ {
 		step.configureTLS()
+	}
+}
+
+func TestUserDefinedSSL(t *testing.T) {
+	assert.True(t, (proxyPassStep{
+		proxy: builder.NewApiProxy("foo", "bar").WithSecret("foo").NewOrDie(),
+	}).userDefinedSSL())
+	assert.False(t, (proxyPassStep{
+		proxy: builder.NewApiProxy("foo", "bar").NewOrDie(),
+	}).userDefinedSSL())
+}
+
+func TestServiceDetails(t *testing.T) {
+	core, _ := observer.New(zap.NewAtomicLevelAt(zapcore.DebugLevel))
+	defer log.SetLogger(zap.New(core)).Restore()
+
+	i := informers.NewSharedInformerFactory(fake.NewSimpleClientset(), 500*time.Millisecond).Core().V1()
+
+	tests := []struct {
+		expectedScheme, expectedHost string
+		step                         proxyPassStep
+		pre                          func(proxyPassStep)
+		expectedErr                  bool
+	}{
+		{
+			expectedErr: true,
+			step: proxyPassStep{
+				v1Interface: i,
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				proxy: builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080, v2.Label{
+					Name:  "foo",
+					Value: "bar",
+				}).NewOrDie(),
+			},
+		},
+		{
+			expectedErr: true,
+			step: proxyPassStep{
+				v1Interface: i,
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").WithTargetBackendStaticService("foo", 8080).NewOrDie(),
+			},
+		},
+		{
+			expectedErr:    false,
+			expectedScheme: "https",
+			expectedHost:   "1.2.3.4:8080",
+			step: proxyPassStep{
+				v1Interface: i,
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithSecret("foo").WithTargetBackendStaticService("foo", 8080).NewOrDie(),
+			},
+			pre: func(step proxyPassStep) {
+				viper.SetDefault(options.FlagProxyEnableClusterIP.GetLong(), true)
+				step.v1Interface.Services().Informer().GetStore().Add(
+					builder.NewServiceBuilder("foo", "bar").WithClusterIP("1.2.3.4").NewOrDie(),
+				)
+			},
+		},
+		{
+			expectedErr:    false,
+			expectedScheme: "http",
+			expectedHost:   "foo.bar.svc.cluster.local:8080",
+			step: proxyPassStep{
+				v1Interface: i,
+				originalReq: builder.NewHTTPRequest().NewOrDie(),
+				proxy:       builder.NewApiProxy("foo", "bar").WithTargetBackendStaticService("foo", 8080).NewOrDie(),
+			},
+			pre: func(step proxyPassStep) {
+				step.v1Interface.Services().Informer().GetStore().Add(
+					builder.NewServiceBuilder("foo", "bar").NewOrDie(),
+				)
+			},
+		},
+		{
+			expectedErr:    false,
+			expectedScheme: "http",
+			expectedHost:   "1.2.3.4:8080",
+			step: proxyPassStep{
+				v1Interface:        i,
+				originalRespWriter: httptest.NewRecorder(),
+				originalReq:        builder.NewHTTPRequest().NewOrDie(),
+				proxy: builder.NewApiProxy("foo", "bar").WithTargetBackendDynamicService(8080, v2.Label{
+					Name:  "foo",
+					Value: "bar",
+				}).NewOrDie(),
+			},
+			pre: func(step proxyPassStep) {
+				viper.SetDefault(options.FlagProxyEnableClusterIP.GetLong(), true)
+				step.v1Interface.Services().Informer().GetStore().Add(
+					builder.NewServiceBuilder("foo", "bar").WithClusterIP("1.2.3.4").WithLabel("foo", "bar").NewOrDie(),
+				)
+				step.v1Interface.Services().Informer().GetStore().Add(
+					builder.NewServiceBuilder("car", "bar").WithClusterIP("1.2.3.4").WithLabel("foo", "bar").NewOrDie(),
+				)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		if test.pre != nil {
+			test.pre(test.step)
+		}
+		scheme, host, err := test.step.serviceDetails()
+		if test.expectedErr {
+			assert.NotNil(t, err)
+		} else {
+			assert.Nil(t, err)
+			assert.Equal(t, test.expectedScheme, scheme)
+			assert.Equal(t, test.expectedHost, host)
+		}
+		viper.Reset()
 	}
 }

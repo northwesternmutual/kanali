@@ -75,6 +75,8 @@ var (
 	defaultTLSCertKey = "tls.crt"
 	defaultTLSKeyKey  = "tls.key"
 	defaultTLSCAKey   = "tls.ca"
+
+	multiServiceHeader = "x-kanali-service-cardinality"
 )
 
 // Hop-by-hop headers. These are removed when sent to the backend.
@@ -118,7 +120,6 @@ func (step proxyPassStep) Do(ctx context.Context, w http.ResponseWriter, r *http
 
 	results := step.configureRequest().configureTransport().preformProxyPass().writeResponse()
 	if results.err != nil {
-		logger.Error(results.err.Error())
 		return results.err
 	}
 
@@ -330,32 +331,42 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 
 	// determine whether tls is needed at all
 	if strings.ToLower(step.upstreamReq.URL.Scheme) != "https" {
-		logger.Debug(fmt.Sprintf("tls is not needed for scheme %s", step.upstreamReq.URL.Scheme))
+		logger.Debug("tls not needed",
+			zap.String(tags.HTTPRequestURLScheme, step.upstreamReq.URL.Scheme),
+		)
 		return nil, nil
 	}
 
 	config := new(tls.Config)
 
-	if step.proxy.Spec.Target.SSL != nil && len(step.proxy.Spec.Target.SSL.SecretName) > 0 {
+	if step.userDefinedSSL() {
 		config.RootCAs = x509.NewCertPool()
 		secret, err := step.v1Interface.Secrets().Lister().Secrets(step.proxy.GetNamespace()).Get(step.proxy.Spec.Target.SSL.SecretName)
 		if err != nil {
-			err := fmt.Errorf("secret %s not found in %s namesapce", step.proxy.Spec.Target.SSL.SecretName, step.proxy.GetNamespace())
-			logger.Error(err.Error())
-			return nil, err
+			logger.Info("secret not found",
+				zap.String(tags.KubernetesSecretName, step.proxy.Spec.Target.SSL.SecretName),
+				zap.String(tags.KubernetesSecretNamespace, step.proxy.GetNamespace()),
+			)
+			return nil, errors.ErrorBadGateway
 		}
 
-		if !metav1.HasAnnotation(secret.ObjectMeta, "kanali.io/enabled") || secret.ObjectMeta.GetAnnotations()["kanali.io/enabled"] != "true" {
-			err := fmt.Errorf("secret %s in %s namespaces exists - however, due to the annotations, kanali doesn't have permission to use this secret", step.proxy.Spec.Target.SSL.SecretName, step.proxy.GetNamespace())
-			logger.Info(err.Error())
-			return nil, err
+		if !metav1.HasAnnotation(secret.ObjectMeta, tags.AnnotationKanaliEnabled) || secret.ObjectMeta.GetAnnotations()[tags.AnnotationKanaliEnabled] != "true" {
+			logger.Info("annotation absent from secret",
+				zap.String(tags.KubernetesSecretName, step.proxy.Spec.Target.SSL.SecretName),
+				zap.String(tags.KubernetesSecretNamespace, step.proxy.GetNamespace()),
+			)
+			return nil, errors.ErrorBadGateway
 		}
 
 		cert, key := getCertKey(secret)
 		ca := getCA(secret)
 
 		if cert == nil && key == nil && ca == nil {
-			return nil, fmt.Errorf("secret does not contain any valid data")
+			logger.Info("no valid data keys in secret",
+				zap.String(tags.KubernetesSecretName, step.proxy.Spec.Target.SSL.SecretName),
+				zap.String(tags.KubernetesSecretNamespace, step.proxy.GetNamespace()),
+			)
+			return nil, errors.ErrorBadGateway
 		}
 
 		if cert != nil && key != nil && len(cert) > 0 && len(key) > 0 {
@@ -369,7 +380,8 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 
 		if ca != nil {
 			if ok := config.RootCAs.AppendCertsFromPEM(ca); !ok {
-				return nil, fmt.Errorf("could not append certificate to pool")
+				logger.Info("could not append CA certificate to root pool")
+				return nil, errors.ErrorBadGateway
 			}
 		}
 	} else {
@@ -391,14 +403,14 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 }
 
 func getCertKey(secret *v1.Secret) (cert, key []byte) {
-	if metav1.HasAnnotation(secret.ObjectMeta, "kanali.io/cert") {
-		cert = secret.Data[secret.GetAnnotations()["kanali.io/cert"]]
+	if metav1.HasAnnotation(secret.ObjectMeta, tags.AnnotationTLSCertDataKey) {
+		cert = secret.Data[secret.GetAnnotations()[tags.AnnotationTLSCertDataKey]]
 	} else {
 		cert = secret.Data[defaultTLSCertKey]
 	}
 
-	if metav1.HasAnnotation(secret.ObjectMeta, "kanali.io/key") {
-		key = secret.Data[secret.GetAnnotations()["kanali.io/key"]]
+	if metav1.HasAnnotation(secret.ObjectMeta, tags.AnnotationTLSKeyDataKey) {
+		key = secret.Data[secret.GetAnnotations()[tags.AnnotationTLSKeyDataKey]]
 	} else {
 		key = secret.Data[defaultTLSKeyKey]
 	}
@@ -407,49 +419,65 @@ func getCertKey(secret *v1.Secret) (cert, key []byte) {
 }
 
 func getCA(secret *v1.Secret) []byte {
-	if metav1.HasAnnotation(secret.ObjectMeta, "kanali.io/ca") {
-		return secret.Data[secret.GetAnnotations()["kanali.io/ca"]]
+	if metav1.HasAnnotation(secret.ObjectMeta, tags.AnnotationTLSCaDataKey) {
+		return secret.Data[secret.GetAnnotations()[tags.AnnotationTLSCaDataKey]]
 	}
 	return secret.Data[defaultTLSCAKey]
 }
 
 func (step proxyPassStep) serviceDetails() (string, string, error) {
 	logger := log.WithContext(step.originalReq.Context())
-	var scheme string
 
-	if step.proxy.Spec.Target.SSL != nil && len(step.proxy.Spec.Target.SSL.SecretName) > 0 {
+	var scheme string
+	if step.userDefinedSSL() {
 		scheme = "https"
 	} else {
 		scheme = "http"
 	}
 
-	services, err := step.v1Interface.Services().Lister().Services(step.proxy.GetNamespace()).List(labels.SelectorFromSet(
-		getServiceLabelSet(step.proxy, step.originalReq.Header, viper.GetStringMapString(options.FlagProxyDefaultHeaderValues.GetLong())),
-	))
-	if err != nil || len(services) < 1 {
-		switch e := err.(type) {
-		case *k8sErrors.StatusError:
-			if e.ErrStatus.Reason == metav1.StatusReasonNotFound {
-				return "", "", errors.ErrorNoMatchingServices
-			}
-		default:
-			logger.Error(err.Error())
-			return "", "", errors.ErrorKubernetesServiceError
-		}
-	}
+	var svc *v1.Service
 
-	if len(services) > 1 {
-		step.originalRespWriter.Header().Add("x-kanali-matched-services", strconv.Itoa(len(services)))
-		logger.Debug(fmt.Sprintf("there were %d matching services", len(services)))
+	if step.proxy.Spec.Target.Backend.Service.Labels != nil && len(step.proxy.Spec.Target.Backend.Service.Labels) > 0 {
+		services, err := step.v1Interface.Services().Lister().Services(step.proxy.GetNamespace()).List(labels.SelectorFromSet(
+			getServiceLabelSet(step.proxy, step.originalReq.Header, viper.GetStringMapString(options.FlagProxyDefaultHeaderValues.GetLong())),
+		))
+		if err != nil {
+			return "", "", err
+		} else if len(services) < 1 {
+			return "", "", errors.ErrorNoMatchingServices
+		}
+
+		if len(services) > 1 {
+			step.originalRespWriter.Header().Add(multiServiceHeader, strconv.Itoa(len(services)))
+			logger.Debug("numerous upstream Kubernetes services",
+				zap.String("cardinality", strconv.Itoa(len(services))),
+			)
+		}
+
+		svc = services[0]
+	} else {
+		service, err := step.v1Interface.Services().Lister().Services(step.proxy.GetNamespace()).Get(step.proxy.Spec.Target.Backend.Service.Name)
+		if err != nil {
+			switch e := err.(type) {
+			case *k8sErrors.StatusError:
+				if e.ErrStatus.Reason == metav1.StatusReasonNotFound {
+					return "", "", errors.ErrorNoMatchingServices
+				}
+			default:
+				logger.Error(err.Error())
+				return "", "", errors.ErrorKubernetesServiceError
+			}
+		}
+		svc = service
 	}
 
 	uri := fmt.Sprintf("%s.%s.svc.cluster.local",
-		services[0].GetName(),
-		step.proxy.GetNamespace(),
+		svc.GetName(),
+		svc.GetNamespace(),
 	)
 
 	if viper.GetBool(options.FlagProxyEnableClusterIP.GetLong()) {
-		uri = services[0].Spec.ClusterIP
+		uri = svc.Spec.ClusterIP
 	}
 
 	return scheme, fmt.Sprintf("%s:%d",
@@ -485,16 +513,6 @@ func (step proxyPassStep) setUpstreamURL() error {
 	}
 
 	return nil
-}
-
-// x509KeyPair creates a tls.Certificate from the tls data in
-// a Kubernetes secret of type kubernetes.io/tls
-func x509KeyPair(s *v1.Secret) (*tls.Certificate, error) {
-	pair, err := tls.X509KeyPair(s.Data["tls.crt"], s.Data["tls.key"])
-	if err != nil {
-		return nil, err
-	}
-	return &pair, err
 }
 
 func copyHeader(dst, src http.Header) {
@@ -548,4 +566,8 @@ func getServiceLabelSet(p *v2.ApiProxy, h http.Header, defaults map[string]strin
 		}
 	}
 	return ls
+}
+
+func (step proxyPassStep) userDefinedSSL() bool {
+	return step.proxy.Spec.Target.SSL != nil && len(step.proxy.Spec.Target.SSL.SecretName) > 0
 }
