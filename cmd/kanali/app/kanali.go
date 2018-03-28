@@ -114,6 +114,7 @@ func Run(sigCtx context.Context) error {
 		TLSCa:        viper.GetString(options.FlagServerTLSCaFile.GetLong()),
 		Handler: chain.New().Add(
 			middleware.Correlation,
+			middleware.Recover,
 			middleware.Metrics,
 		).Link(middleware.Gateway(coreV1SharedInformer)),
 		Logger: logger.Sugar(),
