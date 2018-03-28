@@ -61,7 +61,9 @@ func (b *HTTPRequestBuilder) WithHost(host string) *HTTPRequestBuilder {
 }
 
 func (b *HTTPRequestBuilder) WithPath(path string) *HTTPRequestBuilder {
-	b.curr.URL.Path = path
+	u, _ := url.ParseRequestURI(path)
+	b.curr.URL.Path = u.Path
+	b.curr.URL.RawPath = u.EscapedPath()
 	return b
 }
 

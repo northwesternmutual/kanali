@@ -428,6 +428,11 @@ func getCA(secret *v1.Secret) []byte {
 func (step proxyPassStep) serviceDetails() (string, string, error) {
 	logger := log.WithContext(step.originalReq.Context())
 
+	if step.proxy.Spec.Target.Backend.Service == nil {
+		logger.Info("proxy does not have a defined service backend")
+		return "", "", fmt.Errorf("proxy does not have a defined service backend")
+	}
+
 	var scheme string
 	if step.userDefinedSSL() {
 		scheme = "https"
@@ -487,13 +492,21 @@ func (step proxyPassStep) serviceDetails() (string, string, error) {
 }
 
 func (step proxyPassStep) setUpstreamURL() error {
+	logger := log.WithContext(step.originalReq.Context())
+
 	var err error
 
-	if step.proxy.Spec.Target.Backend.Endpoint != nil { // Endpoint backend is configured
+	if step.proxy.Spec.Target.Backend.Endpoint != nil && len(*step.proxy.Spec.Target.Backend.Endpoint) > 0 { // Endpoint backend is configured
 		u, err := url.Parse(*step.proxy.Spec.Target.Backend.Endpoint)
 		if err != nil {
 			return err
 		} else {
+			if u.Scheme != "http" && u.Scheme != "https" {
+				logger.Info("endpoint malformed",
+					zap.String("endpoint", *step.proxy.Spec.Target.Backend.Endpoint),
+				)
+				return errors.ErrorBadGateway
+			}
 			step.upstreamReq.URL.Scheme = u.Scheme
 			step.upstreamReq.URL.Host = u.Host
 		}
@@ -505,7 +518,25 @@ func (step proxyPassStep) setUpstreamURL() error {
 		return err
 	}
 
-	step.upstreamReq.URL.Path = utils.ComputeTargetPath(step.proxy.Spec.Source.Path, step.proxy.Spec.Target.Path, step.originalReq.URL.EscapedPath())
+	targetPath := utils.ComputeTargetPath(
+		step.proxy.Spec.Source.Path,        // Already escaped
+		step.proxy.Spec.Target.Path,        // Already escaped
+		step.originalReq.URL.EscapedPath(), // Ensure that we are using the escaped representation
+	)
+
+	// The targetPath variable is not the escaped target path. Though it may seem counter intuative,
+	// The unescaped version must go into url.Path and the escaped representation into url.RawPath.
+	// We use a helper method to extract the unescaped version.
+	if len(targetPath) > 0 {
+		unescaped, err := url.ParseRequestURI(targetPath)
+		if err != nil {
+			logger.Info(err.Error())
+			return errors.ErrorBadGateway
+		}
+		step.upstreamReq.URL.Path = unescaped.Path
+		step.upstreamReq.URL.RawPath = unescaped.EscapedPath()
+	}
+
 	if step.originalReq.URL.RawQuery == "" || step.upstreamReq.URL.RawQuery == "" {
 		step.upstreamReq.URL.RawQuery = step.originalReq.URL.RawQuery + step.upstreamReq.URL.RawQuery
 	} else {
