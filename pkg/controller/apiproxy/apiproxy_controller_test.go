@@ -40,7 +40,7 @@ func TestOnAdd(t *testing.T) {
 	defer store.ApiProxyStore().Clear()
 
 	NewController().OnAdd(builder.NewApiProxy("foo", "bar").WithSourcePath("/foo").WithTargetBackendEndpoint("http://foo.bar.com").NewOrDie())
-	assert.NotNil(t, store.ApiProxyStore().Get("/foo"))
+	assert.NotNil(t, store.ApiProxyStore().Get("/foo", ""))
 	assert.Equal(t, 1, logs.FilterField(zap.String(tags.KanaliProxyName, "foo")).FilterField(zap.String(tags.KanaliProxyNamespace, "bar")).Len())
 
 	NewController().OnAdd(nil)
@@ -63,9 +63,9 @@ func TestOnUpdate(t *testing.T) {
 	assert.Equal(t, 3, logs.FilterMessageSnippet("malformed").Len())
 
 	store.ApiProxyStore().Set(apiproxyOld)
-	assert.Equal(t, "/", store.ApiProxyStore().Get("/foo").Spec.Target.Path)
+	assert.Equal(t, "/", store.ApiProxyStore().Get("/foo", "").Spec.Target.Path)
 	NewController().OnUpdate(apiproxyOld, apiproxyNew)
-	assert.Equal(t, "/bar", store.ApiProxyStore().Get("/foo").Spec.Target.Path)
+	assert.Equal(t, "/bar", store.ApiProxyStore().Get("/foo", "").Spec.Target.Path)
 	assert.Equal(t, 1, logs.FilterMessageSnippet("updated").Len())
 	assert.Equal(t, 1, logs.FilterField(zap.String(tags.KanaliProxyName, "foo")).FilterField(zap.String(tags.KanaliProxyNamespace, "bar")).Len())
 }
@@ -81,9 +81,9 @@ func TestOnDelete(t *testing.T) {
 	NewController().OnDelete(nil)
 	assert.Equal(t, 1, logs.FilterMessageSnippet("malformed").Len())
 
-	assert.NotNil(t, store.ApiProxyStore().Get("/foo"))
+	assert.NotNil(t, store.ApiProxyStore().Get("/foo", ""))
 	NewController().OnDelete(apiproxy)
-	assert.Nil(t, store.ApiProxyStore().Get("/foo"))
+	assert.Nil(t, store.ApiProxyStore().Get("/foo", ""))
 	assert.Equal(t, 1, logs.FilterMessageSnippet("deleted").Len())
 	assert.Equal(t, 1, logs.FilterField(zap.String(tags.KanaliProxyName, "foo")).FilterField(zap.String(tags.KanaliProxyNamespace, "bar")).Len())
 }

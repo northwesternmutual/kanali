@@ -31,7 +31,7 @@ import (
 type ApiProxyStoreInterface interface {
 	Set(apiProxy *v2.ApiProxy)
 	Update(old, new *v2.ApiProxy)
-	Get(path string) *v2.ApiProxy
+	Get(path, vhost string) *v2.ApiProxy
 	Delete(apiProxy *v2.ApiProxy) *v2.ApiProxy
 	Clear()
 	IsEmpty() bool
@@ -44,7 +44,12 @@ type apiProxyFactory struct {
 
 type proxyNode struct {
 	children map[string]*proxyNode
-	value    *v2.ApiProxy
+	value    *proxyNodeValue
+}
+
+type proxyNodeValue struct {
+	vhosts map[string]*v2.ApiProxy
+	global *v2.ApiProxy
 }
 
 var (
@@ -74,16 +79,14 @@ func (s *apiProxyFactory) Update(old, new *v2.ApiProxy) {
 func (s *apiProxyFactory) update(old, new *v2.ApiProxy) {
 	normalizeProxyPaths(old)
 	normalizeProxyPaths(new)
-	existing := s.get(new.Spec.Source.Path)
-	if existing != nil {
-		if new.GetName() != existing.GetName() || new.GetNamespace() != existing.GetNamespace() {
-			return
-		}
+	existing := s.get(new.Spec.Source.Path, new.Spec.Source.VirtualHost)
+	if existing != nil && (new.GetName() != existing.GetName() || new.GetNamespace() != existing.GetNamespace() || new.Spec.Source.VirtualHost != existing.Spec.Source.VirtualHost) {
+		return
 	}
 
 	s.proxyTree.doSet(strings.Split(new.Spec.Source.Path[1:], "/"), new)
-	if old.Spec.Source.Path != new.Spec.Source.Path {
-		s.proxyTree.delete(strings.Split(old.Spec.Source.Path[1:], "/"))
+	if old.Spec.Source.Path != new.Spec.Source.Path || old.Spec.Source.VirtualHost != new.Spec.Source.VirtualHost {
+		s.proxyTree.delete(strings.Split(old.Spec.Source.Path[1:], "/"), old.Spec.Source.VirtualHost)
 	}
 }
 
@@ -98,8 +101,15 @@ func (s *apiProxyFactory) Set(apiProxy *v2.ApiProxy) {
 func (s *apiProxyFactory) set(apiProxy *v2.ApiProxy) {
 	normalizeProxyPaths(apiProxy)
 	// edge case
-	if apiProxy.Spec.Source.Path == "/" || apiProxy.Spec.Source.Path == "" {
-		s.proxyTree.value = apiProxy
+	if apiProxy.Spec.Source.Path == "/" {
+		s.proxyTree.value = new(proxyNodeValue)
+		if apiProxy.Spec.Source.VirtualHost == "" {
+			s.proxyTree.value.global = apiProxy
+		} else {
+			s.proxyTree.value.vhosts = map[string]*v2.ApiProxy{
+				apiProxy.Spec.Source.VirtualHost: apiProxy,
+			}
+		}
 	} else {
 		s.proxyTree.doSet(strings.Split(apiProxy.Spec.Source.Path[1:], "/"), apiProxy)
 	}
@@ -113,7 +123,17 @@ func (n *proxyNode) doSet(keys []string, v *v2.ApiProxy) {
 		n.children[keys[0]] = &proxyNode{}
 	}
 	if len(keys) < 2 {
-		n.children[keys[0]].value = v
+		if n.children[keys[0]].value == nil {
+			n.children[keys[0]].value = new(proxyNodeValue)
+		}
+		if v.Spec.Source.VirtualHost == "" {
+			n.children[keys[0]].value.global = v
+		} else {
+			if n.children[keys[0]].value.vhosts == nil {
+				n.children[keys[0]].value.vhosts = map[string]*v2.ApiProxy{}
+			}
+			n.children[keys[0]].value.vhosts[v.Spec.Source.VirtualHost] = v
+		}
 	} else {
 		n.children[keys[0]].doSet(keys[1:], v)
 	}
@@ -127,15 +147,16 @@ func (s *apiProxyFactory) IsEmpty() bool {
 	return len(s.proxyTree.children) <= 0
 }
 
-// Get retrieves an ApiProxy if it exists from a request path
-// O(n), n => number of path segments in request path
-func (s *apiProxyFactory) Get(path string) *v2.ApiProxy {
+// Get retrieves an ApiProxy if it exists given a request path
+// and virtual host (if any).
+// ϴ(logn), n => cardinality of ApiProxy resources in the store unique to source path
+func (s *apiProxyFactory) Get(path, vhost string) *v2.ApiProxy {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	return s.get(path)
+	return s.get(path, vhost)
 }
 
-func (s *apiProxyFactory) get(path string) *v2.ApiProxy {
+func (s *apiProxyFactory) get(path, vhost string) *v2.ApiProxy {
 	if len(path) > 0 && path[0] == '/' {
 		path = path[1:]
 	}
@@ -149,7 +170,12 @@ func (s *apiProxyFactory) get(path string) *v2.ApiProxy {
 	if rootNode.value == nil {
 		return nil
 	}
-	return rootNode.value
+
+	if rootNode.value.global != nil {
+		return rootNode.value.global
+	}
+
+	return rootNode.value.vhosts[vhost]
 }
 
 // Delete will remove an ApiProxy resource
@@ -165,16 +191,29 @@ func (s *apiProxyFactory) delete(apiProxy *v2.ApiProxy) *v2.ApiProxy {
 		return nil
 	}
 	normalizeProxyPaths(apiProxy)
-	return s.proxyTree.delete(strings.Split(apiProxy.Spec.Source.Path[1:], "/"))
+	return s.proxyTree.delete(strings.Split(apiProxy.Spec.Source.Path[1:], "/"), apiProxy.Spec.Source.VirtualHost)
 }
 
-func (n *proxyNode) delete(segments []string) *v2.ApiProxy {
+func (n *proxyNode) delete(segments []string, vhost string) *v2.ApiProxy {
 	if len(segments) == 0 || (len(segments) == 1 && segments[0] == "") {
-		tmp := n.value
-		n.value = nil
-		return tmp
+		if n.value != nil && n.value.global != nil {
+			tmp := n.value.global
+			n.value = nil
+			return tmp
+		}
+		if n.value != nil && n.value.vhosts != nil {
+			if val, ok := n.value.vhosts[vhost]; ok {
+				tmp := val
+				delete(n.value.vhosts, vhost)
+				if len(n.value.vhosts) < 1 {
+					n.value = nil
+				}
+				return tmp
+			}
+		}
+		return nil
 	}
-	result := n.children[segments[0]].delete(segments[1:])
+	result := n.children[segments[0]].delete(segments[1:], vhost)
 	if len(n.children[segments[0]].children) == 0 && n.children[segments[0]].value == nil {
 		delete(n.children, segments[0])
 	}

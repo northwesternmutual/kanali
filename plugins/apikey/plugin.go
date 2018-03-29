@@ -51,7 +51,7 @@ func (k ApiKeyFactory) OnRequest(ctx context.Context, config map[string]string, 
 		return next()
 	}
 
-	p := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
+	p := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL), r.Host)
 	if p == nil {
 		logger.Info(kanaliErrors.ErrorProxyNotFound.String())
 		return kanaliErrors.ErrorProxyNotFound

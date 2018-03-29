@@ -50,7 +50,7 @@ func (step mockTargetStep) Name() string {
 func (step mockTargetStep) Do(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	logger := log.WithContext(r.Context())
 
-	proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL))
+	proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL), r.Host)
 	if proxy == nil {
 		logger.Warn(errors.ErrorProxyNotFound.Message)
 		return errors.ErrorProxyNotFound

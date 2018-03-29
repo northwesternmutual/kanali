@@ -52,7 +52,7 @@ func (step validateProxyStep) Name() string {
 func (step validateProxyStep) Do(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	logger := log.WithContext(r.Context())
 
-	if proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL)); proxy != nil {
+	if proxy := store.ApiProxyStore().Get(utils.ComputeURLPath(r.URL), r.Host); proxy != nil {
 		if span := opentracing.SpanFromContext(ctx); span != nil {
 			span.SetTag(tags.KanaliProxyName, proxy.GetName())
 			span.SetTag(tags.KanaliProxyNamespace, proxy.GetNamespace())

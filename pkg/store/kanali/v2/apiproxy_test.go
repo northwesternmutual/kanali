@@ -23,9 +23,9 @@ package v2
 import (
 	"testing"
 
-	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/northwesternmutual/kanali/test/builder"
 )
 
 func TestApiProxyStore(t *testing.T) {
@@ -36,27 +36,34 @@ func TestApiProxyStore(t *testing.T) {
 func TestApiProxyStoreSet(t *testing.T) {
 	defer ApiProxyStore().Clear()
 
-	testApiProxyOne := getTestApiProxy("example-one", "foo", "/api/v1", "/")
-	testApiProxyTwo := getTestApiProxy("example-two", "foo", "/api/v2", "/")
-	testApiProxyThree := getTestApiProxy("example-three", "foo", "/api", "/")
-	testApiProxyFour := getTestApiProxy("example-four", "foo", "/apis", "/")
-	testApiProxyFive := getTestApiProxy("example-five", "foo", "/", "/")
+	testApiProxyOne := builder.NewApiProxy("example-one", "foo").WithSourcePath("/api/v1").NewOrDie()
+	testApiProxyTwo := builder.NewApiProxy("example-two", "foo").WithSourcePath("/api/v2").NewOrDie()
+	testApiProxyThree := builder.NewApiProxy("example-three", "foo").WithSourcePath("/api").NewOrDie()
+	testApiProxyFour := builder.NewApiProxy("example-four", "foo").WithSourcePath("/apis").NewOrDie()
+	testApiProxyFive := builder.NewApiProxy("example-five", "foo").WithSourcePath("/").NewOrDie()
+	testApiProxySix := builder.NewApiProxy("example-six", "foo").WithSourcePath("/api/v3").WithSourceHost("foo.bar.com").NewOrDie()
+	testApiProxySeven := builder.NewApiProxy("example-seven", "foo").WithSourcePath("/api/v3").WithSourceHost("bar.foo.com").NewOrDie()
 
 	ApiProxyStore().Set(testApiProxyOne)
 	ApiProxyStore().Set(testApiProxyTwo)
 	ApiProxyStore().Set(testApiProxyThree)
 	ApiProxyStore().Set(testApiProxyFour)
 	ApiProxyStore().Set(testApiProxyFive)
+	ApiProxyStore().Set(testApiProxySix)
+	ApiProxyStore().Set(testApiProxySeven)
 
-	assert.Equal(t, testApiProxyOne, apiProxyStore.proxyTree.children["api"].children["v1"].value)
-	assert.Equal(t, testApiProxyTwo, apiProxyStore.proxyTree.children["api"].children["v2"].value)
-	assert.Equal(t, testApiProxyThree, apiProxyStore.proxyTree.children["api"].value)
-	assert.Equal(t, testApiProxyFour, apiProxyStore.proxyTree.children["apis"].value)
-	assert.Equal(t, testApiProxyFive, apiProxyStore.proxyTree.value)
+	assert.Equal(t, testApiProxyOne, apiProxyStore.proxyTree.children["api"].children["v1"].value.global)
+	assert.Equal(t, testApiProxyTwo, apiProxyStore.proxyTree.children["api"].children["v2"].value.global)
+	assert.Equal(t, testApiProxyThree, apiProxyStore.proxyTree.children["api"].value.global)
+	assert.Equal(t, testApiProxyFour, apiProxyStore.proxyTree.children["apis"].value.global)
+	assert.Equal(t, testApiProxyFive, apiProxyStore.proxyTree.value.global)
+	assert.Nil(t, apiProxyStore.proxyTree.children["api"].children["v3"].value.global)
+	assert.Equal(t, testApiProxySix, apiProxyStore.proxyTree.children["api"].children["v3"].value.vhosts["foo.bar.com"])
+	assert.Equal(t, testApiProxySeven, apiProxyStore.proxyTree.children["api"].children["v3"].value.vhosts["bar.foo.com"])
 }
 
 func TestApiProxyStoreClear(t *testing.T) {
-	ApiProxyStore().Set(getTestApiProxy("example-one", "foo", "/api/v1", "/"))
+	ApiProxyStore().Set(builder.NewApiProxy("example-one", "foo").WithSourcePath("/api/v1").NewOrDie())
 	assert.Equal(t, 1, len(apiProxyStore.proxyTree.children))
 	ApiProxyStore().Clear()
 	assert.Equal(t, 0, len(apiProxyStore.proxyTree.children))
@@ -65,68 +72,80 @@ func TestApiProxyStoreClear(t *testing.T) {
 func TestApiProxyStoreUpdate(t *testing.T) {
 	defer ApiProxyStore().Clear()
 
-	testApiProxyOneOld := getTestApiProxy("example-one", "foo", "/api/v1", "/foo")
-	testApiProxyTwoOld := getTestApiProxy("example-two", "foo", "/apis", "/")
+	testApiProxyOneOld := builder.NewApiProxy("example-one", "foo").WithSourcePath("/api/v1").WithTargetPath("/foo").NewOrDie()
+	testApiProxyTwoOld := builder.NewApiProxy("example-two", "foo").WithSourcePath("/apis").WithTargetPath("/").NewOrDie()
+	testApiProxyThree := builder.NewApiProxy("example-three", "foo").WithSourcePath("/api/v1").WithTargetPath("/").NewOrDie()
 
 	ApiProxyStore().Set(testApiProxyOneOld)
 	ApiProxyStore().Set(testApiProxyTwoOld)
 
-	testApiProxyOneNew := getTestApiProxy("example-one", "foo", "/api/v1", "/")
-	testApiProxyTwoNew := getTestApiProxy("example-two", "foo", "/", "/")
+	testApiProxyOneNew := builder.NewApiProxy("example-one", "foo").WithSourcePath("/api/v1").WithTargetPath("/").NewOrDie()
+	testApiProxyTwoNew := builder.NewApiProxy("example-two", "foo").WithSourcePath("/").WithTargetPath("/").NewOrDie()
 
 	ApiProxyStore().Update(testApiProxyOneOld, testApiProxyOneNew)
 	ApiProxyStore().Update(testApiProxyTwoOld, testApiProxyTwoNew)
 
-	assert.Equal(t, testApiProxyOneNew, apiProxyStore.proxyTree.children["api"].children["v1"].value)
-	assert.Equal(t, testApiProxyTwoNew, apiProxyStore.proxyTree.children[""].value)
+	assert.Equal(t, testApiProxyOneNew, apiProxyStore.proxyTree.children["api"].children["v1"].value.global)
+	assert.Equal(t, testApiProxyTwoNew, apiProxyStore.proxyTree.children[""].value.global)
 	assert.Nil(t, apiProxyStore.proxyTree.children["apis"])
 
 	ApiProxyStore().Clear()
 	assert.True(t, ApiProxyStore().IsEmpty())
 	ApiProxyStore().Set(testApiProxyOneOld)
-	ApiProxyStore().Update(testApiProxyOneOld, getTestApiProxy("example-three", "foo", "/api/v1", "/"))
-	assert.Equal(t, testApiProxyOneOld, apiProxyStore.proxyTree.children["api"].children["v1"].value)
+	ApiProxyStore().Update(testApiProxyOneOld, testApiProxyThree)
+	assert.Equal(t, testApiProxyOneOld, apiProxyStore.proxyTree.children["api"].children["v1"].value.global)
 }
 
 func TestApiProxyStoreIsEmpty(t *testing.T) {
 	defer ApiProxyStore().Clear()
 
 	assert.True(t, ApiProxyStore().IsEmpty())
-	ApiProxyStore().Set(getTestApiProxy("example-one", "foo", "/api/v1", "/"))
+	ApiProxyStore().Set(builder.NewApiProxy("example-one", "foo").WithSourcePath("/api/v1").NewOrDie())
 	assert.False(t, ApiProxyStore().IsEmpty())
 }
 
 func TestApiProxyStoreGet(t *testing.T) {
 	defer ApiProxyStore().Clear()
 
-	testApiProxyOne := getTestApiProxy("example-one", "foo", "/api/v1", "/")
-	testApiProxyTwo := getTestApiProxy("example-two", "foo", "/api/v2", "/")
-	testApiProxyThree := getTestApiProxy("example-three", "foo", "/api", "/")
-	testApiProxyFour := getTestApiProxy("example-four", "foo", "/apis", "/")
-	testApiProxyFive := getTestApiProxy("example-five", "foo", "/", "/")
+	testApiProxyOne := builder.NewApiProxy("example-one", "foo").WithSourcePath("/api/v1").NewOrDie()
+	testApiProxyTwo := builder.NewApiProxy("example-two", "foo").WithSourcePath("/api/v2").NewOrDie()
+	testApiProxyThree := builder.NewApiProxy("example-three", "foo").WithSourcePath("/api").NewOrDie()
+	testApiProxyFour := builder.NewApiProxy("example-four", "foo").WithSourcePath("/apis").NewOrDie()
+	testApiProxyFive := builder.NewApiProxy("example-five", "foo").WithSourcePath("/").NewOrDie()
+	testApiProxySix := builder.NewApiProxy("example-six", "foo").WithSourcePath("/api/v3").WithSourceHost("foo.bar.com").NewOrDie()
+
+	assert.Nil(t, ApiProxyStore().Get("/", ""))
 
 	ApiProxyStore().Set(testApiProxyOne)
 	ApiProxyStore().Set(testApiProxyTwo)
 	ApiProxyStore().Set(testApiProxyThree)
 	ApiProxyStore().Set(testApiProxyFour)
 	ApiProxyStore().Set(testApiProxyFive)
+	ApiProxyStore().Set(testApiProxySix)
 
-	assert.Equal(t, testApiProxyFive, ApiProxyStore().Get("/"))
-	assert.Equal(t, testApiProxyFive, ApiProxyStore().Get(""))
-	assert.Equal(t, testApiProxyFive, ApiProxyStore().Get("foo"))
-	assert.Equal(t, testApiProxyOne, ApiProxyStore().Get("api/v1"))
-	assert.Equal(t, testApiProxyTwo, ApiProxyStore().Get("api/v2/foo"))
-	assert.Equal(t, testApiProxyFour, ApiProxyStore().Get("apis/v2/foo"))
+	assert.Equal(t, testApiProxyFive, ApiProxyStore().Get("/", ""))
+	assert.Equal(t, testApiProxyFive, ApiProxyStore().Get("", ""))
+	assert.Equal(t, testApiProxyFive, ApiProxyStore().Get("foo", ""))
+	assert.Equal(t, testApiProxyOne, ApiProxyStore().Get("api/v1", ""))
+	assert.Equal(t, testApiProxyTwo, ApiProxyStore().Get("api/v2/foo", ""))
+	assert.Equal(t, testApiProxyFour, ApiProxyStore().Get("apis/v2/foo", ""))
+
+	ApiProxyStore().Clear()
+	testApiProxySeven := builder.NewApiProxy("example-seven", "foo").WithSourcePath("/").WithSourceHost("foo.bar.com").NewOrDie()
+	ApiProxyStore().Set(testApiProxySeven)
+	assert.Equal(t, testApiProxySeven, ApiProxyStore().Get("/frank", "foo.bar.com"))
 }
 
 func TestApiProxyStoreDelete(t *testing.T) {
 	defer ApiProxyStore().Clear()
 
-	testApiProxyOne := getTestApiProxy("example-one", "foo", "/api/v1", "/")
-	testApiProxyTwo := getTestApiProxy("example-two", "foo", "/api/v2", "/")
-	testApiProxyThree := getTestApiProxy("example-three", "foo", "/api", "/")
-	testApiProxyFour := getTestApiProxy("example-four", "foo", "/apis", "/")
-	testApiProxyFive := getTestApiProxy("example-five", "foo", "/", "/")
+	testApiProxyOne := builder.NewApiProxy("example-one", "foo").WithSourcePath("/api/v1").NewOrDie()
+	testApiProxyTwo := builder.NewApiProxy("example-two", "foo").WithSourcePath("/api/v2").NewOrDie()
+	testApiProxyThree := builder.NewApiProxy("example-three", "foo").WithSourcePath("/api").NewOrDie()
+	testApiProxyFour := builder.NewApiProxy("example-four", "foo").WithSourcePath("/apis").NewOrDie()
+	testApiProxyFive := builder.NewApiProxy("example-five", "foo").WithSourcePath("/").NewOrDie()
+	testApiProxySix := builder.NewApiProxy("example-six", "foo").WithSourcePath("/api/v3").WithSourceHost("foo.bar.com").NewOrDie()
+	testApiProxySeven := builder.NewApiProxy("example-seven", "foo").WithSourcePath("/api/v3").WithSourceHost("bar.foo.com").NewOrDie()
 
 	ApiProxyStore().Set(testApiProxyOne)
 	ApiProxyStore().Set(testApiProxyTwo)
@@ -156,11 +175,18 @@ func TestApiProxyStoreDelete(t *testing.T) {
 
 	assert.Equal(t, testApiProxyFive, ApiProxyStore().Delete(testApiProxyFive))
 	assert.Zero(t, len(apiProxyStore.proxyTree.children))
+
+	ApiProxyStore().Set(testApiProxySix)
+	ApiProxyStore().Set(testApiProxySeven)
+	assert.Equal(t, testApiProxySix, ApiProxyStore().Delete(testApiProxySix))
+	assert.Equal(t, 1, len(apiProxyStore.proxyTree.children["api"].children["v3"].value.vhosts))
+	assert.Equal(t, testApiProxySeven, ApiProxyStore().Delete(testApiProxySeven))
+	assert.Nil(t, apiProxyStore.proxyTree.children["api"])
 }
 
 func TestNormalizeProxyPaths(t *testing.T) {
-	testApiProxyOne := getTestApiProxy("example-one", "foo", "///foo/bar///car", "foo///bar//car")
-	testApiProxyTwo := getTestApiProxy("example-one", "foo", "", "///")
+	testApiProxyOne := builder.NewApiProxy("example-one", "foo").WithSourcePath("///foo/bar///car").WithTargetPath("foo///bar//car").NewOrDie()
+	testApiProxyTwo := builder.NewApiProxy("example-one", "foo").WithSourcePath("").WithTargetPath("///").NewOrDie()
 
 	normalizeProxyPaths(testApiProxyOne)
 	normalizeProxyPaths(testApiProxyTwo)
@@ -169,36 +195,4 @@ func TestNormalizeProxyPaths(t *testing.T) {
 	assert.Equal(t, testApiProxyOne.Spec.Target.Path, "/foo/bar/car")
 	assert.Equal(t, testApiProxyTwo.Spec.Source.Path, "/")
 	assert.Equal(t, testApiProxyTwo.Spec.Target.Path, "/")
-}
-
-func getTestApiProxy(name, namespace, sourcePath, targetPath string) *v2.ApiProxy {
-	return &v2.ApiProxy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: v2.ApiProxySpec{
-			Source: v2.Source{
-				Path: sourcePath,
-			},
-			Target: v2.Target{
-				Path: targetPath,
-				Backend: v2.Backend{
-					Service: &v2.Service{
-						Name: "my-service",
-						Port: 8080,
-					},
-				},
-				SSL: &v2.SSL{
-					SecretName: "mySecret",
-				},
-			},
-			Plugins: []v2.Plugin{
-				{
-					Name:    "apikey",
-					Version: "v1.0.0",
-				},
-			},
-		},
-	}
 }
