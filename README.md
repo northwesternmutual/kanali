@@ -2,8 +2,8 @@
 <img src="logo/logo_with_name.png" alt="Kanali" title="Kanali" width="50%" />
 </p>
 
-[![Travis](https://img.shields.io/travis/northwesternmutual/kanali/kanali.io%2Fv2alpha1.svg)](https://travis-ci.org/northwesternmutual/kanali)
-[![Coveralls](https://img.shields.io/coveralls/northwesternmutual/kanali/kanali.io%2Fv2alpha1.svg)](https://coveralls.io/github/northwesternmutual/kanali)
+[![Travis](https://img.shields.io/travis/northwesternmutual/kanali/master.svg)](https://travis-ci.org/northwesternmutual/kanali)
+[![Coveralls](https://img.shields.io/coveralls/northwesternmutual/kanali/master.svg)](https://coveralls.io/github/northwesternmutual/kanali)
 [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/northwesternmutual/kanali)
 [![Go Report Card](https://goreportcard.com/badge/github.com/northwesternmutual/kanali)](https://goreportcard.com/report/github.com/northwesternmutual/kanali)
