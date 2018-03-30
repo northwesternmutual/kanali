@@ -110,9 +110,5 @@ var _ = Describe("ApiKey", func() {
 		ok, err := testutils.RepresentJSONifiedObject(requestDetails(req, apiproxy)).Match(resp)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ok).To(BeTrue())
-
-		By("deleting an apikey")
-		err = f.KanaliClientSet.KanaliV2().ApiKeys().Delete(apikey.GetName(), nil)
-		Expect(err).NotTo(HaveOccurred())
 	})
 })

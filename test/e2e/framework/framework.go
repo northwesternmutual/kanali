@@ -30,6 +30,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
@@ -79,5 +80,7 @@ func (f *Framework) BeforeEach() {
 
 func (f *Framework) AfterEach() {
 	err := deploy.DestroyNamespace(f.ClientSet, f.Namespace.GetName())
+	Expect(err).NotTo(HaveOccurred())
+	err = f.KanaliClientSet.KanaliV2().ApiKeys().DeleteCollection(nil, metav1.ListOptions{})
 	Expect(err).NotTo(HaveOccurred())
 }
