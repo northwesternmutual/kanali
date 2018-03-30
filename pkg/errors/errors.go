@@ -54,10 +54,10 @@ var (
 	ErrorCreateKeyPair                    = Error{http.StatusInternalServerError, "Could not create x509 key pair.", 07, moreDetails}
 	ErrorBadGateway                       = Error{http.StatusBadGateway, "Could not get a valid or any response from the upstream server.", 8, moreDetails}
 	ErrorKubernetesServiceError           = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, moreDetails}
-	ErrorNoMatchingServices               = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 9, moreDetails}
-	ErrorPluginRuntimeError               = Error{http.StatusInternalServerError, "Plugin threw a runtime error.", 10, moreDetails}
-	ErrorApiProxyBackendEndpointMalformed = Error{http.StatusInternalServerError, "The ApiProxy endpoint backend is malformed.", 11, moreDetails}
-	ErrorForbidden                        = Error{http.StatusForbidden, "My lips are sealed.", 12, moreDetails}
-	ErrorApiKeyUnauthorized               = Error{http.StatusUnauthorized, "Api key is not authorized.", 13, moreDetails}
-	ErrorTooManyRequests                  = Error{http.StatusTooManyRequests, "The Api key you are using has exceeded its rate limit.", 14, moreDetails}
+	ErrorNoMatchingServices               = Error{http.StatusInternalServerError, "Could not retreive Kubernetes services.", 10, moreDetails}
+	ErrorPluginRuntimeError               = Error{http.StatusInternalServerError, "Plugin threw a runtime error.", 11, moreDetails}
+	ErrorApiProxyBackendEndpointMalformed = Error{http.StatusInternalServerError, "The ApiProxy endpoint backend is malformed.", 12, moreDetails}
+	ErrorForbidden                        = Error{http.StatusForbidden, "My lips are sealed.", 13, moreDetails}
+	ErrorApiKeyUnauthorized               = Error{http.StatusUnauthorized, "Api key is not authorized.", 14, moreDetails}
+	ErrorTooManyRequests                  = Error{http.StatusTooManyRequests, "The Api key you are using has exceeded its rate limit.", 15, moreDetails}
 )
