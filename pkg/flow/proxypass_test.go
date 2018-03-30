@@ -506,8 +506,10 @@ func TestSetUpstreamURL(t *testing.T) {
 		{
 			expectedErr: false,
 			expectedURL: &url.URL{
-				Scheme: "http",
-				Host:   "foo.bar.svc.cluster.local:8080",
+				Scheme:  "http",
+				Host:    "foo.bar.svc.cluster.local:8080",
+				Path:    "/",
+				RawPath: "/",
 			},
 			step: proxyPassStep{
 				originalReq: builder.NewHTTPRequest().NewOrDie(),
