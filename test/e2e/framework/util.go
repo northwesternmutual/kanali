@@ -21,12 +21,27 @@
 package framework
 
 import (
+	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
+	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/kubernetes/pkg/client/conditions"
 
 	"github.com/northwesternmutual/kanali/test/e2e/context"
 )
 
 func LoadConfig() (*restclient.Config, error) {
 	return clientcmd.BuildConfigFromFlags("", context.TestContext.KubeConfig)
+}
+
+func waitForServiceAccountInNamespace(c clientset.Interface, ns, serviceAccountName string, timeout time.Duration) error {
+	w, err := c.CoreV1().ServiceAccounts(ns).Watch(metav1.SingleObject(metav1.ObjectMeta{Name: serviceAccountName}))
+	if err != nil {
+		return err
+	}
+	_, err = watch.Until(timeout, w, conditions.ServiceAccountHasSecrets)
+	return err
 }

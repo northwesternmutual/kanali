@@ -241,7 +241,7 @@ func (step proxyPassStep) preformProxyPass() proxyPassStep {
 	logger.Info("upstream request",
 		zap.String(tags.HTTPRequestURLScheme, step.upstreamReq.URL.Scheme),
 		zap.String(tags.HTTPRequestURLHost, step.upstreamReq.URL.Host),
-		zap.String(tags.HTTPRequestURLPath, step.upstreamReq.URL.Path),
+		zap.String(tags.HTTPRequestURLPath, step.upstreamReq.URL.EscapedPath()),
 	)
 
 	res, err := step.upstreamRoundTripper.RoundTrip(step.upstreamReq)

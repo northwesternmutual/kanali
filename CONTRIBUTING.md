@@ -34,7 +34,7 @@ If you would like to run this test suite against local changes, it is necessary 
 
 ```sh
 $ eval $(minikube docker-env)
-$ ./hack/docker-build.sh
+$ make docker
 ```
 
 Execute the e2e test suite:

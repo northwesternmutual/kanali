@@ -21,6 +21,7 @@
 package kanaliio
 
 import (
+	"fmt"
 	"net/http"
 
 	. "github.com/onsi/ginkgo"
@@ -78,6 +79,76 @@ var _ = Describe("ApiProxy", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		ok, err := testutils.RepresentJSONifiedObject(requestDetails(req, apiproxy)).Match(resp)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ok).To(BeTrue())
+	})
+
+	It("should properly handle encoded urls", func() {
+		By("deploying an upstream application")
+		_, _, err := tester.Deploy(f.BaseName, f.Namespace.GetName(), f.ClientSet,
+			deploy.WithServer(deploy.TLSTypeNone),
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("creating an apiproxy")
+		apiproxy, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.Namespace.GetName()).Create(
+			builder.NewApiProxy("endpoint", f.Namespace.GetName()).WithSourcePath("/endpoint").WithTargetBackendStaticService(tester.Name, tester.InsecurePort).NewOrDie(),
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("preforming an http request")
+		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(context.TestContext.KanaliConfig.GetEndpoint()).WithPath(
+			fmt.Sprintf("%s/%%47%%6f%%2f", apiproxy.Spec.Source.Path),
+		).NewOrDie()
+		resp, err := f.HTTPClient.Do(req)
+		Expect(err).NotTo(HaveOccurred())
+
+		ok, err := testutils.RepresentJSONifiedObject(apis.RequestDetails{
+			Method: req.Method,
+			Path:   fmt.Sprintf("/%%47%%6f%%2f"),
+			Query:  map[string]string{},
+		}).Match(resp)
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ok).To(BeTrue())
+	})
+
+	It("should honor vhost routing", func() {
+		By("deploying an upstream application")
+		_, _, err := tester.Deploy(f.BaseName, f.Namespace.GetName(), f.ClientSet,
+			deploy.WithServer(deploy.TLSTypeNone),
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("creating an apiproxy")
+		apiproxyOne, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.Namespace.GetName()).Create(
+			builder.NewApiProxy("foo", f.Namespace.GetName()).WithSourcePath("/endpoint").WithTargetPath("/foo").WithSourceHost("foo.bar.com").WithTargetBackendStaticService(tester.Name, tester.InsecurePort).NewOrDie(),
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("creating another apiproxy")
+		apiproxyTwo, err := f.KanaliClientSet.KanaliV2().ApiProxies(f.Namespace.GetName()).Create(
+			builder.NewApiProxy("bar", f.Namespace.GetName()).WithSourcePath("/endpoint").WithTargetPath("/bar").WithSourceHost("bar.foo.com").WithTargetBackendStaticService(tester.Name, tester.InsecurePort).NewOrDie(),
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("preforming an http request")
+		req := builder.NewHTTPRequest().WithMethod("GET").WithHost(context.TestContext.KanaliConfig.GetEndpoint()).WithPath(apiproxyOne.Spec.Source.Path).NewOrDie()
+		req.Host = "foo.bar.com"
+		resp, err := f.HTTPClient.Do(req)
+		Expect(err).NotTo(HaveOccurred())
+
+		ok, err := testutils.RepresentJSONifiedObject(requestDetails(req, apiproxyOne)).Match(resp)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ok).To(BeTrue())
+
+		By("preforming another http request")
+		req = builder.NewHTTPRequest().WithMethod("GET").WithHost(context.TestContext.KanaliConfig.GetEndpoint()).WithPath(apiproxyTwo.Spec.Source.Path).NewOrDie()
+		req.Host = "bar.foo.com"
+		resp, err = f.HTTPClient.Do(req)
+		Expect(err).NotTo(HaveOccurred())
+
+		ok, err = testutils.RepresentJSONifiedObject(requestDetails(req, apiproxyTwo)).Match(resp)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ok).To(BeTrue())
 	})

@@ -55,7 +55,7 @@ func TestComputeTargetPath(t *testing.T) {
 			source:   "",
 			target:   "",
 			actual:   "",
-			expected: "",
+			expected: "/",
 		},
 		{
 			source:   "/foo/bar",
@@ -68,6 +68,12 @@ func TestComputeTargetPath(t *testing.T) {
 			target:   "/foo",
 			actual:   "/foo/bar",
 			expected: "/foo",
+		},
+		{
+			source:   "/foo",
+			target:   "/",
+			actual:   "/foo/bar",
+			expected: "/bar",
 		},
 	}
 

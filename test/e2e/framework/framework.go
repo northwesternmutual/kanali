@@ -35,6 +35,7 @@ import (
 
 	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
 	"github.com/northwesternmutual/kanali/test/e2e/deploy"
+	"github.com/northwesternmutual/kanali/test/e2e/utils"
 )
 
 type Framework struct {
@@ -76,6 +77,10 @@ func (f *Framework) BeforeEach() {
 	ns, err := deploy.CreateNamespace(f.ClientSet, fmt.Sprintf("e2e-%s-%d", f.BaseName, rand.Intn(1000)))
 	Expect(err).NotTo(HaveOccurred())
 	f.Namespace = ns
+
+	By("Waiting for a default service account to be provisioned in namespace")
+	err = waitForServiceAccountInNamespace(f.ClientSet, f.Namespace.GetName(), "default", utils.ServiceAccountProvisionTimeout)
+	Expect(err).NotTo(HaveOccurred())
 }
 
 func (f *Framework) AfterEach() {

@@ -54,12 +54,16 @@ cover:
 binary:
 	@./hack/binary.sh $(VERSION)
 
+.PHONY: docker
+docker:
+	@./hack/docker-build.sh $(VERSION)
+
 .PHONY: lint
 lint:
-	@$(GOVET) $(NON_GENERATED_PACKAGES)
-	@$(ERRCHECK) $(NON_GENERATED_PACKAGES)
+	@$(GOVET) $(NON_GEN_PKGS)
+	@$(ERRCHECK) $(NON_GEN_PKGS)
 	@cat /dev/null > $(LINT_LOG)
-	@$(foreach pkg, $(NON_GENERATED_PACKAGES), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
+	@$(foreach pkg, $(NON_GEN_PKGS), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
 	@[ ! -s "$(LINT_LOG)" ] || (echo "Lint Failures" | cat - $(LINT_LOG) && false)
 	@$(GOFMT) -e -s -l $(ALL_SRC) > $(FMT_LOG)
 	@[ ! -s "$(FMT_LOG)" ] || (echo "Go Fmt Failures, run 'make fmt'" | cat - $(FMT_LOG) && false)

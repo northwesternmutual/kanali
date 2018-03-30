@@ -39,7 +39,7 @@ var (
 	encryptedDataRegex = `[0-9a-zA-Z]+`
 	httpPathRegex      = `^\/.*`
 	// https://stackoverflow.com/questions/1418423/the-hostname-regex
-	virtualHostRegex = `^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?$`
+	//virtualHostRegex = `^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?$`
 	// https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url
 	httpURLRegex = `https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)`
 	// https://github.com/kubernetes/apimachinery/blob/master/pkg/util/validation/validation.go
@@ -439,7 +439,7 @@ var ApiProxyCRD = &apiextensionsv1beta1.CustomResourceDefinition{
 									"virtualHost": {
 										Description: "http hostname",
 										Type:        "string",
-										Pattern:     virtualHostRegex,
+										//Pattern:     virtualHostRegex,
 									},
 								},
 							},

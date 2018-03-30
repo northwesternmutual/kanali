@@ -45,13 +45,19 @@ func doComputeTargetPath(b *bytes.Buffer, source, target, actual string) string 
 		i++
 	}
 
-	for j := 0; j < len(target); j++ {
-		b.WriteByte(target[j])
+	if len(target) != 1 || target[0] != '/' {
+		for j := 0; j < len(target); j++ {
+			b.WriteByte(target[j])
+		}
 	}
 
 	for i < len(actual) {
 		b.WriteByte(actual[i])
 		i++
+	}
+
+	if b.Len() == 0 {
+		b.WriteByte('/')
 	}
 
 	return b.String()
