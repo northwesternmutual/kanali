@@ -1,8 +1,5 @@
 ca-certificates.crt
-kanali
-vendor/
 .idea/
-*.out
 git-hack.sh
 *.crt
 *.key
@@ -10,12 +7,31 @@ git-hack.sh
 *.srl
 *.test
 debug
-launch.json
-settings.json
-kanali.wiki/
 *.so
 *.pem
 *.log
 LICENSE_*
 .cover/
+torch.svg
+/kanali
+.DS_Store
+
+# vscode
+launch.json
+settings.json
+
+# dependencies
+vendor/
+
+# go test -coverprofile
+# go tool cover -html
+*.out
 *.html
+
+# go test -bench
+*.cpu
+*.mem
+
+# helm
+helm/charts/*.tgz
+helm/requirements.lock

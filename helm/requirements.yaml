@@ -1,12 +1,18 @@
 ---
 
 dependencies:
-- name: influxdb
-  version: 0.4.1
-  repository: https://github.com/kubernetes/charts/tree/master/stable/influxdb
+- name: prometheus
+  version: 5.4.1
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  tags:
+  - metrics
 - name: grafana
-  version: 0.3.6
-  repository: https://github.com/kubernetes/charts/tree/master/stable/grafana
+  version: 0.8.2
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  tags:
+  - metrics
 - name: jaeger
-  version: 1.0.0
-  repository: file://./charts/jaeger
+  version: 0.3.7
+  repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+  tags:
+  - tracing

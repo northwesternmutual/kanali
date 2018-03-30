@@ -1,37 +1,48 @@
 ---
 
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kanali
-  namespace: default
+  namespace: {{default "default" .Values.kanali.namespace}}
 spec:
   selector:
     matchLabels:
-      k8s-app: kanali
+      app: kanali
   template:
     metadata:
       labels:
-        k8s-app: kanali
+        app: kanali
     spec:
       serviceAccountName: kanali
       containers:
       - name: kanali
-        imagePullPolicy: {{default "IfNotPresent" .Values.pullPolicy}}
-        image: {{.Values.imageRegistry}}/kanali:{{.Values.dockerImageTag}}
+        imagePullPolicy: {{default "IfNotPresent" .Values.kanali.gateway.image.pullPolicy}}
+        image: {{.Values.kanali.gateway.image.name}}:{{default "latest" .Values.kanali.gateway.image.tag}}
         command:
         - /kanali
         - start
-        env:
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
         ports:
-        - containerPort: 8443
+        - name: gateway
+          containerPort: {{.Values.kanali.gateway.securePort}}
+        - name: prometheus
+          containerPort: {{.Values.kanali.prometheus.insecurePort}}
+        - name: profiler
+          containerPort: {{.Values.kanali.profiler.insecurePort}}
+        readinessProbe:
+          tcpSocket:
+            port: {{.Values.kanali.gateway.securePort}}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: {{.Values.kanali.gateway.securePort}}
+          initialDelaySeconds: 15
+          periodSeconds: 20
         volumeMounts:
         - name: pki
           mountPath: /etc/pki
+          readOnly: true
         - name: config
           mountPath: /etc/kanali
       volumes:
@@ -39,17 +50,21 @@ spec:
         projected:
           sources:
           - secret:
-              name: {{.Values.tlsSecretName}}
+              name: kanali-pki
               items:
               - key: tls.crt
                 path: tls.crt
               - key: tls.key
                 path: tls.key
           - secret:
-              name: {{.Values.decryptKeySecretName}}
+              name: kanali-rsa
               items:
               - key: key.pem
                 path: key.pem
       - name: config
-        configMap:
-          name: {{.Values.kanaliConfigName}}
+        projected:
+          sources:
+          - configMap:
+              name: kanali-config
+          - configMap:
+              name: kanali-tracer-config

@@ -2,33 +2,36 @@ sudo: required
 
 language: go
 
-go:
-- 1.8.3
+matrix:
+  include:
+  - go: '1.10'
+    env:
+    - TESTS=true
+    - COVERAGE=true
+
+services:
+- docker
 
 env:
   global:
+  - COMMIT=${TRAVIS_COMMIT::8}
   - secure: kqPYySZHukKk79buA26c9staHoX7roMpp13aalARyDKoz8qdfgcCLMfBkAjI3OpIYRpqZHQlla67YBCrBgINA6ahoUm4AQF2nK7P7ll3ZM/VHwjxY6DY+wN7sSlMotBwu6qSkoCs34U8Vd1c6uCjNmDlGGgeTAY2WlLAnHNAe8FVNlYKX3fb2MOolKeLuZLh36VPbrF1409WyUFU79C20CMfN5X0sq13xOqwWJHjOaYF+wnEoOsFGt62lqGmBWXEwTOfFRKwVrYleDhR+LU0onW7k12KHydrAcI4j41mDfi0GUmLYPgCdyoffcyPNbdu6ZjmDEhF3ZSl9QXVoaSaEDIOinnbi9WJvmTRa1pE8rvB2VVz+pGB1V24aYMKZreSdkuCtFfJ1UxklW88312NcItPBVJbInY4Kqn/gMA9BwFMtzCD+pBpR06r83P3iOFs7zvzxTnuuBQ+TJUMw8PQBaRlgrDyrFY/9ORHgSGCSrquPg6nVMcxvHQoU4ugkC6fbSqnivq7TEYHTfKcUEVpLqqK+pdfB1qqCo2nAtfsViRPV2c5BXg5JyJT0uBIjukPnt7k/sJ3BOex1PAow0lgsURyy3JnRf8qAg4h28cZBBhTZCj3ovyC9TH9pcI/46EqmP7Yqs1L0UTReOG8+0cHT+d8wxECnWI8PjqN20rGWw8=
   - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
-
-before_install:
-- curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-- sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu
-  $(lsb_release -cs) stable"
-- sudo apt-get update
-- sudo apt-get -y install docker-ce
-- docker --version
 
 install:
 - make install_ci
 
 script:
-- make test_ci
-- travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true
+- if [ "$TESTS" == true ] && [ "$COVERAGE" == true ]; then make cover; fi
+- if [ "$TESTS" == true ] && [ "$COVERAGE" == false ]; then make unit_test; fi
 
 after_success:
-- bash ./travis/build-docker-images.sh
+- if [ "$COVERAGE" == true ]; then travis_retry goveralls -coverprofile=cover.out
+  -service=travis-ci || true ; else echo 'skipping coverage'; fi
 
 notifications:
   slack:
     rooms:
-      secure: Qkh1Ucluku5Q3mimju0VtMLaIr2ugzIYLf/wlyqIO60IZd1zYMnegl0FY7PwrbOAJfTxTADbaP5egPzDbKt71EAQnuu1s5vHzxac1kdvMtEFpUyJVxfJ/EqumUDdVOgb0QGKRbu252Y2HzPDT0de0xFvVuZR15mo1ntTI5D1UyCIzXA2ypO8RN4xS4pEppTMWx19QoDi8L8JuOKA5gpybaKk+aIv81eSLQMEheTln9pFza02ZoOY99b0Gv06CcUAyuXTXjPONM+M8HnlyeNxcdghBt6ovAl59YfpvLruDq30+zYTkUTHeaMfKoT1gyGuukZsU3sv1SeR4NCJ3l11H5wezREp4W56XJpZjert0x2nABNQui/JfRfm0Ofs7LJ/HDYXkIcAd0lyPMjjySq+27LMxpaUTO6EHYDoDbZq6egmjx02zJYhSil/14Y6b2PS1zfa3ZEe0qSHP5fIArfll5NP5bdLWZgzObBaqhiLPQXOoEg4BKkwOGfa0/MlqlxjqV7ObGwD8g8Tj2UBKmzX0j7iBOwo9McLaz2pkCJYLFbdZ6mlyQxbAQbCGr7fVwUMlAUNvZttQdZ6kisj8WDw1UqI3XlYMy0ca3IRclk7S28AtkqJaqv5dooqFCeHMz3CubQNb8TwHqDo5bb5QLX+u6ly1eNY2zokwokic5WOl6k=
+      on_success: always
+      on_failure: always
+      secure: Z73JPNBtFixKvYaa5IFaoL+YjCh6FAMQWxS7JQje6U5ftUreDgZzsLyRLXFelqO1ScxNFvxIdoa08OZfE7/swMqwoiqCeYqwJ8goHuDs80LsOX5CBpA+9u7kyDiKFlsRhAjLFnJ/CRFvEtK4SZudD0cY0SsJszHu4dEm9KzUKbkKiYacSfgf2jNcXdC0LJoccBCG68jjbhvldUFaHUrCnyLJAhx6l1Ni2T042uo7qnfrqORPmS9Xbgkk5ibHiGSAC4BCjeP8/Oql7gx3GJizM3UIUtB8fLyj0/B/YBLrZmgf4JBqmfKHhvh7M9xw+nmz4Xpxopeox5mPs/ntBF+HZ676Dq0YZsHTo68kEygt7AzmiuITenotUftElbAtAJkLj+H1Os0gSweDDI+xLW+INT4VMbudPLhaBg30FMRe2l/R64rZzrZc9w7rQdCHg4JEoIYvbiOrMkonGvq0gFF/db2BUTDcEb8rDVMSahMot2fUiXHPA+OkpWNJ/SDdIGVN+GI5ZQQXm0L0zzg50I4cNwAuzvYAbgRQ44/IpFKKoJ9Mw5+sOJ5UbFh87OcOZccVoloaQgLGBc3OVN7C4hb7fgEQdWDIGuSMrH3Gk2jhPOYZrZh3m2Dig5gNsg8SqRInBqC+eV99FhjlTT6zzhC//IQPL47irQYyX+lyvd2XW5U=

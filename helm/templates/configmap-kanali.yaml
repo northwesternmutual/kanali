@@ -1,0 +1,52 @@
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kanali-config
+  namespace: {{default "default" .Values.kanali.namespace}}
+data:
+  config.toml: |-
+    [tracing]
+    config_file = "/etc/kanali/tracer.yaml"
+
+    [prometheus]
+    insecure_port = {{.Values.kanali.prometheus.insecurePort}}
+    insecure_bind_address = "{{.Values.kanali.prometheus.insecureBindAddress}}"
+
+    [server]
+    secure_port = {{.Values.kanali.gateway.securePort}}
+    secure_bind_address = "{{.Values.kanali.gateway.secureBindAddress}}"
+
+    [server.tls]
+    cert_file = "/etc/pki/tls.crt"
+    key_file = "/etc/pki/tls.key"
+    ca_file = ""
+
+    [profiling]
+    enabled = true
+    insecure_port = {{.Values.kanali.profiler.insecurePort}}
+    insecure_bind_address = "{{.Values.kanali.profiler.insecureBindAddress}}"
+
+    [plugins]
+    location = "/"
+
+    [plugins.apiKey]
+    decryption_key_file = "/etc/pki/key.pem"
+    header_key = "apikey"
+
+    [process]
+    log_level = "info"
+
+    [proxy]
+    enable_cluster_ip = true
+    enable_mock_responses = true
+    upstream_timeout = "0h1m0s"
+    header_mask_value = "omitted"
+    tls_common_name_validation = true
+    mask_header_keys = [
+      "apikey"
+    ]
+
+    [proxy.default_header_values]
+    x-canary-deployment = "stable"

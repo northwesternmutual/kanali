@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Contextual and performant logging using zap.
+- New `MockTarget` resource.
+### Changed
+- Using `client-go@v5.0.0` for Kubernetes client.
+- Using `CRDs` to replace the deprecated `TPRs`.
+- Modified `ApiProxy` resource
+- Modified `ApiKeyBinding` resource
+- Modified `ApiKey` resource
+
 ## [1.2.3] - 2017-11-12
 ### Changed
 - Allow for batching of InfluxDB writes.
@@ -66,7 +77,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - If InfluxDB database doesn't exist when writing, it will be created.
 - Raw URL path will be used as the primary path when proxying to upstream services.
-- Cleaning up logging.
+- Cleaning up log.
 
 ## [1.1.1] - 2017-08-15
 ### Changed

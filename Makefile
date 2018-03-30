@@ -1,59 +1,69 @@
-ALL_SRC := $(shell find . -name "*.go" | grep -v -e vendor \
-        -e ".*/\..*" \
-        -e ".*/_.*" \
-        -e ".*/mocks.*")
-
-BINARY=$(shell echo $${PWD\#\#*/})
-FILES = $(shell go list ./... | grep -v /vendor/)
-PACKAGES := $(shell glide novendor)
-
-RACE=-race
-GOTEST=go test -v $(RACE)
-GOLINT=golint
-GOVET=go vet
-GOBUILD=go build $(RACE)
-GOFMT=gofmt
-ERRCHECK=errcheck -ignoretests
-FMT_LOG=fmt.log
-LINT_LOG=lint.log
-
-PASS=$(shell printf "\033[32mPASS\033[0m")
-FAIL=$(shell printf "\033[31mFAIL\033[0m")
-COLORIZE=sed ''/PASS/s//$(PASS)/'' | sed ''/FAIL/s//$(FAIL)/''
+ALL_SRC                = $(shell find . -name "*.go" | grep -v -e vendor)
+BINARY                 = $(shell echo $${PWD\#\#*/})
+PACKAGES               = $(shell go list ./... | grep -v -E 'vendor')
+NON_GEN_PKGS           = $(shell go list ./... | grep -v -E 'vendor|client|apis') # TODO: By excluding /apis/, we are excluding types.go which is a non-generated file.
+NON_GEN_NON_TEST_PKGS  = $(shell go list ./... | grep -v -E 'vendor|client|apis|test')
+RACE                   = -race
+GOTEST                 = go test -v $(RACE)
+GOLINT                 = golint
+GOVET                  = go vet
+GOFMT                  = gofmt
+ERRCHECK               = errcheck -ignoretests
+FMT_LOG                = fmt.log
+LINT_LOG               = lint.log
+DEP_VERSION            = v0.4.1
+PASS                   = $(shell printf "\033[32mPASS\033[0m")
+FAIL                   = $(shell printf "\033[31mFAIL\033[0m")
+COLORIZE               = sed ''/PASS/s//$(PASS)/'' | sed ''/FAIL/s//$(FAIL)/''
 
 .DEFAULT_GOAL: $(BINARY)
 
-$(BINARY): $(ALL_SRC) test fmt lint
+$(BINARY): $(ALL_SRC) unit_test lint codegen_verify
+
+.PHONY: up
+up:
+	./hack/kanali-up.sh
+
+.PHONY: unit_test
+unit_test:
+	@bash -c "set -e; set -o pipefail; $(GOTEST) $(NON_GEN_NON_TEST_PKGS) | $(COLORIZE)"
+
+.PHONY: e2e_test
+e2e_test:
+	@./hack/e2e.sh
+
+.PHONY: test
+test: unit_test e2e_test
 
 .PHONY: install
 install:
-	glide --version || go get github.com/Masterminds/glide
-	glide install
-
-.PHONY: build
-build:
-	GOOS=`go env GOHOSTOS` GOARCH=`go env GOHOSTARCH` $(GOBUILD) -o $(BINARY)
+	(dep version | grep $(DEP_VERSION)) || (mkdir -p $(GOPATH)/bin && DEP_RELEASE_TAG=$(DEP_VERSION) curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh && dep version)
+	dep ensure -v -vendor-only # assumes updated Gopkg.lock
 
 .PHONY: fmt
 fmt:
-	$(GOFMT) -e -s -l -w $(ALL_SRC)
-	./scripts/updateLicenses.sh
+	@$(GOFMT) -e -s -l -w $(ALL_SRC)
+	@./hack/updateLicenses.sh
 
 .PHONY: cover
 cover:
-	./scripts/cover.sh $(shell go list $(PACKAGES))
-	go tool cover -html=cover.out -o cover.html
+	@./hack/cover.sh $(NON_GEN_NON_TEST_PKGS)
+	@go tool cover -html=cover.out -o cover.html
 
-.PHONY: test
-test:
-	bash -c "set -e; set -o pipefail; $(GOTEST) $(PACKAGES) | $(COLORIZE)"
+.PHONY: binary
+binary:
+	@./hack/binary.sh $(VERSION)
+
+.PHONY: docker
+docker:
+	@./hack/docker-build.sh $(VERSION)
 
 .PHONY: lint
 lint:
-	@$(GOVET) $(PACKAGES)
-	@$(ERRCHECK) $(PACKAGES)
+	@$(GOVET) $(NON_GEN_PKGS)
+	@$(ERRCHECK) $(NON_GEN_PKGS)
 	@cat /dev/null > $(LINT_LOG)
-	@$(foreach pkg, $(PACKAGES), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
+	@$(foreach pkg, $(NON_GEN_PKGS), $(GOLINT) $(pkg) >> $(LINT_LOG) || true;)
 	@[ ! -s "$(LINT_LOG)" ] || (echo "Lint Failures" | cat - $(LINT_LOG) && false)
 	@$(GOFMT) -e -s -l $(ALL_SRC) > $(FMT_LOG)
 	@[ ! -s "$(FMT_LOG)" ] || (echo "Go Fmt Failures, run 'make fmt'" | cat - $(FMT_LOG) && false)
@@ -63,14 +73,13 @@ install_ci: install
 	go get github.com/wadey/gocovmerge
 	go get github.com/mattn/goveralls
 	go get golang.org/x/tools/cmd/cover
-	go get github.com/golang/lint/golint
+	go get golang.org/x/lint/golint
 	go get github.com/kisielk/errcheck
 
-.PHONY: test_ci
-test_ci:
-	@./scripts/cover.sh $(shell go list $(PACKAGES))
-	make lint
+.PHONY: codegen_verify
+codegen_verify:
+	@./hack/verify-codegen.sh
 
-.PHONY: clean
-clean:
-	if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
+.PHONY: codegen_update
+codegen_update:
+	@./hack/update-codegen.sh

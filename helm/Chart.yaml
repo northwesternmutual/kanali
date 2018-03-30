@@ -1,19 +1,17 @@
 ---
 
-  name: helm
-  version: 1.0.0
-  description: helm chart to deploy kanali
-  keywords:
-  - ingress
-  - kubernetes
-  - api
-  - management
-  home: "https://github.com/northwesternmutual/kanali"
-  sources:
-  - "https://github.com/northwesternmutual/kanali"
-  maintainers:
-  - name: Frank B Greco Jr
-    email: frankgreco@northwesternmutual.com
-  engine: gotpl
-  appVersion: v1.0.0
-  deprecated: false
+appVersion: v2.0.0-rc1
+name: kanali
+version: 0.0.1
+description: A Kanali Helm chart for Kubernetes
+keywords:
+- kanali
+- ingress
+- api management
+home: https://github.com/northwesternmutual/kanali
+icon: https://github.com/northwesternmutual/kanali/blob/master/logo/logo_with_name.png?raw=true
+sources:
+- https://hub.docker.com/r/northwesternmutual/kanali/
+maintainers:
+- name: Frank B Greco Jr
+  email: frankgreco@northwesternmutual.com
