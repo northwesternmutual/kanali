@@ -1,0 +1,63 @@
+{{ define "title"}} {{ .Site.Title}} {{end}}
+{{ define "header"}} {{ partial "header" .}} {{end}}
+{{ define "main"}}
+
+<div id="main">
+  <div id="hero">
+    <h1>{{.Title}}</h1>
+    <p>{{.Description}}</p>
+  </div>
+  <div id="action-buttons">
+    <a class="button primary big" href="/tutorial/" onclick="_gaq.push(['_trackEvent', 'kube', 'download']);">Tutorial</a> <a class="button outline big" target="_blank" href="https://github.com/northwesternmutual/kanali" onclick="_gaq.push(['_trackEvent', 'kube', 'github']);">View on Github</a>
+  </div>
+  <div class="message focus" data-component="message"> <span class="close small"></span>
+    <a class="button inverted small " target="_blank" href="https://github.com/northwesternmutual/kanali/releases/latest" >v2.0.0-rc1 </a> just released! Click <a target="_blank" href="https://github.com/northwesternmutual/kanali/releases/latest" ><mark>here</mark></a> to find out what's new!
+  </div>
+  <div class="message success" data-component="message"> <span class="close small"></span>
+   Watch the full presentation from KubeCon 2017 <a class="button outline inverted small " target="_blank" href="https://youtu.be/--LSmvCKVSs" >here</a>
+  </div>
+  <div class="message warning" data-component="message"> <span class="close small"></span>
+    This site is under active development!
+  </div>
+  <div id="kube-features">
+    <div class="row gutters">
+      <div class="col col-4 item">
+        <figure>
+          <img alt="Baseline" height="48" src="{{ "/img/kube/kubernetes.png" | relURL }}" width="48">
+        </figure>
+        <h4>Kubernetes Native</h4>
+        <p>Kanali extends the Kubernetes API by using Custom Resource Definitions, allowing Kanali to be configured and used in the same way as native Kubernetes resources.</p>
+      </div>
+      <div class="col col-4 item">
+        <figure>
+          <img alt="Baseline" height="48" src="{{ "/img/kube/opentracing.png" | relURL }}" width="48">
+        </figure>
+        <h4>OpenTracing</h4>
+        <p>Kanali integrates with OpenTracing, a vendor-neutral open standard for distributed tracing. Jaeger, a distributed tracing system, is supported out of the box to provide a visual representation for your traces.</p>
+      </div>
+      <div class="col col-4 item">
+        <figure>
+          <img alt="Baseline" height="48" src="{{ "/img/kube/prometheus.png" | relURL }}" width="48">
+        </figure>
+        <h4>Analytics & Monitoring</h4>
+        <p>Kanali integrates with Prometheus and Grafana to provide a robust set of metrics and a customizable dashboard so that you can monitor the performance of your APIs in real time.</p>
+      </div>
+    </div>
+    <div class="row gutters">
+      <div class="col col-4 item">
+        <h4>Production Ready</h4>
+        <p>Northwestern Mutual uses Kanali in production at scale for all of its API management needs in their cloud native stack.</p>
+      </div>
+      <div class="col col-4 item">
+        <h4>Plugin Framework</h4>
+        <p>Need to perform complex transformations or integrations with a legacy system? Kanali provides a framework allowing developers to create, integrate, and version control custom plugins.</p>
+      </div>
+      <div class="col col-4 item">
+        <h4>Robust API Management</h4>
+        <p>Fine grained API key authorization, JWT validation, quota policies, rate limiting, etc., these are some of the built in API management capabilities that Kanali provides.</p>
+    </div>
+  </div>
+</div>
+</div>
+{{ end }}
+{{ define "footer"}} {{ partial "footer" .}} {{end}}
