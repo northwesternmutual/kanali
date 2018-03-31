@@ -1,4 +1,4 @@
-baseURL = "/"
+baseURL = "https://northwesternmutual.github.io/kanali/"
 languageCode = "en-us"
 title = "Kanali"
 theme = "kube"
