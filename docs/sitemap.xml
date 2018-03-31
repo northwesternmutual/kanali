@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/docs/v2/quick-start/</loc>
+    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/docs/v2/configuration/</loc>
+    <lastmod>2017-04-10T16:41:54+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/docs/v2/errorcodes/</loc>
+    <lastmod>2017-04-10T16:41:54+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/docs/v2/plugins/</loc>
+    <lastmod>2017-04-10T16:41:16+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/docs/v2/contributing/</loc>
+    <lastmod>2017-04-10T16:41:54+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/docs/v2/deployment/</loc>
+    <lastmod>2017-04-10T16:41:54+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/tutorial/</loc>
+    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/categories/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/docs/</loc>
+    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/</loc>
+    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://northwesternmutual.github.io/kanali/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+</urlset>

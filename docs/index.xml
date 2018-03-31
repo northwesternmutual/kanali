@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kanali</title>
+    <link>https://northwesternmutual.github.io/kanali/</link>
+    <description>Recent content on Kanali</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 10 Apr 2017 16:43:08 +0100</lastBuildDate>
+    
+	<atom:link href="https://northwesternmutual.github.io/kanali/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Quick Start</title>
+      <link>https://northwesternmutual.github.io/kanali/docs/v2/quick-start/</link>
+      <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
+      
+      <guid>https://northwesternmutual.github.io/kanali/docs/v2/quick-start/</guid>
+      <description> Coming soon </description>
+    </item>
+    
+    <item>
+      <title>Configuration</title>
+      <link>https://northwesternmutual.github.io/kanali/docs/v2/configuration/</link>
+      <pubDate>Mon, 10 Apr 2017 16:41:54 +0100</pubDate>
+      
+      <guid>https://northwesternmutual.github.io/kanali/docs/v2/configuration/</guid>
+      <description>Introduction The goal of this section is to provide an introduction to each of Kanali&amp;rsquo;s configurable resources. More in depth documentation for each resource can be found here.
+
+The ApiProxy Resource This resource declaratively defines how your upstream services are
+  --- apiVersion: kanali.io/v2 kind: ApiProxy metadata: name: example namespace: default spec: source: path: /example target: service: name: serviceName port: 8080    --- apiVersion: kanali.io/v2 kind: ApiProxy metadata: name: example namespace: default spec: source: path: /example target: service: port: 8080 labels: - name: key value: value - name: deploy header: x-foo-deployment    --- apiVersion: kanali.</description>
+    </item>
+    
+    <item>
+      <title>Error Codes</title>
+      <link>https://northwesternmutual.github.io/kanali/docs/v2/errorcodes/</link>
+      <pubDate>Mon, 10 Apr 2017 16:41:54 +0100</pubDate>
+      
+      <guid>https://northwesternmutual.github.io/kanali/docs/v2/errorcodes/</guid>
+      <description> Introduction If you&amp;rsquo;re visiting this page, changes are that Kanali has given you a response similar to this one:
+{ &amp;quot;status&amp;quot;: 404, &amp;quot;message&amp;quot;: &amp;quot;No ApiProxy resource was not found that matches the request.&amp;quot;, &amp;quot;code&amp;quot;: 0, &amp;quot;details&amp;quot;: &amp;quot;Visit https://kanali.io/docs/errorcodes for more details.&amp;quot; }  As promised in that response, the table below contains detailed information about each unique error code.
+Details    Code Status Description     00 404 coming soon   01 500 coming soon   02 404 coming soon   03 500 coming soon   04 500 coming soon   05 500 coming soon   06 500 coming soon   07 500 coming soon   08 502 coming soon   09 500 coming soon   10 500 coming soon   11 500 coming soon   12 500 coming soon   13 403 coming soon   14 401 coming soon   15 429 coming soon    </description>
+    </item>
+    
+    <item>
+      <title>Plugins</title>
+      <link>https://northwesternmutual.github.io/kanali/docs/v2/plugins/</link>
+      <pubDate>Mon, 10 Apr 2017 16:41:16 +0100</pubDate>
+      
+      <guid>https://northwesternmutual.github.io/kanali/docs/v2/plugins/</guid>
+      <description> Coming soon </description>
+    </item>
+    
+    <item>
+      <title>Contributing</title>
+      <link>https://northwesternmutual.github.io/kanali/docs/v2/contributing/</link>
+      <pubDate>Mon, 10 Apr 2017 16:41:54 +0100</pubDate>
+      
+      <guid>https://northwesternmutual.github.io/kanali/docs/v2/contributing/</guid>
+      <description> Getting Started Testing Project Structure Imports Grouping Making a Change License </description>
+    </item>
+    
+    <item>
+      <title>Deployment</title>
+      <link>https://northwesternmutual.github.io/kanali/docs/v2/deployment/</link>
+      <pubDate>Mon, 10 Apr 2017 16:41:54 +0100</pubDate>
+      
+      <guid>https://northwesternmutual.github.io/kanali/docs/v2/deployment/</guid>
+      <description> Coming soon </description>
+    </item>
+    
+  </channel>
+</rss>
