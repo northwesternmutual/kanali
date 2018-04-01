@@ -24,9 +24,9 @@ Notable features:
 
 ## Getting Started
 
-Find complete documentation at [kanali.io](kanali.io).
+Find complete documentation at [kanali.io](https://kanali.io).
 
-Try our [interactive tutorial](kanali.io/tutorial).
+Try our [interactive tutorial](https://kanali.io/tutorial).
 
 ## Media
 
