@@ -33,5 +33,5 @@ vendor/
 *.mem
 
 # helm
-helm/charts/*.tgz
-helm/requirements.lock
+helm/kanali/charts
+helm/kanali/*.lock

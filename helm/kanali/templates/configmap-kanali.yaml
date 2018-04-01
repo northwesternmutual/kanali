@@ -1,0 +1,61 @@
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kanali-config
+  namespace: {{default "default" .Values.kanali.namespace}}
+data:
+  config.toml: |-
+    [plugins]
+    location = "/"
+
+    [plugins.apiKey]
+    decryption_key_file = "/etc/pki/key.pem"
+    header_key = {{default "apikey" .Values.kanali.gateway.plugins.apikey.headerKey}}
+
+    [process]
+    log_level = {{default "info" .Values.kanali.logLevel}}
+
+    [profiling]
+    insecure_port = {{.Values.kanali.profiler.insecurePort}}
+    insecure_bind_address = "{{.Values.kanali.profiler.insecureBindAddress}}"
+
+    [prometheus]
+    insecure_port = {{default 0 .Values.kanali.prometheus.insecurePort}}
+    insecure_bind_address = "{{default "0.0.0.0" .Values.kanali.prometheus.insecureBindAddress}}"
+    secure_port = {{default 0 .Values.kanali.prometheus.securePort}}
+    secure_bind_address = "{{default "0.0.0.0" .Values.kanali.prometheus.secureBindAddress}}"
+
+    [proxy]
+    enable_cluster_ip = true
+    header_mask_Value = omitted
+    enable_mock_responses = true
+    upstream_timeout = "0h0m10s"
+    mask_header_keys = [
+      {{default "apikey" .Values.kanali.gateway.plugins.apikey.headerKey}}
+    ]
+    tls_common_name_validation = true
+
+    [proxy.default_header_values]
+    x-canary-deployment = "stable"
+
+    [server]
+    insecure_port = {{default 0 .Values.kanali.gateway.insecurePort}}
+    insecure_bind_address = "{{default "0.0.0.0" .Values.kanali.gateway.insecureBindAddress}}"
+    secure_port = {{default 0 .Values.kanali.gateway.securePort}}
+    secure_bind_address = "{{default "0.0.0.0" .Values.kanali.gateway.secureBindAddress}}"
+
+    {{- if .Values.kanali.gateway.securePort }}
+    [server.tls]
+    cert_file = "/etc/pki/tls.crt"
+    key_file = "/etc/pki/tls.key"
+    {{- if .Values.kanali.gateway.tls.verifyClient }}
+    ca_file = "/etc/pki/tls.ca"
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.tags.tracing }}
+    [tracing]
+    config_file = "/etc/kanali/tracer.yaml"
+    {{- end }}

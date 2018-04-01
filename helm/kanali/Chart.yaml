@@ -1,0 +1,17 @@
+---
+
+appVersion: v2.0.0-rc1
+name: kanali
+version: 0.0.1
+description: A Kanali Helm chart for Kubernetes
+keywords:
+- kanali
+- ingress
+- api management
+home: https://github.com/northwesternmutual/kanali
+icon: https://github.com/northwesternmutual/kanali/blob/master/logo/logo_with_name.png?raw=true
+sources:
+- https://hub.docker.com/r/northwesternmutual/kanali/
+maintainers:
+- name: Frank B Greco Jr
+  email: frankgreco@northwesternmutual.com

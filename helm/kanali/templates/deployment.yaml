@@ -1,0 +1,91 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kanali
+  namespace: {{default "default" .Values.kanali.namespace}}
+spec:
+  selector:
+    matchLabels:
+      app: kanali
+  template:
+    metadata:
+      labels:
+        app: kanali
+    spec:
+      serviceAccountName: kanali
+      containers:
+      - name: kanali
+        imagePullPolicy: {{default "IfNotPresent" .Values.kanali.gateway.image.pullPolicy}}
+        image: {{.Values.kanali.gateway.image.name}}:{{default "latest" .Values.kanali.gateway.image.tag}}
+        command:
+        - /kanali
+        - start
+        ports:
+        - name: gateway
+          containerPort: {{.Values.kanali.gateway.securePort}}
+        - name: prometheus
+          containerPort: {{.Values.kanali.prometheus.insecurePort}}
+        - name: profiler
+          containerPort: {{.Values.kanali.profiler.insecurePort}}
+        {{- if .Values.kanali.gateway.securePort }}
+        readinessProbe:
+          tcpSocket:
+            port: {{.Values.kanali.gateway.securePort}}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: {{.Values.kanali.gateway.securePort}}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        {{- else }}
+        readinessProbe:
+          tcpSocket:
+            port: {{.Values.kanali.gateway.insecurePort}}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: {{.Values.kanali.gateway.insecurePort}}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        {{- end }}
+        volumeMounts:
+        - name: pki
+          mountPath: /etc/pki
+          readOnly: true
+        - name: config
+          mountPath: /etc/kanali
+      volumes:
+      - name: pki
+        projected:
+          sources:
+          {{- if .Values.kanali.gateway.securePort }}
+          - secret:
+              name: {{default "kanali-pki" .Values.kanali.gateway.tls.secretName}}
+              items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+              {{- if .Values.kanali.gateway.tls.verifyClient }}
+              - key: tls.ca
+                path: tls.ca
+              {{- end }}
+          {{- end }}
+          - secret:
+              name: {{default "kanali-rsa" .Values.kanali.gateway.rsa.secretName}}
+              items:
+              - key: key.pem
+                path: key.pem
+      - name: config
+        projected:
+          sources:
+          - configMap:
+              name: kanali-config
+          {{- if .Values.tags.tracing }}
+          - configMap:
+              name: kanali-tracer-config
+          {{- end }}

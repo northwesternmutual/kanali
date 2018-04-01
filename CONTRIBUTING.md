@@ -55,7 +55,8 @@ github.com/northwesternmutual/kanali
       main.go
   examples/           - Examples of all resources in the kanali.io API group
   hack/               - Miscellaneous project scripts
-  docs/               - Hugo assets for documentation site
+  hugo/               - Hugo assets for documentation site
+  docs/               - Rendered Hugo site in GitHub pages format
   helm/               - Helm chart for Kanali
   logo/               - Logo assets
   pkg/                - (See footnote 1)

@@ -1,0 +1,27 @@
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kanali-gateway
+  namespace: {{default "default" .Values.kanali.namespace}}
+  {{- if .Values.tags.metrics }}
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/scheme: 'http'
+    prometheus.io/path: '/metrics'
+    prometheus.io/port: '{{.Values.kanali.prometheus.insecurePort}}'
+  {{- end }}
+spec:
+  selector:
+    app: kanali
+  ports:
+  {{- if .Values.kanali.gateway.securePort }}
+  - name: https
+    port: {{.Values.kanali.gateway.securePort}}
+  {{- end }}
+  {{- if .Values.kanali.gateway.insecurePort }}
+  - name: http
+    port: {{.Values.kanali.gateway.insecurePort}}
+  {{- end }}
+  type: NodePort
