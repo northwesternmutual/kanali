@@ -19,14 +19,14 @@ Notable features:
 * **Robust API Management:** Fine grained API key authorization, JWT validation, quota policies, rate limiting, etc., these are some of the built in API management capabilities that Kanali provides.
 * **Analytics & Monitoring:** Kanali integrates with [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) to provide a robust set of metrics and a customizable dashboard so that you can monitor the performance of your APIs in real time.
 * **Production Ready:** [Northwestern Mutual](https://www.northwesternmutual.com/) uses Kanali in production at scale for all of its API management needs in their cloud native stack.
-* **Cloud Native Deployment:** Kanali is deployed using native Kubernetes constructs which is assisted by an included [Helm](https://helm.sh/) chart.
+* **Cloud Native Deployment:** Kanali is deployed using native Kubernetes constructs which is assisted by an included Helm [chart](https://github.com/northwesternmutual/kanali/tree/master/helm/kanali).
 * **Open Tracing Integration:** Kanali integrates with [OpenTracing](http://opentracing.io/), a vendor-neutral open standard for distributed tracing. [Jaeger](http://jaeger.readthedocs.io/en/latest/), a distributed tracing system, is supported out of the box to provide a visual representation for your traces.
 
 ## Getting Started
 
-Find complete documentation at [kanali.io](https://kanali.io).
+Find complete documentation at [kanali.io](kanali.io).
 
-Try our [interactive tutorial](https://kanali.io/tutorial).
+Try our [interactive tutorial](kanali.io/tutorial).
 
 ## Media
 
