@@ -92,7 +92,7 @@ ga('send', 'pageview');
   <div class="hide-sm" id="top">
     <div id="top-brand">
       <a href="/" title="home">
-        <img alt="Baseline" height="36" src="/img/kube/kanali.png" width="36">
+        <img alt="Baseline" height="36" src="/img/kanali.png" width="36">
       </a>
     </div>
     <nav id="top-nav-main">
@@ -146,7 +146,323 @@ headingSelector: 'h3'
 
     
 
-<h3 id="foo">foo</h3>
+<h3 id="usage">Usage</h3>
+
+<p>Each of the following flags can be set to a custom value. Values can also be set via environment variables and configuration files. The name of the corresponding environment variable is documented below. The order of precedence is as follows (each item has precedence over the item below it):</p>
+
+<p><span class="label focus">Flag</span>
+<br />
+<span class="label success">Environment Variable</span>
+<br />
+<span class="label warning">Config file</span></p>
+
+<p>To illustrate an example, let&rsquo;s assume we have a <code>config.toml</code> with the following value:</p>
+
+<pre><code>[kubernetes]
+kubeconfig = &quot;/usr/frank/.kube/config&quot;
+</code></pre>
+
+<p>If the <code>KANALI_KUBERNETES_KUBECONFIG</code> environment variable is set, it will tag precedence over the value in the <code>config.toml</code> file.</p>
+
+<p>If Kanali is started with the <code>--kubernetes.kubeconfig</code> flag, that will take the ultimate precedence over the previous two options.</p>
+
+<h3 id="configuration-flags">Configuration Flags</h3>
+
+<h4 id="kubernetes-kubeconfig"><code>--kubernetes.kubeconfig</code></h4>
+
+<p><strong>Description:</strong> Location of Kubernetes config file. This flag is most likely only applicable if running Kanali outside of a Kubernetes cluster.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_KUBERNETES_KUBECONFIG</code></p>
+
+<p><br /></p>
+
+<h4 id="plugins-location"><code>--plugins.location</code></h4>
+
+<p><strong>Description:</strong> Location of directory containing compiled shared object plugin files.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>/</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PLUGINS_LOCATION</code></p>
+
+<p><br /></p>
+
+<h4 id="plugins-apikey-decryption-key-file"><code>--plugins.apiKey.decryption_key_file</code></h4>
+
+<p><strong>Description:</strong> Location of PEM encoded RSA private key.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PLUGINS_APIKEY_DECRYPTION_KEY_FILE</code></p>
+
+<p><br /></p>
+
+<h4 id="plugins-apikey-header-key"><code>--plugins.apiKey.header_key</code></h4>
+
+<p><strong>Description:</strong> Name of HTTP header containing API key value.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>apikey</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PLUGINS_APIKEY_HEADER_KEY</code></p>
+
+<p><br /></p>
+
+<h4 id="process-log-level"><code>--process.log_level</code></h4>
+
+<p><strong>Description:</strong> Kanali logging level</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>info</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROCESS_LOG_LEVEL</code></p>
+
+<p><br /></p>
+
+<h4 id="profiling-insecure-port"><code>--profiling.insecure_port</code></h4>
+
+<p><strong>Description:</strong> TCP port value that the profiling server will bind to for an HTTP server.</p>
+
+<p><strong>Type:</strong> <em>number</em></p>
+
+<p><strong>Default:</strong> <code>9090</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROFILING_INSECURE_PORT</code></p>
+
+<p><br /></p>
+
+<h4 id="profiling-insecure-bind-address"><code>--profiling.insecure_bind_address</code></h4>
+
+<p><strong>Description:</strong> Bind address that the profiling server will bind to for an HTTP server.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>0.0.0.0</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROFILING_INSECURE_BIND_ADDRESS</code></p>
+
+<p><br /></p>
+
+<h4 id="prometheus-secure-port"><code>--prometheus.secure_port</code></h4>
+
+<p><strong>Description:</strong> TCP port value that the profiling server will bind to for an HTTPS server.</p>
+
+<p><strong>Type:</strong> <em>number</em></p>
+
+<p><strong>Default:</strong> <code>0</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROMETHEUS_SECURE_PORT</code></p>
+
+<p><br /></p>
+
+<h4 id="prometheus-insecure-port"><code>--prometheus.insecure_port</code></h4>
+
+<p><strong>Description:</strong> TCP port value that the profiling server will bind to for an HTTP server.</p>
+
+<p><strong>Type:</strong> <em>number</em></p>
+
+<p><strong>Default:</strong> <code>9000</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROMETHEUS_INSECURE_PORT</code></p>
+
+<p><br /></p>
+
+<h4 id="prometheus-insecure-bind-address"><code>--prometheus.insecure_bind_address</code></h4>
+
+<p><strong>Description:</strong> Bind address that the profiling server will bind to for an HTTP server.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>0.0.0.0</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROMETHEUS_INSECURE_BIND_ADDRESS</code></p>
+
+<p><br /></p>
+
+<h4 id="prometheus-secure-bind-address"><code>--prometheus.secure_bind_address</code></h4>
+
+<p><strong>Description:</strong> Bind address that the profiling server will bind to for an HTTPS server.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>0.0.0.0</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROMETHEUS_SECURE_BIND_ADDRESS</code></p>
+
+<p><br /></p>
+
+<h4 id="proxy-enable-cluster-ip"><code>--proxy.enable_cluster_ip</code></h4>
+
+<p><strong>Description:</strong> Whether or not to use the Kubernetes <code>clusterIP</code> instead of dns for Kubernetes upstream services.</p>
+
+<p><strong>Type:</strong> <em>boolean</em></p>
+
+<p><strong>Default:</strong> <code>true</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROXY_ENABLE_CLUSTER_IP</code></p>
+
+<p><br /></p>
+
+<h4 id="proxy-header-mask-value"><code>--proxy.header_mask_Value</code></h4>
+
+<p><strong>Description:</strong> When logging and tracing a request&rsquo;s headers, this flag specifies the value to use when masking certain header&rsquo;s values.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>omitted</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROXY_HEADER_MASK_VALUE</code></p>
+
+<p><br /></p>
+
+<h4 id="proxy-enable-mock-responses"><code>--proxy.enable_mock_responses</code></h4>
+
+<p><strong>Description:</strong> Whether or not to enable mock responses.</p>
+
+<p><strong>Type:</strong> <em>boolean</em></p>
+
+<p><strong>Default:</strong> <code>true</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROXY_ENABLE_MOCK_RESPONSES</code></p>
+
+<p><br /></p>
+
+<h4 id="proxy-upstream-timeout"><code>--proxy.upstream_timeout</code></h4>
+
+<p><strong>Description:</strong> Upstream timeout duration.</p>
+
+<p><strong>Type:</strong> <em>duration</em></p>
+
+<p><strong>Default:</strong> <code>0h0m10s</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROXY_UPSTREAM_TIMEOUT</code></p>
+
+<p><br /></p>
+
+<h4 id="proxy-mask-header-keys"><code>--proxy.mask_header_keys</code></h4>
+
+<p><strong>Description:</strong> When logging and tracing a request&rsquo;s headers, this flag specifies the headers (comma separated) whose values will be masked.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROXY_MASK_HEADER_KEYS</code></p>
+
+<p><br /></p>
+
+<h4 id="proxy-tls-common-name-validation"><code>--proxy.tls_common_name_validation</code></h4>
+
+<p><strong>Description:</strong> This flag specifies whether server name validation will be performed during an upstream TLS handshake.</p>
+
+<p><strong>Type:</strong> <em>boolean</em></p>
+
+<p><strong>Default:</strong> <code>true</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROXY_TLS_COMMON_NAME_VALIDATION</code></p>
+
+<p><br /></p>
+
+<h4 id="proxy-default-header-values"><code>--proxy.default_header_values</code></h4>
+
+<p><strong>Description:</strong> Default values for HTTP headers when using dynamic service discovery. Flag value takes the form <code>foo=bar,car=baz</code>.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_PROXY_DEFAULT_HEADER_VALUES</code></p>
+
+<p><br /></p>
+
+<h4 id="server-secure-port"><code>--server.secure_port</code></h4>
+
+<p><strong>Description:</strong> TCP port value that the profiling server will bind to for an HTTPS server.</p>
+
+<p><strong>Type:</strong> <em>number</em></p>
+
+<p><strong>Default:</strong> <code>0</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_SERVER_SECURE_PORT</code></p>
+
+<p><br /></p>
+
+<h4 id="server-insecure-port"><code>--server.insecure_port</code></h4>
+
+<p><strong>Description:</strong> TCP port value that the profiling server will bind to for an HTTP server.</p>
+
+<p><strong>Type:</strong> <em>number</em></p>
+
+<p><strong>Default:</strong> <code>8080</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_SERVER_INSECURE_PORT</code></p>
+
+<p><br /></p>
+
+<h4 id="server-insecure-bind-address"><code>--server.insecure_bind_address</code></h4>
+
+<p><strong>Description:</strong> Bind address that the profiling server will bind to for an HTTP server.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>0.0.0.0</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_SERVER_INSECURE_BIND_ADDRESS</code></p>
+
+<p><br /></p>
+
+<h4 id="server-secure-bind-address"><code>--server.secure_bind_address</code></h4>
+
+<p><strong>Description:</strong> Bind address that the profiling server will bind to for an HTTPS server.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Default:</strong> <code>0.0.0.0</code></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_SERVER_SECURE_BIND_ADDRESS</code></p>
+
+<p><br /></p>
+
+<h4 id="server-tls-cert-file"><code>--server.tls.cert_file</code></h4>
+
+<p><strong>Description:</strong> Location of the PEM encoded TLS certificate for the Kanali gateway server.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_SERVER_TLS_CERT_FILE</code></p>
+
+<p><br /></p>
+
+<h4 id="server-tls-key-file"><code>--server.tls.key_file</code></h4>
+
+<p><strong>Description:</strong> Location of the PEM encoded TLS private key for the Kanali gateway server.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_SERVER_TLS_KEY_FILE</code></p>
+
+<p><br /></p>
+
+<h4 id="server-tls-ca-file"><code>--server.tls.ca_file</code></h4>
+
+<p><strong>Description:</strong> Location of the PEM encoded TLS certificate authority for the Kanali gateway server. This is specified when validating the identity of the client.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_SERVER_TLS_CA_FILE</code></p>
+
+<p><br /></p>
+
+<h4 id="tracing-config-file"><code>--tracing.config_file</code></h4>
+
+<p><strong>Description:</strong> Location of the Jaeger config file in <code>yaml</code> format. Configuration details can be found <a href="https://godoc.org/github.com/uber/jaeger-client-go/config#Configuration">here</a>.</p>
+
+<p><strong>Type:</strong> <em>string</em></p>
+
+<p><strong>Environment Variable:</strong> <code>KANALI_TRACING_CONFIG_FILE</code></p>
+
+<p><br /></p>
 
 
     

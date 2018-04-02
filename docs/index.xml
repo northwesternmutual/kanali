@@ -35,15 +35,6 @@ Details    Code Status Description     00 404 coming soon   01 500 coming soon  
     </item>
     
     <item>
-      <title>Plugins</title>
-      <link>/docs/v2/plugins/</link>
-      <pubDate>Mon, 10 Apr 2017 16:41:16 +0100</pubDate>
-      
-      <guid>/docs/v2/plugins/</guid>
-      <description> Coming soon </description>
-    </item>
-    
-    <item>
       <title>Tools</title>
       <link>/docs/v2/tools/</link>
       <pubDate>Mon, 10 Apr 2017 16:41:16 +0100</pubDate>
@@ -58,7 +49,9 @@ Details    Code Status Description     00 404 coming soon   01 500 coming soon  
       <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
       
       <guid>/docs/v2/flags/</guid>
-      <description> foo </description>
+      <description>Usage Each of the following flags can be set to a custom value. Values can also be set via environment variables and configuration files. The name of the corresponding environment variable is documented below. The order of precedence is as follows (each item has precedence over the item below it):
+Flag Environment Variable Config file
+To illustrate an example, let&amp;rsquo;s assume we have a config.toml with the following value:</description>
     </item>
     
     <item>
