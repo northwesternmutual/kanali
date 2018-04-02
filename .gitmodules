@@ -1,0 +1,3 @@
+[submodule "hugo/themes/kube"]
+	path = hugo/themes/kube
+	url = https://github.com/jeblister/kube.git
