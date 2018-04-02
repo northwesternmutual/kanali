@@ -3,11 +3,6 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/docs/v2/quick-start/</loc>
-    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/docs/v2/configuration/</loc>
     <lastmod>2017-04-10T16:41:54+01:00</lastmod>
   </url>
@@ -23,8 +18,18 @@
   </url>
   
   <url>
-    <loc>/docs/v2/contributing/</loc>
-    <lastmod>2017-04-10T16:41:54+01:00</lastmod>
+    <loc>/docs/v2/tools/</loc>
+    <lastmod>2017-04-10T16:41:16+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/docs/v2/flags/</loc>
+    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/docs/v2/security/</loc>
+    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
   </url>
   
   <url>
@@ -44,13 +49,13 @@
   
   <url>
     <loc>/docs/</loc>
-    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
+    <lastmod>2017-04-10T16:41:54+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/</loc>
-    <lastmod>2017-04-10T16:43:08+01:00</lastmod>
+    <lastmod>2017-04-10T16:41:54+01:00</lastmod>
   </url>
   
   <url>

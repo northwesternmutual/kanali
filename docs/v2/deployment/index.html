@@ -146,7 +146,77 @@ headingSelector: 'h3'
 
     
 
-<h3 id="coming-soon">Coming soon</h3>
+<h3 id="helm">Helm</h3>
+
+<blockquote>
+<p>This is the recommended deployment option.</p>
+</blockquote>
+
+<p><a href="https://helm.sh">Helm</a> is a package manager for Kubernetes. Helm makes it easy to deploy all the components of an application and its dependencies.</p>
+
+<p>Kanali&rsquo;s Helm chart can be found <a href="https://github.com/northwesternmutual/kanali/tree/master/helm/kanali">here</a>. Before demonstrating how to use this chart, let&rsquo;s bootstrap a local Kubernetes environment so that you can follow along.</p>
+
+<pre><code># Start a local Kubernetes cluster.
+$ minikube start --kubernetes-version=v1.9.4 --feature-gates CustomResourceValidation=true
+
+# Update a potentially stale kubeconfig context.
+$ minikube update-context
+Kubeconfig IP correctly configured, pointing at 192.168.64.24
+
+# Verify that our cluster is ready.
+$ kubectl get nodes
+NAME       STATUS    ROLES     AGE       VERSION
+minikube   Ready     &lt;none&gt;    17h       v1.9.4
+</code></pre>
+
+<p>Now that we have have a running cluster, the Kanali Helm chart can be deployed by executing the following commands.</p>
+
+<pre><code># Retrieve a local copy of Kanali. This is necessary because Kanali does not
+# yet live in a chart repository.
+$ git clone https://github.com/northwesternmutual/kanali.git
+
+# To ensure that Helm has the appropriate permissions to deploy our chart,
+# we need to create an RBAC policy and a service account.
+$ kubectl apply -f kanali/hack/helm-rbac.yaml
+
+# Bootstrap helm using the service account created in the previous step.
+$ helm init --service-account tiller
+
+# One of the optional dependencies for Kanali is Jaeger, whose chart lives in the following repo.
+$ helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
+
+# Install any required dependencies.
+$ helm dep up kanali/helm/kanali
+
+# Install the Kanali chart (note the relative path to the chart).
+$ helm install --name kanali kanali/helm/kanali
+</code></pre>
+
+<p>Kanali is now deployed. Note that the default set of Helm values were used. You will probably want to overwrite some of these values for your deployment. All of the values that you can customize can be found <a href="https://github.com/northwesternmutual/kanali/tree/master/helm/kanali">here</a>. Instructions on how to set your custom values can be found <a href="https://docs.helm.sh/developing_charts/#charts">here</a>.</p>
+
+<p>We can wait for it to complete its bootstrapping process with the following command.</p>
+
+<pre><code>$ kubectl rollout status -w deployment/kanali --namespace=default
+</code></pre>
+
+<p>Now that Kanali is ready to be used, we can test our installation with the following command. By default, Kanali will bootstrap itself with a set of self signed certificates which is why our https request is insecure.</p>
+
+<pre><code>$ curl --insecure $(minikube service kanali-gateway --url --format=&quot;https://{{.IP}}:{{.Port}}&quot;)
+{
+  &quot;status&quot;: 404,
+  &quot;message&quot;: &quot;No ApiProxy resource was not found that matches the request.&quot;,
+  &quot;code&quot;: 0,
+  &quot;details&quot;: &quot;Visit https://kanali.io/docs/v2/errorcodes for more details.&quot;
+}
+</code></pre>
+
+<p><strong>Configurations!</strong> You have successfully bootstrapped Kanali using Helm. To learn more, visit the <a href="https://kanali.io/tutorial">tutorial</a>.</p>
+
+<h3 id="manual">Manual</h3>
+
+<p>If you like to deploy Kanali a different way, there are just a few things you need to know.</p>
+
+<p>Kanali&rsquo;s artifact is a <a href="https://www.docker.com/">Docker</a> image. When starting this container, you will need to specify your own configuration arguments if you would like to overwrite the defaults. This can be accomplished by specifying one or more flags, environment variables and/or configuration file updates. Specific details for these configuration items can be found <a href="https://kanali.io/docs/v2/flags">here</a>.</p>
 
 
     

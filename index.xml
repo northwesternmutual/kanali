@@ -6,19 +6,10 @@
     <description>Recent content on Kanali</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 10 Apr 2017 16:43:08 +0100</lastBuildDate>
+    <lastBuildDate>Mon, 10 Apr 2017 16:41:54 +0100</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
-    
-    <item>
-      <title>Quick Start</title>
-      <link>/docs/v2/quick-start/</link>
-      <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
-      
-      <guid>/docs/v2/quick-start/</guid>
-      <description> Coming soon </description>
-    </item>
     
     <item>
       <title>Configuration</title>
@@ -53,12 +44,30 @@ Details    Code Status Description     00 404 coming soon   01 500 coming soon  
     </item>
     
     <item>
-      <title>Contributing</title>
-      <link>/docs/v2/contributing/</link>
-      <pubDate>Mon, 10 Apr 2017 16:41:54 +0100</pubDate>
+      <title>Tools</title>
+      <link>/docs/v2/tools/</link>
+      <pubDate>Mon, 10 Apr 2017 16:41:16 +0100</pubDate>
       
-      <guid>/docs/v2/contributing/</guid>
-      <description> Getting Started Testing Project Structure Imports Grouping Making a Change License </description>
+      <guid>/docs/v2/tools/</guid>
+      <description> Coming soon </description>
+    </item>
+    
+    <item>
+      <title>Flags</title>
+      <link>/docs/v2/flags/</link>
+      <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
+      
+      <guid>/docs/v2/flags/</guid>
+      <description> foo </description>
+    </item>
+    
+    <item>
+      <title>Security</title>
+      <link>/docs/v2/security/</link>
+      <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
+      
+      <guid>/docs/v2/security/</guid>
+      <description> foo </description>
     </item>
     
     <item>
@@ -67,7 +76,10 @@ Details    Code Status Description     00 404 coming soon   01 500 coming soon  
       <pubDate>Mon, 10 Apr 2017 16:41:54 +0100</pubDate>
       
       <guid>/docs/v2/deployment/</guid>
-      <description> Coming soon </description>
+      <description>Helm  This is the recommended deployment option.
+ Helm is a package manager for Kubernetes. Helm makes it easy to deploy all the components of an application and its dependencies.
+Kanali&amp;rsquo;s Helm chart can be found here. Before demonstrating how to use this chart, let&amp;rsquo;s bootstrap a local Kubernetes environment so that you can follow along.
+# Start a local Kubernetes cluster. $ minikube start --kubernetes-version=v1.9.4 --feature-gates CustomResourceValidation=true # Update a potentially stale kubeconfig context.</description>
     </item>
     
   </channel>
