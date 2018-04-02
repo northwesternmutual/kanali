@@ -4,7 +4,8 @@ title = "Kanali"
 theme = "kube"
 description = "Kanali is a lightweight, Kubernetes native API management gateway that together with network policies provide a robust, open source solution to Kubernetes ingress, API management, and API security."
 Paginate = 4
-publishDir = "../docs"
+publishDir = "../public"
+googleAnalytics = "UA-77739027-2"
 
 [[menu.main]]
     name = "Docs"

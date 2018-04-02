@@ -35,3 +35,6 @@ vendor/
 # helm
 helm/kanali/charts
 helm/kanali/*.lock
+
+# github pages
+public/
