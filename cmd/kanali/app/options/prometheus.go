@@ -45,7 +45,7 @@ var (
 	FlagPrometheusServerInsecurePort = flags.Flag{
 		Long:  "prometheus.insecure_port",
 		Short: "",
-		Value: 0,
+		Value: 9000,
 		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
 	// FlagPrometheusServerInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests

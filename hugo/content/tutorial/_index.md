@@ -8,7 +8,11 @@ bref="foo"
 type = "tutorial"
 +++
 
-<div class="example">
+<div class="message focus" data-component="message">
+  Tutorial coming soon! Check back in a little bit.
+</div>
+
+<!-- <div class="example">
 
 <nav id="tabs" class="tabs" data-component="tabs">
     <ul class="hide">
@@ -53,4 +57,4 @@ spec:
 <button class="float-right button outline big" onclick="$('#tabs').tabs('next');">next</button>
 </div>
 
-</div>
+</div> -->

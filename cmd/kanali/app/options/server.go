@@ -48,7 +48,7 @@ var (
 	FlagServerInsecurePort = flags.Flag{
 		Long:  "server.insecure_port",
 		Short: "",
-		Value: 0,
+		Value: 8080,
 		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests

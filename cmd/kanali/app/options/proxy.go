@@ -57,7 +57,7 @@ var (
 	FlagProxyEnableMockResponses = flags.Flag{
 		Long:  "proxy.enable_mock_responses",
 		Short: "",
-		Value: false,
+		Value: true,
 		Usage: "Enables Kanali's mock responses feature. Read the documentation for more information.",
 	}
 	// FlagProxyUpstreamTimeout sets the length of upstream timeout
