@@ -40,7 +40,7 @@ func (e Error) String() string {
 }
 
 const (
-	moreDetails = "Visit https://kanali.io/docs/errorcodes for more details."
+	moreDetails = "Visit https://kanali.io/docs/v2/errorcodes for more details."
 )
 
 var (
