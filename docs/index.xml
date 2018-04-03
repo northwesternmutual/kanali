@@ -19,8 +19,9 @@
       <guid>/docs/v2/configuration/</guid>
       <description>Introduction The goal of this section is to provide an introduction to each of Kanali&amp;rsquo;s configurable resources. More in depth documentation for each resource can be found here.
 
-The ApiProxy Resource This resource declaratively defines how your upstream services are
-  --- apiVersion: kanali.io/v2 kind: ApiProxy metadata: name: example namespace: default spec: source: path: /example target: service: name: serviceName port: 8080    --- apiVersion: kanali.io/v2 kind: ApiProxy metadata: name: example namespace: default spec: source: path: /example target: service: port: 8080 labels: - name: key value: value - name: deploy header: x-foo-deployment    --- apiVersion: kanali.</description>
+The ApiProxy Resource This resource declaratively defines how your upstream services are reached. There are 3 main sections that can be configured for this resource.
+source how your proxy will be accessible
+target how your upstream service will be reached</description>
     </item>
     
     <item>
@@ -52,6 +53,15 @@ Details    Code Status Description     00 404 coming soon   01 500 coming soon  
       <description>Usage Each of the following flags can be set to a custom value. Values can also be set via environment variables and configuration files. The name of the corresponding environment variable is documented below. The order of precedence is as follows (each item has precedence over the item below it):
 Flag Environment Variable Config file
 To illustrate an example, let&amp;rsquo;s assume we have a config.toml with the following value:</description>
+    </item>
+    
+    <item>
+      <title>Plugins</title>
+      <link>/docs/v2/plugins/</link>
+      <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
+      
+      <guid>/docs/v2/plugins/</guid>
+      <description> Coming Soon </description>
     </item>
     
     <item>
