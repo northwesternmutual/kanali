@@ -40,6 +40,10 @@ install:
 	(dep version | grep $(DEP_VERSION)) || (mkdir -p $(GOPATH)/bin && DEP_RELEASE_TAG=$(DEP_VERSION) curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh && dep version)
 	dep ensure -v -vendor-only # assumes updated Gopkg.lock
 
+.PHONY: docs
+docs:
+	./hack/gh-pages.sh
+
 .PHONY: fmt
 fmt:
 	@$(GOFMT) -e -s -l -w $(ALL_SRC)

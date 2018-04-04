@@ -313,7 +313,110 @@ spec:
 
 </div>
 
+##### SSL
+
+The presence of the <code>ssl</code> field specifies that tls will be used to secure the connection between Kanali and an upstream service. To configure this option, just specify the secret name containing the tls assets. An example is demonstrated below.
+
+<div class="example">
+<pre>
+---
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
+  name: example
+spec:
+  source:
+    path: /foo
+  target:
+    path: /bar
+    backend:
+      endpoint: https://foo.bar.com:8443
+    ssl:
+      secretName: my-secret</pre>
+</div>
+
+Let's assume that the specified secret above is structured like the example below. Note the presence of the <code>kanali.io/enabled</code> annotation. This annotation declares that Kanali is <i>allowed</i> to use this secret (this is due to Kubernetes RBAC limitations).
+
+Note the data fields present in this secret. If your upstream service wants to perform client side validation, the tls certificate/key pair as specified in the <code>tls.crt</code> and <code>tls.key</code> fields will be send to the server.
+
+<div class="example">
+<pre>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+  annotations:
+    kanali.io/enabled: 'true'
+type: Opaque
+data:
+  tls.crt: <tls crt data>
+  tls.key: <tls key data>
+  tls.ca: <tls ca data></pre>
+</div>
+
+If you want to customize the name of the data keys, you can specify your custom key via an annotation. For example, if you want to use the data key <code>crt.pem</code> instead of <code>tls.crt</code>, you would need to include the annotation <code>kanali.io/cert: 'crt.pem'</code>. A complete list of override annotations for the data fields are listed below.
+
+<table>
+  <tr><td>Data field</td><td>Annotation</td></tr>
+  <tr><td><code>tls.ca</code></td><td><code>kanali.io/ca: 'custom.ca.value'</code></td></tr>
+  <tr><td><code>tls.crt</code></td><td><code>kanali.io/cert: 'custom.cert.value'</code></td></tr>
+  <tr><td><code>tls.key</code></td><td><code>kanali.io/key: 'custom.key.value'</code></td></tr>
+<table>
+
+#### Plugins
+
+Plugins enable the execution of encapsulated logic on a per proxy basis. Plugins are configured as a list of different plugins that you want executed for a specific <code>ApiProxy</code>. Each plugin in the list requires the name of the plugin and an optional config field specifying proxy level configuration items that will be passed to the plugin upon execution.
+
+For a complete list of available plugins and their corresponding documentation, visit the [documentation for plugins](/docs/v2/plugins).
+
+<div class="example">
+<pre>
+---
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
+  name: example
+spec:
+  source:
+    path: /foo
+  target:
+    path: /bar
+    backend:
+      endpoint: https://foo.bar.com:8443
+  plugins:
+  - name: apikey
+    config:
+      bindingName: my-binding
+  - name: jwt
+    config:
+      audienceID: abc123</pre>
+
+</div>
+
 ### The `ApiKey` Resource
+
+This resource configures API keys. Note that by itself, an <code>ApiKey</code> resource does not grant permission to any <code>ApiProxy</code>. Permissions are granted via the <code>ApiKeyBinding</code> resource (the next resource we will explore).
+
+> Note that this resource is <i>cluster scoped</i>. This means that resources of this kind are unique per cluster, not per namespace.
+
+Each <code>ApiKey</code> resource specifies a list of revisions. A revision is a specific API key value that may either be active or inactive. The value is both rsa encrypted and base64 encoded. This format caters well for API key rotation.
+
+Below is an example of an <code>ApiKey</code> resource.
+
+<div class="example">
+<pre>
+---
+apiVersion: kanali.io/v2
+kind: ApiKey
+metadata:
+  name: example
+revisions:
+- data: aGVsbG8=
+  status: Active
+- data: d29ybGQ=
+  status: Inactive
+</div>
 
 ### The `ApiKeyBinding` Resource
 
