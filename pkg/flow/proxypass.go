@@ -347,7 +347,7 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 				zap.String(tags.KubernetesSecretName, step.proxy.Spec.Target.SSL.SecretName),
 				zap.String(tags.KubernetesSecretNamespace, step.proxy.GetNamespace()),
 			)
-			return nil, errors.ErrorBadGateway
+			return nil, errors.ErrorKubernetesSecretError
 		}
 
 		if !metav1.HasAnnotation(secret.ObjectMeta, tags.AnnotationKanaliEnabled) || secret.ObjectMeta.GetAnnotations()[tags.AnnotationKanaliEnabled] != "true" {
@@ -355,7 +355,7 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 				zap.String(tags.KubernetesSecretName, step.proxy.Spec.Target.SSL.SecretName),
 				zap.String(tags.KubernetesSecretNamespace, step.proxy.GetNamespace()),
 			)
-			return nil, errors.ErrorBadGateway
+			return nil, errors.ErrorKubernetesSecretError
 		}
 
 		cert, key := getCertKey(secret)
@@ -366,7 +366,7 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 				zap.String(tags.KubernetesSecretName, step.proxy.Spec.Target.SSL.SecretName),
 				zap.String(tags.KubernetesSecretNamespace, step.proxy.GetNamespace()),
 			)
-			return nil, errors.ErrorBadGateway
+			return nil, errors.ErrorKubernetesSecretError
 		}
 
 		if cert != nil && key != nil && len(cert) > 0 && len(key) > 0 {

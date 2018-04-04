@@ -12,10 +12,10 @@ data:
 
     [plugins.apiKey]
     decryption_key_file = "/etc/pki/key.pem"
-    header_key = {{default "apikey" .Values.kanali.gateway.plugins.apikey.headerKey}}
+    header_key = {{default "apikey" .Values.kanali.gateway.plugins.apikey.headerKey | quote}}
 
     [process]
-    log_level = {{default "info" .Values.kanali.logLevel}}
+    log_level = {{default "info" .Values.kanali.logLevel  | quote}}
 
     [profiling]
     insecure_port = {{.Values.kanali.profiler.insecurePort}}
@@ -29,11 +29,11 @@ data:
 
     [proxy]
     enable_cluster_ip = true
-    header_mask_Value = omitted
+    header_mask_Value = "omitted"
     enable_mock_responses = true
     upstream_timeout = "0h0m10s"
     mask_header_keys = [
-      {{default "apikey" .Values.kanali.gateway.plugins.apikey.headerKey}}
+      {{default "apikey" .Values.kanali.gateway.plugins.apikey.headerKey | quote}}
     ]
     tls_common_name_validation = true
 

@@ -8,9 +8,13 @@ bref="foo"
 type = "tutorial"
 +++
 
-<div class="example">
+<div class="message focus" data-component="message">
+  Tutorial coming soon! Check back in a little bit.
+</div>
 
-<nav id="tabs" class="tabs" data-component="tabs">
+<!-- <div class="example">
+
+<nav class="pagination pager align-center">
     <ul class="hide">
         <li class="hidden active"><a href="#tab1">one</a></li>
         <li><a href="#tab2">two</a></li>
@@ -53,4 +57,4 @@ spec:
 <button class="float-right button outline big" onclick="$('#tabs').tabs('next');">next</button>
 </div>
 
-</div>
+</div> -->
