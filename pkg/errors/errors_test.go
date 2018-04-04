@@ -30,3 +30,11 @@ func TestError(t *testing.T) {
 	e := Error{404, "message", 1, "details"}
 	assert.Equal(t, "message", e.Error())
 }
+
+func TestNew(t *testing.T) {
+	err := New(0, 1, "foo")
+	assert.Equal(t, 1, err.Status)
+	assert.Equal(t, 0, err.Code)
+	assert.Equal(t, "foo", err.Message)
+	assert.Equal(t, "Visit https://kanali.io/docs/v2/errorcodes/#00 for more details.", err.Details)
+}

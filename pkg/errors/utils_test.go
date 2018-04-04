@@ -37,10 +37,10 @@ func TestToJSON(t *testing.T) {
 
 	e, d = ToJSON(untyped)
 	assert.Equal(t, e, ErrorUnknown)
-	assert.Equal(t, d, []byte(`{"status":500,"message":"An unknown error occured.","code":1,"details":"`+moreDetails+`"}`))
+	assert.Equal(t, d, []byte(`{"status":500,"message":"An unknown error occurred.","code":1,"details":"Visit https://kanali.io/docs/v2/errorcodes/#01 for more details."}`))
 
 	e, d = ToJSON(nil)
 	assert.Equal(t, e, ErrorUnknown)
-	assert.Equal(t, d, []byte(`{"status":500,"message":"An unknown error occured.","code":1,"details":"`+moreDetails+`"}`))
+	assert.Equal(t, d, []byte(`{"status":500,"message":"An unknown error occurred.","code":1,"details":"Visit https://kanali.io/docs/v2/errorcodes/#01 for more details."}`))
 
 }

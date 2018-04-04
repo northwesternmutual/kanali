@@ -14,7 +14,7 @@ type = "tutorial"
 
 <!-- <div class="example">
 
-<nav id="tabs" class="tabs" data-component="tabs">
+<nav class="pagination pager align-center">
     <ul class="hide">
         <li class="hidden active"><a href="#tab1">one</a></li>
         <li><a href="#tab2">two</a></li>
