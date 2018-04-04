@@ -315,6 +315,28 @@ spec:
 
 ### The `ApiKey` Resource
 
+This resource configures API keys. Note that by itself, an <code>ApiKey</code> resource does not grant permission to any <code>ApiProxy</code>. Permissions are granted via the <code>ApiKeyBinding</code> resource (the next resource we will explore).
+
+> Note that this resource is <i>cluster scoped</i>. This means that resources of this kind are unique per cluster, not per namespace.
+
+Each <code>ApiKey</code> resource specifies a list of revisions. A revision is a specific API key value that may either be active or inactive. The value is both rsa encrypted and base64 encoded. This format caters well for API key rotation.
+
+Below is an example of an <code>ApiKey</code> resource.
+
+<div class="example">
+<pre>
+---
+apiVersion: kanali.io/v2
+kind: ApiKey
+metadata:
+  name: example
+revisions:
+- data: aGVsbG8=
+  status: Active
+- data: d29ybGQ=
+  status: Inactive
+</div>
+
 ### The `ApiKeyBinding` Resource
 
 ### The `MockTarget` Resource
