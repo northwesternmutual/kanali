@@ -154,7 +154,7 @@ headingSelector: 'h3'
   &quot;status&quot;: 404,
   &quot;message&quot;: &quot;No ApiProxy resource was not found that matches the request.&quot;,
   &quot;code&quot;: 0,
-  &quot;details&quot;: &quot;Visit https://kanali.io/docs/errorcodes for more details.&quot;
+  &quot;details&quot;: &quot;Visit https://kanali.io/docs/v2/errorcodes/#00 for more details.&quot;
 }
 </code></pre>
 
@@ -162,113 +162,160 @@ headingSelector: 'h3'
 
 <h3 id="details">Details</h3>
 
-<table>
-<thead>
-<tr>
-<th>Code</th>
-<th>Status</th>
-<th>Description</th>
-</tr>
-</thead>
+<h4 id="00"><code>00</code></h4>
 
-<tbody>
-<tr>
-<td>00</td>
-<td>404</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Status:</strong> <span class="label error">404</span></p>
 
-<tr>
-<td>01</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Message:</strong> <em>No ApiProxy resource was not found that matches the request.</em></p>
 
-<tr>
-<td>02</td>
-<td>404</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Description:</strong> Kanali was unable to match the given request to an <code>ApiProxy</code> resource at the time the request occurred.</p>
 
-<tr>
-<td>03</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Troubleshooting:</strong> Verify the presence of the <code>ApiProxy</code> resource inside of the Kubernetes cluster that Kanali is deployed to. In addition, verify that the path in the request is prefixed with the source path of the <code>ApiProxy</code> resource.</p>
 
-<tr>
-<td>04</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<h4 id="01"><code>01</code></h4>
 
-<tr>
-<td>05</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Status:</strong> <span class="label error">500</span></p>
 
-<tr>
-<td>06</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Message:</strong> <em>An unknown error occurred.</em></p>
 
-<tr>
-<td>07</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Description:</strong> Something went wrong. However, no details are known at this time.</p>
 
-<tr>
-<td>08</td>
-<td>502</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Troubleshooting:</strong> Reach out to your Kanali administrator for further troubleshooting.</p>
 
-<tr>
-<td>09</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<h4 id="02"><code>02</code></h4>
 
-<tr>
-<td>10</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Status:</strong> <span class="label error">404</span></p>
 
-<tr>
-<td>11</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Message:</strong> <em>No MockTarget resource was not found that matches the request.</em></p>
 
-<tr>
-<td>12</td>
-<td>500</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Description:</strong> Kanali was unable to find the <code>MockTarget</code> resource that was specified in the <code>ApiProxy</code> resource that matched this request.</p>
 
-<tr>
-<td>13</td>
-<td>403</td>
-<td><em>coming soon</em></td>
-</tr>
+<p><strong>Troubleshooting:</strong> Verify that the name of the <code>MockTarget</code> that is configured in matching <code>ApiProxy</code> resource exists in the same namespace as the <code>ApiProxy</code> resource.</p>
 
-<tr>
-<td>14</td>
-<td>401</td>
-<td><em>coming soon</em></td>
-</tr>
+<h4 id="03"><code>03</code></h4>
 
-<tr>
-<td>15</td>
-<td>429</td>
-<td><em>coming soon</em></td>
-</tr>
-</tbody>
-</table>
+<p><strong>Status:</strong> <span class="label error">500</span></p>
+
+<p><strong>Message:</strong> <em>Could not open or load plugin.</em></p>
+
+<p><strong>Description:</strong> Kanali was unable to open or load one of the plugins specified in the <code>ApiProxy</code> resource that matched this request.</p>
+
+<p><strong>Troubleshooting:</strong> Verify that there is a <code>.so</code> file for each corresponding plugin used by the matching <code>ApiProxy</code>. Look for these files in the location specified by the <code>&ndash;plugins.location</code> configuration flag. This value can be found in one of the very first logs that Kanali logs upon startup.</p>
+
+<h4 id="04"><code>04</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">500</span></p>
+
+<p><strong>Message:</strong> <em>Could not lookup plugin symbol.</em></p>
+
+<p><strong>Description:</strong> Kanali attempted to execute one of the plugins configured on the <code>ApiProxy</code> resource that matched this request. However, when attempting to load one of the plugins, no exported variable, <code>Plugin</code> was found.</p>
+
+<p><strong>Troubleshooting:</strong> Confirm that all of the plugins that the matching <code>ApiProxy</code> resource is using export the variable <code>Plugin</code>. If you find that one of the plugins does not do this, reach out to your Kanali administrator.</p>
+
+<h4 id="05"><code>05</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">500</span></p>
+
+<p><strong>Message:</strong> <em>Plugin does not implement the correct interface.</em></p>
+
+<p><strong>Description:</strong> Kanali attempted to execute one of the plugins configured on the <code>ApiProxy</code> resource that matched this request. However, when attempting to execute the plugin, it was determined that the plugin did not implement the required interface. This interface can be found <a href="https://godoc.org/github.com/northwesternmutual/kanali/pkg/plugin#Plugin">here</a>.</p>
+
+<p><strong>Troubleshooting:</strong> Confirm that all of the plugins that the matching <code>ApiProxy</code> resource is using implement the interface described above. If you find that one of the plugins do not implement this interface, reach out to your Kanali administrator.</p>
+
+<h4 id="06"><code>06</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">500</span></p>
+
+<p><strong>Message:</strong> <em>Could not retrieve Kubernetes secret.</em></p>
+
+<p><strong>Description:</strong> Kanali attempted to retrieve the secret specified in the <code>ssl</code> field of the <code>ApiProxy</code> resource that matched this request. Due to one of a few reasons, there was an issue retrieving and/or using this secret.</p>
+
+<p><strong>Troubleshooting:</strong> First, verify that there is a secret that has the same name as the one specified in the <code>ApiProxy</code> resource that matched this request. Note that this secret must also live in the same namespace as the <code>ApiProxy</code> resource. If the secret exists, verify that the <code>kanali.io/enabled: &lsquo;true&rsquo;</code> annotation is present on the secret. Next, verify that the secret contains the correct data fields. Documentation about what fields are required can be found <a href="/docs/v2/configuration/#ssl">here</a>. If everything checks out, contact your Kanali administrator and let them know that Kanali may be having trouble connecting to the Kubernetes API server.</p>
+
+<h4 id="07"><code>07</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">500</span></p>
+
+<p><strong>Message:</strong> <em>Could not create x509 key pair.</em></p>
+
+<p><strong>Description:</strong> Kanali found a valid secret as configured in the <code>ApiProxy</code> resource that matched this request. However, while attempting to parse the public/private key pair from the data in this secret, an error occurred.</p>
+
+<p><strong>Troubleshooting:</strong> Validate that the public/private key pair that is specified in the above described secret is valid. One way to verify this is to use the following commands to generate <code>md5</code> hashes. If the hashes are different, your key pair is not valid.</p>
+
+<pre>
+openssl x509 -noout -modulus -in server.crt | openssl md5
+openssl rsa -noout -modulus -in server.key | openssl md5
+</pre>
+
+<h4 id="08"><code>08</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">502</span></p>
+
+<p><strong>Message:</strong> <em>Could not get a valid or any response from the upstream server.</em></p>
+
+<p><strong>Description:</strong> Kanali attempted to issue is request to an upstream service. However, something with this request went wrong. The issue could stem from the configuration of the <code>ApiProxy</code> resource matching this request, from the upstream service, from the networking in between Kanali and the upstream, or something else.</p>
+
+<p><strong>Troubleshooting:</strong> First, verify that you are able to access the upstream service without Kanali (e.g. using curl from a busybox pod). If this is successful, make sure that the <code>ApiProxy</code> resource mathing this request is correctly configured so that it will route traffic to the expected upstream service. You might also ensure that any networking related items such as route tables, firewalls, etc. are correctly configured.</p>
+
+<h4 id="09"><code>09</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">500</span></p>
+
+<p><strong>Message:</strong> <em>Could not retrieve Kubernetes services.</em></p>
+
+<p><strong>Description:</strong> Kanali determined that for this request, the upstream service is a Kubernetes service. However, when attempting to find out which service it might be, an error occurred. This does not imply that Kanali is unable to communicate with the Kubernetes API server. However, it does imply that Kanali has an issue.</p>
+
+<p><strong>Troubleshooting:</strong> Try recycling Kanali&rsquo;s pod(s) and reach out to your Kanali administrator.</p>
+
+<h4 id="10"><code>10</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">500</span></p>
+
+<p><strong>Message:</strong> <em>Could not retrieve any matching Kubernetes services.</em></p>
+
+<p><strong>Description:</strong> Kanali determined that for this request, the upstream service is a Kubernetes service. However, when attempting to find out which service it might be, none were found.</p>
+
+<p><strong>Troubleshooting:</strong> Review the documentation for configuring the <code>ApiProxy</code> resource <a href="/docs/v2/configuration">here</a>. If static service discovery is being used, verify that a Kubernetes service in the same namespace as the matching <code>ApiProxy</code> resource exists. If dynamic service discovery is being used, verify that there exists a service in that same namespace that contains the dynamic labels.</p>
+
+<h4 id="11"><code>11</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">500</span></p>
+
+<p><strong>Message:</strong> <em>Plugin threw a runtime error.</em></p>
+
+<p><strong>Description:</strong> Kanali attempted to execute one of the plugins configured on the <code>ApiProxy</code> resource that matched this request. However, when attempting to execute one of the plugins, a runtime error was thrown causing the plugin to crash.</p>
+
+<p><strong>Troubleshooting:</strong> Contact your Kanali administrator as a bug in a plugin has been identified.</p>
+
+<h4 id="12"><code>12</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">403</span></p>
+
+<p><strong>Message:</strong> <em>My lips are sealed.</em></p>
+
+<p><strong>Description:</strong> All I can say is that something went wrong.</p>
+
+<p><strong>Troubleshooting:</strong> Like the message says, <em>My lips are sealed.</em>&hellip;</p>
+
+<h4 id="13"><code>13</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">401</span></p>
+
+<p><strong>Message:</strong> <em>Api key is not authorized.</em></p>
+
+<p><strong>Description:</strong> Kanali was able to associate this request to a matching <code>ApiProxy</code> resource. In addition, the API key plugin was able to find an <code>ApiKeyBinding</code> resource that was configured in the <code>ApiProxy</code> resource. However, in the <code>ApiKeyBinding</code> resource, access it not granted to the API key that was used for the type of request performed.</p>
+
+<p><strong>Troubleshooting:</strong> Verify that the API key used does not have permission to perform the request. If the <code>ApiKeyBinding</code> resource grants the API key used access to the specific request performed, contact your Kanali administrator for further troubleshooting.</p>
+
+<h4 id="14"><code>14</code></h4>
+
+<p><strong>Status:</strong> <span class="label error">429</span></p>
+
+<p><strong>Message:</strong> <em>The Api key you are using has exceeded its rate limit.</em></p>
+
+<p><strong>Description:</strong> Kanali was able to associate this request to a matching <code>ApiProxy</code> resource. In addition, the API key plugin was able to find an <code>ApiKeyBinding</code> resource that was configured in the <code>ApiProxy</code> resource. However, the API key used has exceeded its rate limit or quota policy.</p>
+
+<p><strong>Troubleshooting:</strong> Verify that the API key used did indeed exceed its rate limit or quota. If the rate limit or quota was not exceeded, contact your Kanali administrator for further troubleshooting.</p>
 
 
     

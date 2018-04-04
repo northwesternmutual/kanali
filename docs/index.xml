@@ -30,9 +30,10 @@ target how your upstream service will be reached</description>
       <pubDate>Mon, 10 Apr 2017 16:41:54 +0100</pubDate>
       
       <guid>/docs/v2/errorcodes/</guid>
-      <description> Introduction If you&amp;rsquo;re visiting this page, changes are that Kanali has given you a response similar to this one:
-{ &amp;quot;status&amp;quot;: 404, &amp;quot;message&amp;quot;: &amp;quot;No ApiProxy resource was not found that matches the request.&amp;quot;, &amp;quot;code&amp;quot;: 0, &amp;quot;details&amp;quot;: &amp;quot;Visit https://kanali.io/docs/errorcodes for more details.&amp;quot; }  As promised in that response, the table below contains detailed information about each unique error code.
-Details    Code Status Description     00 404 coming soon   01 500 coming soon   02 404 coming soon   03 500 coming soon   04 500 coming soon   05 500 coming soon   06 500 coming soon   07 500 coming soon   08 502 coming soon   09 500 coming soon   10 500 coming soon   11 500 coming soon   12 500 coming soon   13 403 coming soon   14 401 coming soon   15 429 coming soon    </description>
+      <description>Introduction If you&amp;rsquo;re visiting this page, changes are that Kanali has given you a response similar to this one:
+{ &amp;quot;status&amp;quot;: 404, &amp;quot;message&amp;quot;: &amp;quot;No ApiProxy resource was not found that matches the request.&amp;quot;, &amp;quot;code&amp;quot;: 0, &amp;quot;details&amp;quot;: &amp;quot;Visit https://kanali.io/docs/v2/errorcodes/#00 for more details.&amp;quot; }  As promised in that response, the table below contains detailed information about each unique error code.
+Details 00 Status: 404
+Message: No ApiProxy resource was not found that matches the request.</description>
     </item>
     
     <item>
@@ -41,7 +42,7 @@ Details    Code Status Description     00 404 coming soon   01 500 coming soon  
       <pubDate>Mon, 10 Apr 2017 16:41:16 +0100</pubDate>
       
       <guid>/docs/v2/tools/</guid>
-      <description> Coming soon </description>
+      <description> kanalictl </description>
     </item>
     
     <item>
@@ -61,7 +62,9 @@ To illustrate an example, let&amp;rsquo;s assume we have a config.toml with the 
       <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
       
       <guid>/docs/v2/plugins/</guid>
-      <description> Coming Soon </description>
+      <description>API Key This plugin performs API key validation for all requests matching a certain ApiProxy. The plugin will ensure that the course and fine grained permissions that are specified in the given ApiKeyBinding resource are enforced. For details on how to configure the ApiKeyBinding resource, read the corresponding documentation here.
+Configuration  FieldTypeDescription bindingNamestringName of ApiKeyBinding resource, in the same namespace as the ApiProxy, to be used. 
+Example  plugins: - name: apikey config: bindingName: my-binding JWT  coming soon</description>
     </item>
     
     <item>
@@ -70,7 +73,7 @@ To illustrate an example, let&amp;rsquo;s assume we have a config.toml with the 
       <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
       
       <guid>/docs/v2/security/</guid>
-      <description> foo </description>
+      <description> Coming Soon </description>
     </item>
     
     <item>

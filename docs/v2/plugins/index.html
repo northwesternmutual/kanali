@@ -146,7 +146,30 @@ headingSelector: 'h3'
 
     
 
-<h3 id="coming-soon">Coming Soon</h3>
+<h3 id="api-key">API Key</h3>
+
+<p>This plugin performs API key validation for all requests matching a certain <code>ApiProxy</code>. The plugin will ensure that the course and fine grained permissions that are specified in the given <code>ApiKeyBinding</code> resource are enforced. For details on how to configure the <code>ApiKeyBinding</code> resource, read the corresponding documentation <a href="/docs/v2/configuration/#the-apikeybinding-resource">here</a>.</p>
+
+<h4 id="configuration">Configuration</h4>
+
+<p><table>
+  <tr><td>Field</td><td>Type</td><td>Description</td></tr>
+  <tr><td><code>bindingName</code></td><td><code>string</code></td><td>Name of <code>ApiKeyBinding</code> resource, in the same namespace as the <code>ApiProxy</code>, to be used.</td></tr>
+<table></p>
+
+<h4 id="example">Example</h4>
+
+<pre>
+plugins:
+- name: apikey
+  config:
+    bindingName: my-binding</pre>
+
+<h3 id="jwt">JWT</h3>
+
+<blockquote>
+<p>coming soon</p>
+</blockquote>
 
 
     
