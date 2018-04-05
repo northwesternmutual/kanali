@@ -42,7 +42,8 @@ Message: No ApiProxy resource was not found that matches the request.</descripti
       <pubDate>Mon, 10 Apr 2017 16:41:16 +0100</pubDate>
       
       <guid>/docs/v2/tools/</guid>
-      <description> kanalictl </description>
+      <description>Kanalictl Kanalictl is a command line utility that provides tooling for Kanali.
+Installation # replace &#39;darwin&#39; and &#39;amd64&#39; with your OS and ARCH $ curl -O https://s3.amazonaws.com/kanalictl/release/$(curl -s https://s3.amazonaws.com/kanalictl/release/latest.txt)/darwin/amd64/kanalictl $ chmod +x kanalictl $ sudo mv kanalictl /usr/local/bin/kanalictl $ kanalictl -h  Usage $ kanalictl -h cli interface for kanali Usage: kanalictl [command] Available Commands: apikey performs operations on API key resources version version  Commands apikey Description: Performs utility operations on ApiKey resources.</description>
     </item>
     
     <item>
