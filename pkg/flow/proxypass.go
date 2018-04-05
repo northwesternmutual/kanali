@@ -372,7 +372,7 @@ func (step proxyPassStep) configureTLS() (*tls.Config, error) {
 		if cert != nil && key != nil && len(cert) > 0 && len(key) > 0 {
 			pair, err := tls.X509KeyPair(cert, key)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Info(err.Error())
 				return nil, errors.ErrorCreateKeyPair
 			}
 			config.Certificates = []tls.Certificate{pair}
