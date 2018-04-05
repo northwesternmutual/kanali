@@ -69,15 +69,6 @@ Example  plugins: - name: apikey config: bindingName: my-binding JWT  coming soo
     </item>
     
     <item>
-      <title>Security</title>
-      <link>/docs/v2/security/</link>
-      <pubDate>Mon, 10 Apr 2017 16:43:08 +0100</pubDate>
-      
-      <guid>/docs/v2/security/</guid>
-      <description> Coming Soon </description>
-    </item>
-    
-    <item>
       <title>Deployment</title>
       <link>/docs/v2/deployment/</link>
       <pubDate>Mon, 10 Apr 2017 16:41:54 +0100</pubDate>
