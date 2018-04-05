@@ -411,14 +411,116 @@ apiVersion: kanali.io/v2
 kind: ApiKey
 metadata:
   name: example
-revisions:
-- data: aGVsbG8=
-  status: Active
-- data: d29ybGQ=
-  status: Inactive
+spec:
+  revisions:
+  - data: aGVsbG8=
+    status: Active
+  - data: d29ybGQ=
+    status: Inactive
 </div>
 
 ### The `ApiKeyBinding` Resource
 
+This resource is responsible for granting course and fine grained permissions to a list of <code>ApiKey</code> resources. Toggle below to learn more about the different options available to you when granting permissions.
+
+<div class="example">
+  <nav id="livetabs" data-component="tabs" data-live=".tab-live2"></nav>
+
+  <div id="tab-coarse-grained" data-title="Coarse-grained" class="tab-live2">
+  <pre>
+---
+apiVersion: kanali.io/v2
+kind: ApiKeyBinding
+metadata:
+  name: example
+spec:
+  keys:
+  - name: key-one
+    defaultRule:
+      global: true
+  - name: key-two
+    defaultRule:
+      granular:
+        verbs:
+        - GET
+  </pre>
+
+  Each API key has a default rule. This can be thought of as coarse grained validation for this API key. This default rule can either grant global access or granular access. Global access will grant an API key access to all http methods whereas granular access allows for only a subset of methods to be granted.
+  </div>
+
+  <div id="tab-fine-grained" data-title="Fine-grained" class="tab-live2">
+  <pre>
+&#8209;&#8209;&#8209;
+apiVersion: kanali.io/v2
+kind: ApiKeyBinding
+metadata:
+  name: example
+spec:
+  keys:
+  - name: key-one
+    defaultRule:
+      global: true
+    subpaths:
+    - path: /foo
+      rule:
+        global: false
+  </pre>
+
+  Fine-grained access is granted with the <code>subpaths</code> field. This field contains a list of <b>target paths</b> that define a higher priority rule than that of the default rule.
+
+  Let's explore an example using the above <code>ApiKeyBinding</code> resource.
+
+  Suppose a request is made with the <i>key-one</i> API key. Let's also assume that the upstream service will see a request with the path <code>/foo/bar</code>. When Kanali is evaluating which rule is the highest priority, it will do a regular expression match with each path in the subpaths list. If a match is found, that rule is used. If no item in the subpaths list matches, the default rule is used. Hence, in this example, the first item in the subpath list will be a match and hence no access will be granted.
+  </div>
+
+  <div id="tab-rate-limiting" data-title="Rate limiting" class="tab-live2">
+  <pre>
+&#8209;&#8209;&#8209;
+apiVersion: kanali.io/v2
+kind: ApiKeyBinding
+metadata:
+  name: example
+spec:
+  keys:
+  - name: key-one
+    defaultRule:
+      global: true
+    rate:
+      amount: 5
+      unit: second
+  </pre>
+  <i><b>NOTE:</b> the implementation for rate limiting is not present in</i> <code>v2.0.0</code><i>. It will however be present in an upcoming minor release.</i>
+
+  It you would like to limit the rate of calls a specific API key is allowed to make to a specific upstream service, simplify configure the <code>rate</code> field.
+  </div>
+</div>
+
 ### The `MockTarget` Resource
+
+This resource allows for the configuration of a fake response that will be sent back to the client if the <code>ApiProxy</code> resource that matches a request specifies that a <code>MockTarget</code> should be used as the upstream service.
+
+To configure a <code>MockTarget</code> resource, configure a list of routes. Think of it as if you were developing a an upstream service and each route in your middleware should represent a route item in a <code>MockTarget</code> resource.
+
+<div class="example">
+<pre>
+&#8209;&#8209;&#8209;
+apiVersion: kanali.io/v2
+kind: MockTarget
+metadata:
+  name: example
+spec:
+  routes:
+  - path: /foo
+    status: 200
+    methods:
+    - GET
+    - POST
+    headers:
+      Content-Type: application/json
+    body: |-
+      {
+        "foo": "bar"
+      }
+</pre>
+</div>
 
