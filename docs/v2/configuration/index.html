@@ -452,6 +452,87 @@ spec:
 
 </div>
 
+<h5 id="ssl-1">SSL</h5>
+
+<p>The presence of the <code>ssl</code> field specifies that tls will be used to secure the connection between Kanali and an upstream service. To configure this option, just specify the secret name containing the tls assets. An example is demonstrated below.</p>
+
+<div class="example">
+<pre>
+---
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
+  name: example
+spec:
+  source:
+    path: /foo
+  target:
+    path: /bar
+    backend:
+      endpoint: https://foo.bar.com:8443
+    ssl:
+      secretName: my-secret</pre>
+</div>
+
+<p>Let&rsquo;s assume that the specified secret above is structured like the example below. Note the presence of the <code>kanali.io/enabled</code> annotation. This annotation declares that Kanali is <i>allowed</i> to use this secret (this is due to Kubernetes RBAC limitations).</p>
+
+<p>Note the data fields present in this secret. If your upstream service wants to perform client side validation, the tls certificate/key pair as specified in the <code>tls.crt</code> and <code>tls.key</code> fields will be send to the server.</p>
+
+<div class="example">
+<pre>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+  annotations:
+    kanali.io/enabled: 'true'
+type: Opaque
+data:
+  tls.crt: <tls crt data>
+  tls.key: <tls key data>
+  tls.ca: <tls ca data></pre>
+</div>
+
+<p>If you want to customize the name of the data keys, you can specify your custom key via an annotation. For example, if you want to use the data key <code>crt.pem</code> instead of <code>tls.crt</code>, you would need to include the annotation <code>kanali.io/cert: &lsquo;crt.pem&rsquo;</code>. A complete list of override annotations for the data fields are listed below.</p>
+
+<p><table>
+  <tr><td>Data field</td><td>Annotation</td></tr>
+  <tr><td><code>tls.ca</code></td><td><code>kanali.io/ca: &lsquo;custom.ca.value&rsquo;</code></td></tr>
+  <tr><td><code>tls.crt</code></td><td><code>kanali.io/cert: &lsquo;custom.cert.value&rsquo;</code></td></tr>
+  <tr><td><code>tls.key</code></td><td><code>kanali.io/key: &lsquo;custom.key.value&rsquo;</code></td></tr>
+<table></p>
+
+<h4 id="plugins-1">Plugins</h4>
+
+<p>Plugins enable the execution of encapsulated logic on a per proxy basis. Plugins are configured as a list of different plugins that you want executed for a specific <code>ApiProxy</code>. Each plugin in the list requires the name of the plugin and an optional config field specifying proxy level configuration items that will be passed to the plugin upon execution.</p>
+
+<p>For a complete list of available plugins and their corresponding documentation, visit the <a href="/docs/v2/plugins">documentation for plugins</a>.</p>
+
+<div class="example">
+<pre>
+---
+apiVersion: kanali.io/v2
+kind: ApiProxy
+metadata:
+  name: example
+spec:
+  source:
+    path: /foo
+  target:
+    path: /bar
+    backend:
+      endpoint: https://foo.bar.com:8443
+  plugins:
+  - name: apikey
+    config:
+      bindingName: my-binding
+  - name: jwt
+    config:
+      audienceID: abc123</pre>
+
+</div>
+
 <h3 id="the-apikey-resource">The <code>ApiKey</code> Resource</h3>
 
 <p>This resource configures API keys. Note that by itself, an <code>ApiKey</code> resource does not grant permission to any <code>ApiProxy</code>. Permissions are granted via the <code>ApiKeyBinding</code> resource (the next resource we will explore).</p>
@@ -471,16 +552,118 @@ apiVersion: kanali.io/v2
 kind: ApiKey
 metadata:
   name: example
-revisions:
-- data: aGVsbG8=
-  status: Active
-- data: d29ybGQ=
-  status: Inactive
+spec:
+  revisions:
+  - data: aGVsbG8=
+    status: Active
+  - data: d29ybGQ=
+    status: Inactive
 </div>
 
 <h3 id="the-apikeybinding-resource">The <code>ApiKeyBinding</code> Resource</h3>
 
+<p>This resource is responsible for granting course and fine grained permissions to a list of <code>ApiKey</code> resources. Toggle below to learn more about the different options available to you when granting permissions.</p>
+
+<div class="example">
+  <nav id="livetabs" data-component="tabs" data-live=".tab-live2"></nav>
+
+  <div id="tab-coarse-grained" data-title="Coarse-grained" class="tab-live2">
+  <pre>
+---
+apiVersion: kanali.io/v2
+kind: ApiKeyBinding
+metadata:
+  name: example
+spec:
+  keys:
+  - name: key-one
+    defaultRule:
+      global: true
+  - name: key-two
+    defaultRule:
+      granular:
+        verbs:
+        - GET
+  </pre>
+
+  Each API key has a default rule. This can be thought of as coarse grained validation for this API key. This default rule can either grant global access or granular access. Global access will grant an API key access to all http methods whereas granular access allows for only a subset of methods to be granted.
+  </div>
+
+<p><div id="tab-fine-grained" data-title="Fine-grained" class="tab-live2">
+  <pre>
+&#8209;&#8209;&#8209;
+apiVersion: kanali.io/v2
+kind: ApiKeyBinding
+metadata:
+  name: example
+spec:
+  keys:
+  - name: key-one
+    defaultRule:
+      global: true
+    subpaths:
+    - path: /foo
+      rule:
+        global: false
+  </pre></p>
+
+<p>Fine-grained access is granted with the <code>subpaths</code> field. This field contains a list of <b>target paths</b> that define a higher priority rule than that of the default rule.</p>
+
+<p>Let&rsquo;s explore an example using the above <code>ApiKeyBinding</code> resource.</p>
+
+<p>Suppose a request is made with the <i>key-one</i> API key. Let&rsquo;s also assume that the upstream service will see a request with the path <code>/foo/bar</code>. When Kanali is evaluating which rule is the highest priority, it will do a regular expression match with each path in the subpaths list. If a match is found, that rule is used. If no item in the subpaths list matches, the default rule is used. Hence, in this example, the first item in the subpath list will be a match and hence no access will be granted.
+  </div></p>
+
+<p><div id="tab-rate-limiting" data-title="Rate limiting" class="tab-live2">
+  <pre>
+&#8209;&#8209;&#8209;
+apiVersion: kanali.io/v2
+kind: ApiKeyBinding
+metadata:
+  name: example
+spec:
+  keys:
+  - name: key-one
+    defaultRule:
+      global: true
+    rate:
+      amount: 5
+      unit: second
+  </pre>
+  <i><b>NOTE:</b> the implementation for rate limiting is not present in</i> <code>v2.0.0</code><i>. It will however be present in an upcoming minor release.</i></p>
+
+<p>It you would like to limit the rate of calls a specific API key is allowed to make to a specific upstream service, simplify configure the <code>rate</code> field.
+  </div>
+</div></p>
+
 <h3 id="the-mocktarget-resource">The <code>MockTarget</code> Resource</h3>
+
+<p>This resource allows for the configuration of a fake response that will be sent back to the client if the <code>ApiProxy</code> resource that matches a request specifies that a <code>MockTarget</code> should be used as the upstream service.</p>
+
+<p>To configure a <code>MockTarget</code> resource, configure a list of routes. Think of it as if you were developing a an upstream service and each route in your middleware should represent a route item in a <code>MockTarget</code> resource.</p>
+
+<div class="example">
+<pre>
+&#8209;&#8209;&#8209;
+apiVersion: kanali.io/v2
+kind: MockTarget
+metadata:
+  name: example
+spec:
+  routes:
+  - path: /foo
+    status: 200
+    methods:
+    - GET
+    - POST
+    headers:
+      Content-Type: application/json
+    body: |-
+      {
+        "foo": "bar"
+      }
+</pre>
+</div>
 
 
     
