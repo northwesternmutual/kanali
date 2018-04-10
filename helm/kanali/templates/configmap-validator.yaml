@@ -3,17 +3,10 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: kanali-config
-  namespace: {{default "default" .Values.kanali.namespace}}
+  name: kanali-validator-config
+  namespace: {{default "default" .Values.kanali.validator.namespace}}
 data:
   config.toml: |-
-    [plugins]
-    location = "/"
-
-    [plugins.apiKey]
-    decryption_key_file = "/etc/pki/key.pem"
-    header_key = {{default "apikey" .Values.kanali.gateway.plugins.apikey.headerKey | quote}}
-
     [process]
     log_level = {{default "info" .Values.kanali.logLevel  | quote}}
 
@@ -26,19 +19,6 @@ data:
     insecure_bind_address = "{{default "0.0.0.0" .Values.kanali.gateway.prometheus.insecureBindAddress}}"
     secure_port = {{default 0 .Values.kanali.gateway.prometheus.securePort}}
     secure_bind_address = "{{default "0.0.0.0" .Values.kanali.gateway.prometheus.secureBindAddress}}"
-
-    [proxy]
-    enable_cluster_ip = true
-    header_mask_Value = "omitted"
-    enable_mock_responses = true
-    upstream_timeout = "0h0m10s"
-    mask_header_keys = [
-      {{default "apikey" .Values.kanali.gateway.plugins.apikey.headerKey | quote}}
-    ]
-    tls_common_name_validation = true
-
-    [proxy.default_header_values]
-    x-canary-deployment = "stable"
 
     [server]
     insecure_port = {{default 0 .Values.kanali.gateway.insecurePort}}
@@ -53,9 +33,4 @@ data:
     {{- if .Values.kanali.gateway.tls.verifyClient }}
     ca_file = "/etc/pki/tls.ca"
     {{- end }}
-    {{- end }}
-
-    {{- if .Values.tags.tracing }}
-    [tracing]
-    config_file = "/etc/kanali/tracer.yaml"
     {{- end }}

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,21 +22,26 @@ package options
 
 import (
 	"github.com/northwesternmutual/kanali/pkg/flags"
-	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
 func init() {
-	KanaliGatewayOptions.Add(
-		FlagProcessLogLevel,
+	KanaliValidatorOptions.Add(
+		flags.FlagServerSecurePort,
+		flags.FlagServerInsecurePort,
+		flags.FlagServerInsecureBindAddress,
+		flags.FlagServerSecureBindAddress,
+		flags.FlagServerTLSCertFile,
+		flags.FlagServerTLSKeyFile,
+		flags.FlagServerTLSCaFile,
+		flags.FlagProcessLogLevel,
+		flags.FlagProfilingInsecurePort,
+		flags.FlagProfilingInsecureBindAddress,
+		flags.FlagKubernetesKubeConfig,
+		flags.FlagPrometheusServerSecurePort,
+		flags.FlagPrometheusServerInsecurePort,
+		flags.FlagPrometheusServerInsecureBindAddress,
+		flags.FlagPrometheusServerSecureBindAddress,
 	)
 }
 
-var (
-	// FlagProcessLogLevel sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'
-	FlagProcessLogLevel = flags.Flag{
-		Long:  "process.log_level",
-		Short: "l",
-		Value: log.InfoLevel,
-		Usage: "Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'.",
-	}
-)
+var KanaliValidatorOptions = flags.NewFlagSet()

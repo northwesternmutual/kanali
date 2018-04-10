@@ -1,0 +1,67 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kanali-validator
+  namespace: {{default "default" .Values.kanali.validator.namespace}}
+spec:
+  selector:
+    matchLabels:
+      app: kanali-validator
+  template:
+    metadata:
+      labels:
+        app: kanali-validator
+    spec:
+      serviceAccountName: kanali-validator
+      containers:
+      - name: validator
+        imagePullPolicy: {{default "IfNotPresent" .Values.kanali.validator.image.pullPolicy}}
+        image: {{.Values.kanali.validator.image.name}}:{{default "latest" .Values.kanali.validator.image.tag}}
+        command:
+        - /validator
+        - start
+        ports:
+        - name: validator
+          containerPort: {{.Values.kanali.validator.securePort}}
+        - name: prometheus
+          containerPort: {{.Values.kanali.validator.prometheus.insecurePort}}
+        - name: profiler
+          containerPort: {{.Values.kanali.validator.profiler.insecurePort}}
+        readinessProbe:
+          tcpSocket:
+            port: {{.Values.kanali.validator.securePort}}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: {{.Values.kanali.validator.securePort}}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        volumeMounts:
+        - name: pki
+          mountPath: /etc/pki
+          readOnly: true
+        - name: config
+          mountPath: /etc/kanali
+      volumes:
+      - name: pki
+        projected:
+          sources:
+          - secret:
+              name: {{default "kanali-pki" .Values.kanali.validator.tls.secretName}}
+              items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+              {{- if .Values.kanali.validator.tls.verifyClient }}
+              - key: tls.ca
+                path: tls.ca
+              {{- end }}
+      - name: config
+        projected:
+          sources:
+          - configMap:
+              name: kanali-validator-config

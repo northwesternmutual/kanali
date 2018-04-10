@@ -18,24 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package options
+package flags
 
 import (
-	"github.com/northwesternmutual/kanali/pkg/flags"
+	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
-func init() {
-	KanaliGatewayOptions.Add(
-		FlagKubernetesKubeConfig,
-	)
-}
-
 var (
-	// FlagKubernetesKubeConfig specifies path to kubeconfig file which is only needed if outside a cluster.
-	FlagKubernetesKubeConfig = flags.Flag{
-		Long:  "kubernetes.kubeconfig",
-		Short: "",
-		Value: "",
-		Usage: "Absolute path to kubeconfig file if outside of a cluster.",
+	// FlagProcessLogLevel sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'
+	FlagProcessLogLevel = Flag{
+		Long:  "process.log_level",
+		Short: "l",
+		Value: log.InfoLevel,
+		Usage: "Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'.",
 	}
 )

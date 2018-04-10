@@ -1,0 +1,27 @@
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kanali-validator
+  namespace: {{default "default" .Values.kanali.validator.namespace}}
+  {{- if .Values.tags.metrics }}
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/scheme: 'http'
+    prometheus.io/path: '/metrics'
+    prometheus.io/port: '{{.Values.kanali.validator.prometheus.insecurePort}}'
+  {{- end }}
+spec:
+  selector:
+    app: kanali-validator
+  ports:
+  {{- if .Values.kanali.validator.securePort }}
+  - name: https
+    port: {{.Values.kanali.validator.securePort}}
+  {{- end }}
+  {{- if .Values.kanali.validator.insecurePort }}
+  - name: http
+    port: {{.Values.kanali.validator.insecurePort}}
+  {{- end }}
+  type: NodePort

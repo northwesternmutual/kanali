@@ -10,5 +10,5 @@ spec:
     app: kanali
   ports:
   - name: profiler
-    port: {{.Values.kanali.profiler.insecurePort}}
+    port: {{.Values.kanali.gateway.profiler.insecurePort}}
   type: NodePort

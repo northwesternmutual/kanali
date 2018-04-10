@@ -26,9 +26,9 @@ spec:
         - name: gateway
           containerPort: {{.Values.kanali.gateway.securePort}}
         - name: prometheus
-          containerPort: {{.Values.kanali.prometheus.insecurePort}}
+          containerPort: {{.Values.kanali.gateway.prometheus.insecurePort}}
         - name: profiler
-          containerPort: {{.Values.kanali.profiler.insecurePort}}
+          containerPort: {{.Values.kanali.gateway.profiler.insecurePort}}
         {{- if .Values.kanali.gateway.securePort }}
         readinessProbe:
           tcpSocket:
