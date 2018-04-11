@@ -44,7 +44,7 @@ spec:
           mountPath: /etc/pki
           readOnly: true
         - name: config
-          mountPath: /etc/kanali
+          mountPath: /etc/validator
       volumes:
       - name: pki
         projected:

@@ -20,8 +20,4 @@ spec:
   - name: https
     port: {{.Values.kanali.validator.securePort}}
   {{- end }}
-  {{- if .Values.kanali.validator.insecurePort }}
-  - name: http
-    port: {{.Values.kanali.validator.insecurePort}}
-  {{- end }}
-  type: NodePort
+  type: ClusterIP
