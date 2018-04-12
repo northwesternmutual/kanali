@@ -105,8 +105,9 @@ func (v *validation) isValidApiProxy(apiproxy *v2.ApiProxy) error {
 					if apiproxy.Spec.Source.Path == curr.Spec.Source.Path {
 						// BEGIN CASE 2.a.ii.I.1
 						if len(curr.Spec.Source.VirtualHost) > 0 {
-							logger.Info("There exists an ApiProxy with the same source.Path that has a non-empty source.VirtualHost")
-							return errors.New("There exists an ApiProxy with the same source.Path that has a non-empty source.VirtualHost")
+							message := fmt.Sprintf("The ApiProxy you are attempting to update is not virtual host specific. There exists an ApiProxy named %s in the %s namespace with the same source path that is already virtual host agnostic. Hence, applying this ApiProxy would overwrite it.", curr.GetName(), curr.GetNamespace())
+							logger.Info(message)
+							return errors.New(message)
 						}
 						// END CASE 2.a.ii.I.1
 					}
@@ -122,8 +123,9 @@ func (v *validation) isValidApiProxy(apiproxy *v2.ApiProxy) error {
 					}
 					if apiproxy.Spec.Source.Path == curr.Spec.Source.Path {
 						if curr.Spec.Source.VirtualHost == apiproxy.Spec.Source.VirtualHost {
-							logger.Info("There exists another ApiProxy with the same source.Path and an empty source.VirtualHost")
-							return errors.New("There exists another ApiProxy with the same source.Path and an empty source.VirtualHost")
+							message := fmt.Sprintf("The ApiProxy you are attempting to update has the same source path and virtual host as the ApiProxy named %s in the %s namespace. Hence, applying this ApiProxy would overwrite it.", curr.GetName(), curr.GetNamespace())
+							logger.Info(message)
+							return errors.New(message)
 						}
 						return nil
 					}
@@ -139,8 +141,9 @@ func (v *validation) isValidApiProxy(apiproxy *v2.ApiProxy) error {
 	if apiproxy.GetName() != case2DirtyBit.GetName() || apiproxy.GetNamespace() != case2DirtyBit.GetNamespace() {
 		// BEGIN CASE 2.b.i
 		if len(apiproxy.Spec.Source.VirtualHost) < 1 {
-			logger.Info("The source.VirtualHost is equal to the empty string")
-			return errors.New("The source.VirtualHost is equal to the empty string")
+			message := fmt.Sprintf("The ApiProxy you are attempting to update is not virtual host specific. There exists an ApiProxy named %s in the %s namespace with the same source path that is already virtual host agnostic. Hence, applying this ApiProxy would overwrite it.", case2DirtyBit.GetName(), case2DirtyBit.GetNamespace())
+			logger.Info(message)
+			return errors.New(message)
 		}
 		// END CASE 2.b.i
 
@@ -149,13 +152,15 @@ func (v *validation) isValidApiProxy(apiproxy *v2.ApiProxy) error {
 			for _, curr := range list.Items {
 				if apiproxy.Spec.Source.Path == curr.Spec.Source.Path {
 					if len(curr.Spec.Source.VirtualHost) < 1 {
-						logger.Info("The source.VirtualHost is equal to the empty string")
-						return errors.New("The source.VirtualHost is equal to the empty string")
+						message := fmt.Sprintf("The ApiProxy you are attempting to update is virtual host specific. There exists an ApiProxy named %s in the %s namespace with the same source path that is already virtual host agnostic. Hence, applying this ApiProxy would overwrite it.", curr.GetName(), curr.GetNamespace())
+						logger.Info(message)
+						return errors.New(message)
 					}
 
 					if curr.Spec.Source.VirtualHost == apiproxy.Spec.Source.VirtualHost {
-						logger.Info("There exists another ApiProxy with the same source.Path and source.VirtualHost")
-						return errors.New("There exists another ApiProxy with the same source.Path and source.VirtualHost")
+						message := fmt.Sprintf("The ApiProxy you are attempting to update is unique to the %s virtual host. There exists an ApiProxy named %s in the %s namespace with the same source path and virtual host. Hence, applying this ApiProxy would overwrite it.", apiproxy.Spec.Source.VirtualHost, curr.GetName(), curr.GetNamespace())
+						logger.Info(message)
+						return errors.New(message)
 					}
 				}
 			}
