@@ -30,6 +30,7 @@ jobs:
   - stage: test
     go: '1.10'
     script:
+    - which go && echo $GOPATH && go env
     - make install_ci
     - make cover
     - travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true
