@@ -28,9 +28,11 @@ stages:
 jobs:
   include:
   - stage: test
-    go: '1.10'
+    language: go
+    go:
+    - '1.10'
     script:
-    - which go && echo $GOPATH && go env
+    - which go && go version && echo $GOPATH && go env
     - make install_ci
     - make cover
     - travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true
@@ -40,7 +42,9 @@ jobs:
     script:
     - echo "todo"
   - stage: distro
-    go: '1.10'
+    language: go
+    go:
+    - '1.10'
     script:
     - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
     - unzip awscli-bundle.zip
