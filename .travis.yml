@@ -1,16 +1,16 @@
 sudo: required
 
-language: go
+# language: go
+#
+# matrix:
+#   include:
+#   - go: '1.10'
+#     env:
+#     - TESTS=true
+#     - COVERAGE=true
 
-matrix:
-  include:
-  - go: '1.10'
-    env:
-    - TESTS=true
-    - COVERAGE=true
-
-services:
-- docker
+# services:
+# - docker
 
 env:
   global:
@@ -18,16 +18,44 @@ env:
   - secure: kqPYySZHukKk79buA26c9staHoX7roMpp13aalARyDKoz8qdfgcCLMfBkAjI3OpIYRpqZHQlla67YBCrBgINA6ahoUm4AQF2nK7P7ll3ZM/VHwjxY6DY+wN7sSlMotBwu6qSkoCs34U8Vd1c6uCjNmDlGGgeTAY2WlLAnHNAe8FVNlYKX3fb2MOolKeLuZLh36VPbrF1409WyUFU79C20CMfN5X0sq13xOqwWJHjOaYF+wnEoOsFGt62lqGmBWXEwTOfFRKwVrYleDhR+LU0onW7k12KHydrAcI4j41mDfi0GUmLYPgCdyoffcyPNbdu6ZjmDEhF3ZSl9QXVoaSaEDIOinnbi9WJvmTRa1pE8rvB2VVz+pGB1V24aYMKZreSdkuCtFfJ1UxklW88312NcItPBVJbInY4Kqn/gMA9BwFMtzCD+pBpR06r83P3iOFs7zvzxTnuuBQ+TJUMw8PQBaRlgrDyrFY/9ORHgSGCSrquPg6nVMcxvHQoU4ugkC6fbSqnivq7TEYHTfKcUEVpLqqK+pdfB1qqCo2nAtfsViRPV2c5BXg5JyJT0uBIjukPnt7k/sJ3BOex1PAow0lgsURyy3JnRf8qAg4h28cZBBhTZCj3ovyC9TH9pcI/46EqmP7Yqs1L0UTReOG8+0cHT+d8wxECnWI8PjqN20rGWw8=
   - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
 
-install:
-- make install_ci
+stages:
+- name: test
+- name: docker
+  if: type IN (push, pull_request) OR tag =~ ^v
+- name: distro
+  if: tag =~ ^v
 
-script:
-- if [ "$TESTS" == true ] && [ "$COVERAGE" == true ]; then make cover; fi
-- if [ "$TESTS" == true ] && [ "$COVERAGE" == false ]; then make unit_test; fi
+jobs:
+  include:
+  - stage: test
+    go: '1.10'
+    script:
+    - make install_ci
+    - make cover
+    - travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true
+  - stage: docker
+    services:
+    - docker
+    script:
+    - echo "todo"
+  - stage: distro
+    go: '1.10'
+    script:
+    - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+    - unzip awscli-bundle.zip
+    - ./awscli-bundle/install -b ~/bin/aws
+    - bash ./hack/distro.sh
 
-after_success:
-- if [ "$COVERAGE" == true ]; then travis_retry goveralls -coverprofile=cover.out
-  -service=travis-ci || true ; else echo 'skipping coverage'; fi
+# install:
+# - make install_ci
+
+# script:
+# - if [ "$TESTS" == true ] && [ "$COVERAGE" == true ]; then make cover; fi
+# - if [ "$TESTS" == true ] && [ "$COVERAGE" == false ]; then make unit_test; fi
+
+# after_success:
+# - if [ "$COVERAGE" == true ]; then travis_retry goveralls -coverprofile=cover.out
+#   -service=travis-ci || true ; else echo 'skipping coverage'; fi
 
 notifications:
   slack:
