@@ -27,8 +27,38 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	mathRand "math/rand"
 	"os"
+	"time"
 )
+
+const (
+	letterBytes   = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+func GenerateRandomBytes(length int) ([]byte, error) {
+	if length < 1 {
+		return nil, errors.New("length must be a natural number")
+	}
+
+	src := mathRand.NewSource(time.Now().UnixNano())
+	b := make([]byte, length)
+	for i, cache, remain := length-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+	return b, nil
+}
 
 func LoadDecryptionKey(location string) (*rsa.PrivateKey, error) {
 	file, err := os.Open(location)
@@ -55,4 +85,37 @@ func loadDecryptionKey(reader io.Reader) (*rsa.PrivateKey, error) {
 	}
 	// parse the pem block into a private key
 	return x509.ParsePKCS1PrivateKey(block.Bytes)
+}
+
+func LoadPublicKey(location string) (*rsa.PublicKey, error) {
+	file, err := os.Open(location)
+	if err != nil {
+		return nil, errors.New("error opening public key file")
+	}
+	defer file.Close()
+	return loadPublicKey(file)
+}
+
+func loadPublicKey(reader io.Reader) (*rsa.PublicKey, error) {
+	if reader == nil {
+		return nil, errors.New("reader is nil")
+	}
+	// read in private key
+	keyBytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	block, _ := pem.Decode(keyBytes)
+	if block == nil {
+		return nil, errors.New("failed to decode PEM block containing rsa private key")
+	}
+
+	publicKeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+	publicKey, ok := publicKeyInterface.(*rsa.PublicKey)
+	if !ok {
+		return nil, errors.New("error parsing public key")
+	}
+
+	return publicKey, nil
 }

@@ -27,6 +27,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,4 +59,59 @@ func TestLoadDecryptionKey(t *testing.T) {
 	result, err := loadDecryptionKey(bytes.NewReader(keyData))
 	assert.Nil(t, err)
 	assert.Equal(t, key, result)
+}
+
+func TestLoadPublicKey(t *testing.T) {
+	_, err := loadPublicKey(nil)
+	assert.Error(t, err)
+
+	_, err = loadPublicKey(bytes.NewReader([]byte("foo")))
+	assert.Error(t, err)
+
+	_, err = loadPublicKey(new(errorReader))
+	assert.Error(t, err)
+
+	key, _ := rsa.GenerateKey(rand.Reader, 1024)
+	data, _ := x509.MarshalPKIXPublicKey(&key.PublicKey)
+
+	result, err := loadPublicKey(bytes.NewReader(pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: data,
+	})))
+	assert.Nil(t, err)
+	assert.Equal(t, &key.PublicKey, result)
+
+	_, err = loadPublicKey(bytes.NewReader(pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: x509.MarshalPKCS1PublicKey(&key.PublicKey),
+	})))
+	assert.NotNil(t, err)
+}
+
+func TestGenerateRandomBytes(t *testing.T) {
+	tests := []struct {
+		size int
+		err  bool
+	}{
+		{
+			size: 1,
+		},
+		{
+			size: 10,
+		},
+		{
+			size: 0,
+			err:  true,
+		},
+	}
+
+	for _, test := range tests {
+		data, err := GenerateRandomBytes(test.size)
+		if test.err {
+			assert.NotNil(t, err)
+		} else {
+			assert.Nil(t, err)
+			assert.True(t, regexp.MustCompile(fmt.Sprintf("[0-9a-zA-Z]{%d}", test.size)).Match(data))
+		}
+	}
 }

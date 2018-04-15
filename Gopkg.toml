@@ -79,5 +79,13 @@ required = [
   version = "v1.4.0"
 
 [[constraint]]
+  name = "github.com/ghodss/yaml"
+  version = "v1.0.0"
+
+[[constraint]]
+  name = "github.com/olekukonko/tablewriter"
+  revision = "b8a9be070da40449e501c3c4730a889e42d87a9e"
+
+[[constraint]]
   name = "github.com/onsi/gomega"
   version = "v1.3.0"
