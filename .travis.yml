@@ -1,15 +1,9 @@
 sudo: required
 
-env:
-  global:
-  - COMMIT=${TRAVIS_COMMIT::8}
-  - secure: kqPYySZHukKk79buA26c9staHoX7roMpp13aalARyDKoz8qdfgcCLMfBkAjI3OpIYRpqZHQlla67YBCrBgINA6ahoUm4AQF2nK7P7ll3ZM/VHwjxY6DY+wN7sSlMotBwu6qSkoCs34U8Vd1c6uCjNmDlGGgeTAY2WlLAnHNAe8FVNlYKX3fb2MOolKeLuZLh36VPbrF1409WyUFU79C20CMfN5X0sq13xOqwWJHjOaYF+wnEoOsFGt62lqGmBWXEwTOfFRKwVrYleDhR+LU0onW7k12KHydrAcI4j41mDfi0GUmLYPgCdyoffcyPNbdu6ZjmDEhF3ZSl9QXVoaSaEDIOinnbi9WJvmTRa1pE8rvB2VVz+pGB1V24aYMKZreSdkuCtFfJ1UxklW88312NcItPBVJbInY4Kqn/gMA9BwFMtzCD+pBpR06r83P3iOFs7zvzxTnuuBQ+TJUMw8PQBaRlgrDyrFY/9ORHgSGCSrquPg6nVMcxvHQoU4ugkC6fbSqnivq7TEYHTfKcUEVpLqqK+pdfB1qqCo2nAtfsViRPV2c5BXg5JyJT0uBIjukPnt7k/sJ3BOex1PAow0lgsURyy3JnRf8qAg4h28cZBBhTZCj3ovyC9TH9pcI/46EqmP7Yqs1L0UTReOG8+0cHT+d8wxECnWI8PjqN20rGWw8=
-  - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
-
 stages:
 - name: test
 - name: docker
-  if: type IN (push, pull_request) OR tag =~ ^v
+  if: type IN (push) OR tag =~ ^v
 - name: distro
   if: tag =~ ^v
 
@@ -26,6 +20,9 @@ jobs:
   - stage: docker
     services:
     - docker
+    env:
+    - secure: kqPYySZHukKk79buA26c9staHoX7roMpp13aalARyDKoz8qdfgcCLMfBkAjI3OpIYRpqZHQlla67YBCrBgINA6ahoUm4AQF2nK7P7ll3ZM/VHwjxY6DY+wN7sSlMotBwu6qSkoCs34U8Vd1c6uCjNmDlGGgeTAY2WlLAnHNAe8FVNlYKX3fb2MOolKeLuZLh36VPbrF1409WyUFU79C20CMfN5X0sq13xOqwWJHjOaYF+wnEoOsFGt62lqGmBWXEwTOfFRKwVrYleDhR+LU0onW7k12KHydrAcI4j41mDfi0GUmLYPgCdyoffcyPNbdu6ZjmDEhF3ZSl9QXVoaSaEDIOinnbi9WJvmTRa1pE8rvB2VVz+pGB1V24aYMKZreSdkuCtFfJ1UxklW88312NcItPBVJbInY4Kqn/gMA9BwFMtzCD+pBpR06r83P3iOFs7zvzxTnuuBQ+TJUMw8PQBaRlgrDyrFY/9ORHgSGCSrquPg6nVMcxvHQoU4ugkC6fbSqnivq7TEYHTfKcUEVpLqqK+pdfB1qqCo2nAtfsViRPV2c5BXg5JyJT0uBIjukPnt7k/sJ3BOex1PAow0lgsURyy3JnRf8qAg4h28cZBBhTZCj3ovyC9TH9pcI/46EqmP7Yqs1L0UTReOG8+0cHT+d8wxECnWI8PjqN20rGWw8=
+    - secure: BUFDeBBeZZ4yDuKFes7Myn1p78uYnQXnwNrgzQ48X7NBMSf5oaDL6UUH9efdiQwotF+IX8uPLU4mBabDFzZNoeb/nKEKnDMmXETjw/2x1zT1qMl3JjJbxcOM6ca3sbnOBFK4GYqgQjOR75NczVJWdZ/QsYghiPkTL+dn6nyLs7RbKXovUFu4RmM36h03R+/0LdkPPcYOa6BbAjs43BIHqsqmWDcQYs6VLVamaHQZjdVjUISP9ymK4NncXyfqDF2uRJPzitTNBwgDnkNwxBylBezrE+xIYtbGfZemVvwU6UIlQ5qHAZQgnvW8k3txmMgWg5tPxahSm0/TUUxtT32YO1aZwpjdhZmqAt0xkTQo3jJCxQS45QuTkgjaCTFXp5dZWegY+ftGWKRPTPnAVStTRephTjyBjxrPRIqNlNBOTGfMql1CE0wr/6kH3yrlx6jZbUbBEITODNG7CZ0VWxBVYRPy/EkhlaGhoAbM4HvrVpFh34ezlfK0RiWKLi4ycYAq3B78HO61UlwcZ8npMxPUkTVd4IYDPBQuGPuMEAHEYULHNn6lmKmrp2xKaBqsE2jPJH0VQqidYsH0R0osWZbNhyyxD044Yy5q+QIvLS9v1uBobyxK4hb1jkOKcWxPZX+rOPaYT8NardW3LykDPtO9IxJb/r47NtREgamuq02RzRk=
     script:
     - if [ ! -z "$TRAVIS_TAG" ]; then export IMAGE_TAG=$TRAVIS_TAG && ./hack/docker-build.sh; else export IMAGE_TAG=$TRAVIS_COMMIT && ./hack/docker-build.sh; fi
     - if [ ! -z "$TRAVIS_TAG" ]; then export IMAGE_TAG=$TRAVIS_TAG && export IMAGE_LATEST=true && ./hack/docker-upload.sh; else export IMAGE_TAG=$TRAVIS_COMMIT && ./hack/docker-upload.sh; fi
@@ -33,11 +30,15 @@ jobs:
     language: go
     go:
     - '1.10'
+    env:
+    - AWS_DEFAULT_REGION=us-east-1
+    - secure: "r3eiVrk2g6vQpc2t3mwReJv7/TwJpYoF0nGb0LWv6C9ohbyqQsexCeos4BoIR3gkKx1j5tVZenXMtBn5bayNBJ4ZSrRdAPXCdTttPm5hFBO3KawxJdiywlpp/NmU0U/GQCn5j779sxg9SViIuQmCXC5EMH5SM0xVtlh2ZEwZ60iJmgQEgQQLazuLQnGAk7KL3FRiQSnHb1S0KxCFVNg2guToHMsB8AvNihOvVKSh9ADr16C3OL81qSShWb/LXu9G8pRX1JPTfLpsiAL85SuL9fAzfaSSlnpLgdHJ3WNZXc7/fSVuhV6gVtObOnJkFUBNEccNVxjTMTUlfMEhMuySBxf2BJXNAshagl9EHoNqOnyRLxnZCLrlEGlzuft+/rhm3y70ayTXzIm1XPGpB9g6meKfio209gJz6v2dtIKsr3p7XS+57rKtvHR6Gw3mNyGivBOfEy4uvgQjuMyu9O/0aPrHKT3hXUG2EQ01i01o5vF/Nd2MWGRjk+WtlBxoefcn/v3jygWerGn35Wrp82xXNvKrqZxr3dvJpkoa1a4ZwDL6eZwnKSvr8E0Df7Aof4X6w7N2VoRTZOaQQoKOXG3pAmm+5+qHuZDDHz2JuGHLp1RJ0Zaq2gTGQYsFyd4cwcF313ssC6tqeh3ung3rM1CqAMx4SZ4LQMJlZBuDmBM6kI4="
+    - secure: "HchpFXzNr7cYRX4sj5VcPUMWZ6wMLmo5BJGXFS6NVWE3Xpfi4KiA5yHj4vY97JG78UrMXuv8VkUSlZq2+1L5y26Nfp7dwwHhJFA9H+phe7ByWtxwp5bZqkxYzgvO668JGLK6tFCCer/YwxYPo0YNf/xmAO72nWBtFWBfS2gu5zIVKtyLNm2kQI1P1ywAR2/BBnRceZYEIdIXtJkRD6J0R0xp3q9+OEVCx+khxzvsKtPaoFLL8U69L8CwwSwbeiIWDsvveRq9TPBcMTiw4UIyi09HAuBeSxyKzg5SRY6D+hsxEGsv8jnSwKujNwb1pYwXKGfWwA6OTsI7oaS6rdygfY7WfPdi2mmMGgELcRfSPNchercZewbjLujxwJrxG62XfSSdcVWQSxwQaKsKBK41RCsRrepUTV9YQw1aRHxzGQZSMpTqun7hNhPtycwHSRqZjVq1AJmVVVEKiZVHFqUx96FazL9igJmMLo0yeBWzU6PYC6Nnrc49n1bL/zDtNkeRI3lQGaaIG7g5F1C5ULRBFChyGd85cvBBVlS/XDbngjLoA3tWAf8YhgEPRoo2phBXJPKmEnZ9Ei36pt0nVKaGqEJLp2P49CtoswH1nn5j9x0JWXIHAUeHBZ43PtoJA+b62WCTKw2RnTR1XfwXDOvCLi+wRyPgGDFf/MnIebooejw="
     script:
     - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
     - unzip awscli-bundle.zip
     - ./awscli-bundle/install -b ~/bin/aws
-    - bash ./hack/distro.sh
+    - export RELEASE=$TRAVIS_TAG && ./hack/distro.sh
 
 notifications:
   slack:
