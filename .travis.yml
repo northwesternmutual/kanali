@@ -1,17 +1,5 @@
 sudo: required
 
-# language: go
-#
-# matrix:
-#   include:
-#   - go: '1.10'
-#     env:
-#     - TESTS=true
-#     - COVERAGE=true
-
-# services:
-# - docker
-
 env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}
@@ -32,7 +20,6 @@ jobs:
     go:
     - '1.10'
     script:
-    - which go && go version && echo $GOPATH && go env
     - make install_ci
     - make cover
     - travis_retry goveralls -coverprofile=cover.out -service=travis-ci || true
@@ -40,7 +27,8 @@ jobs:
     services:
     - docker
     script:
-    - echo "todo"
+    - if [ ! -z "$TRAVIS_TAG" ]; then IMAGE_TAG=$TRAVIS_TAG && ./hack/docker-build.sh; else IMAGE_TAG=$TRAVIS_COMMIT && ./hack/docker-build.sh; fi
+    - if [ ! -z "$TRAVIS_TAG" ]; then IMAGE_TAG=$TRAVIS_TAG IMAGE_LATEST=true && ./hack/docker-upload.sh; else IMAGE_TAG=$TRAVIS_COMMIT && ./hack/docker-upload.sh; fi
   - stage: distro
     language: go
     go:
@@ -50,17 +38,6 @@ jobs:
     - unzip awscli-bundle.zip
     - ./awscli-bundle/install -b ~/bin/aws
     - bash ./hack/distro.sh
-
-# install:
-# - make install_ci
-
-# script:
-# - if [ "$TESTS" == true ] && [ "$COVERAGE" == true ]; then make cover; fi
-# - if [ "$TESTS" == true ] && [ "$COVERAGE" == false ]; then make unit_test; fi
-
-# after_success:
-# - if [ "$COVERAGE" == true ]; then travis_retry goveralls -coverprofile=cover.out
-#   -service=travis-ci || true ; else echo 'skipping coverage'; fi
 
 notifications:
   slack:
