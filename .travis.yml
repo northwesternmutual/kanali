@@ -27,8 +27,8 @@ jobs:
     services:
     - docker
     script:
-    - if [ ! -z "$TRAVIS_TAG" ]; then IMAGE_TAG=$TRAVIS_TAG && ./hack/docker-build.sh; else IMAGE_TAG=$TRAVIS_COMMIT && ./hack/docker-build.sh; fi
-    - if [ ! -z "$TRAVIS_TAG" ]; then IMAGE_TAG=$TRAVIS_TAG IMAGE_LATEST=true && ./hack/docker-upload.sh; else IMAGE_TAG=$TRAVIS_COMMIT && ./hack/docker-upload.sh; fi
+    - if [ ! -z "$TRAVIS_TAG" ]; then export IMAGE_TAG=$TRAVIS_TAG && ./hack/docker-build.sh; else export IMAGE_TAG=$TRAVIS_COMMIT && ./hack/docker-build.sh; fi
+    - if [ ! -z "$TRAVIS_TAG" ]; then export IMAGE_TAG=$TRAVIS_TAG && export IMAGE_LATEST=true && ./hack/docker-upload.sh; else export IMAGE_TAG=$TRAVIS_COMMIT && ./hack/docker-upload.sh; fi
   - stage: distro
     language: go
     go:
