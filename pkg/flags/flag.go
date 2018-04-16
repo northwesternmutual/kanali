@@ -43,10 +43,11 @@ func NewFlagSet() *flagSet {
 	return &flagSet{}
 }
 
-func (f *flagSet) Add(a ...Flag) {
+func (f *flagSet) Add(a ...Flag) *flagSet {
 	for _, curr := range a {
 		*f = append(*f, curr)
 	}
+	return f
 }
 
 // GetLong returns the name of the flag
@@ -64,8 +65,8 @@ func (f Flag) GetUsage() string {
 	return f.Usage
 }
 
-func (f flagSet) AddAll(cmd *cobra.Command) error {
-	for _, curr := range f {
+func (f *flagSet) AddAll(cmd *cobra.Command) error {
+	for _, curr := range *f {
 		viper.SetDefault(curr.Long, curr.Value)
 		switch v := curr.Value.(type) {
 		case int:

@@ -33,6 +33,10 @@ type ApiKeyBuilder struct {
 func NewApiKey(name string) *ApiKeyBuilder {
 	return &ApiKeyBuilder{
 		curr: v2.ApiKey{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "kanali.io/v2",
+				Kind:       "ApiKey",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: name,
 			},

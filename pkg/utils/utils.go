@@ -22,12 +22,18 @@ package utils
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 
 	"github.com/northwesternmutual/kanali/pkg/utils/pool"
 )
+
+func Write(w io.Writer, msg string) error {
+	_, err := w.Write([]byte(msg + "\n"))
+	return err
+}
 
 // ComputeTargetPath calculates the path to be used when
 // proxying to an upstream service.

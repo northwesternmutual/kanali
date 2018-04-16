@@ -21,6 +21,7 @@
 package utils
 
 import (
+	"bytes"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -166,4 +167,10 @@ func TestCopyHeader(t *testing.T) {
 		"Foo": {"bar"},
 	})
 	assert.Equal(t, original, CloneHTTPHeader(original))
+}
+
+func TestWrite(t *testing.T) {
+	buf := bytes.NewBuffer(nil)
+	assert.Nil(t, Write(buf, "foo"))
+	assert.Equal(t, "foo\n", buf.String())
 }
