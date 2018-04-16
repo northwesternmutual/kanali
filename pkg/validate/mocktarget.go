@@ -18,44 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package builder
+package validate
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"encoding/json"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 )
 
-type ApiKeyBuilder struct {
-	curr v2.ApiKey
-}
-
-func NewApiKey(name string) *ApiKeyBuilder {
-	return &ApiKeyBuilder{
-		curr: v2.ApiKey{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "kanali.io/v2",
-				Kind:       "ApiKey",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
-			Spec: v2.ApiKeySpec{
-				Revisions: []v2.Revision{},
-			},
-		},
+func (v *validation) IsValidMockTarget(data []byte) error {
+	mocktarget := new(v2.MockTarget)
+	if err := json.Unmarshal(data, mocktarget); err != nil {
+		return err
 	}
+	return v.isValidMockTarget(mocktarget)
 }
 
-func (b *ApiKeyBuilder) WithRevision(status v2.RevisionStatus, encryptedKey []byte) *ApiKeyBuilder {
-	b.curr.Spec.Revisions = append(b.curr.Spec.Revisions, v2.Revision{
-		Data:   string(encryptedKey),
-		Status: status,
-	})
-
-	return b
+func (v *validation) isValidMockTarget(mocktarget *v2.MockTarget) error {
+	// no dynamic validation needed at this time
+	return nil
 }
 
-func (b *ApiKeyBuilder) NewOrDie() *v2.ApiKey {
-	return &b.curr
+func (v *validation) IsValidMockTargetList(data []byte) error {
+	list := new(v2.MockTargetList)
+	if err := json.Unmarshal(data, list); err != nil {
+		return err
+	}
+	return v.isValidMockTargetList(list)
+}
+
+func (v *validation) isValidMockTargetList(list *v2.MockTargetList) error {
+	for _, mocktarget := range list.Items {
+		if err := v.isValidMockTarget(&mocktarget); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Northwestern Mutual.
+// Copyright (c) 2017 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,44 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package builder
+package flags
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/pkg/log"
 )
 
-type ApiKeyBuilder struct {
-	curr v2.ApiKey
-}
-
-func NewApiKey(name string) *ApiKeyBuilder {
-	return &ApiKeyBuilder{
-		curr: v2.ApiKey{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "kanali.io/v2",
-				Kind:       "ApiKey",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
-			Spec: v2.ApiKeySpec{
-				Revisions: []v2.Revision{},
-			},
-		},
+var (
+	// FlagProcessLogLevel sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'
+	FlagProcessLogLevel = Flag{
+		Long:  "process.log_level",
+		Short: "l",
+		Value: log.InfoLevel,
+		Usage: "Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'.",
 	}
-}
-
-func (b *ApiKeyBuilder) WithRevision(status v2.RevisionStatus, encryptedKey []byte) *ApiKeyBuilder {
-	b.curr.Spec.Revisions = append(b.curr.Spec.Revisions, v2.Revision{
-		Data:   string(encryptedKey),
-		Status: status,
-	})
-
-	return b
-}
-
-func (b *ApiKeyBuilder) NewOrDie() *v2.ApiKey {
-	return &b.curr
-}
+)

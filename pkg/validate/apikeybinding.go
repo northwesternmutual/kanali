@@ -18,44 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package builder
+package validate
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"encoding/json"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
 )
 
-type ApiKeyBuilder struct {
-	curr v2.ApiKey
-}
-
-func NewApiKey(name string) *ApiKeyBuilder {
-	return &ApiKeyBuilder{
-		curr: v2.ApiKey{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "kanali.io/v2",
-				Kind:       "ApiKey",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
-			Spec: v2.ApiKeySpec{
-				Revisions: []v2.Revision{},
-			},
-		},
+func (v *validation) IsValidApiKeyBinding(data []byte) error {
+	apikeybinding := new(v2.ApiKeyBinding)
+	if err := json.Unmarshal(data, apikeybinding); err != nil {
+		return err
 	}
+	return v.isValidApiKeyBinding(apikeybinding)
 }
 
-func (b *ApiKeyBuilder) WithRevision(status v2.RevisionStatus, encryptedKey []byte) *ApiKeyBuilder {
-	b.curr.Spec.Revisions = append(b.curr.Spec.Revisions, v2.Revision{
-		Data:   string(encryptedKey),
-		Status: status,
-	})
-
-	return b
+func (v *validation) isValidApiKeyBinding(apikeybinding *v2.ApiKeyBinding) error {
+	// no dynamic validation needed at this time
+	return nil
 }
 
-func (b *ApiKeyBuilder) NewOrDie() *v2.ApiKey {
-	return &b.curr
+func (v *validation) IsValidApiKeyBindingList(data []byte) error {
+	list := new(v2.ApiKeyBindingList)
+	if err := json.Unmarshal(data, list); err != nil {
+		return err
+	}
+	return v.isValidApiKeyBindingList(list)
+}
+
+func (v *validation) isValidApiKeyBindingList(list *v2.ApiKeyBindingList) error {
+	for _, apikeybinding := range list.Items {
+		if err := v.isValidApiKeyBinding(&apikeybinding); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,24 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package options
+package validate
 
 import (
-	"github.com/northwesternmutual/kanali/pkg/flags"
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/test/builder"
 )
 
-func init() {
-	KanaliGatewayOptions.Add(
-		FlagKubernetesKubeConfig,
-	)
+func TestIsValidMockTarget(t *testing.T) {
+	assert.Error(t, (&validation{}).IsValidMockTarget(nil))
+
+	mocktarget, _ := json.Marshal(builder.NewMockTarget("foo", "bar").NewOrDie())
+	assert.Nil(t, (&validation{}).IsValidMockTarget(mocktarget))
 }
 
-var (
-	// FlagKubernetesKubeConfig specifies path to kubeconfig file which is only needed if outside a cluster.
-	FlagKubernetesKubeConfig = flags.Flag{
-		Long:  "kubernetes.kubeconfig",
-		Short: "",
-		Value: "",
-		Usage: "Absolute path to kubeconfig file if outside of a cluster.",
-	}
-)
+func TestIsValidMockTargetList(t *testing.T) {
+	assert.Error(t, (&validation{}).IsValidMockTargetList(nil))
+
+	list, _ := json.Marshal(&v2.MockTargetList{
+		Items: []v2.MockTarget{
+			*builder.NewMockTarget("foo", "bar").NewOrDie(),
+		},
+	})
+	assert.Nil(t, (&validation{}).IsValidMockTargetList(list))
+}

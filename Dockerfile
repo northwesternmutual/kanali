@@ -15,5 +15,5 @@ FROM alpine:${ALPINE_VERSION}
 LABEL maintainer="frankgreco@northwesternmutual.com"
 LABEL version="${VERSION}"
 COPY --from=BUILD /go/bin/kanali /
+COPY --from=BUILD /go/bin/validator /
 COPY --from=BUILD /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-ENTRYPOINT ["/kanali"]

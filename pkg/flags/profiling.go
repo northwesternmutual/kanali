@@ -18,46 +18,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package options
-
-import (
-	"github.com/northwesternmutual/kanali/pkg/flags"
-)
-
-func init() {
-	KanaliGatewayOptions.Add(
-		FlagPrometheusServerSecurePort,
-		FlagPrometheusServerInsecurePort,
-		FlagPrometheusServerInsecureBindAddress,
-		FlagPrometheusServerSecureBindAddress,
-	)
-}
+package flags
 
 var (
-	// FlagPrometheusServerSecurePort sets the port that Kanali will listen on for incoming requests
-	FlagPrometheusServerSecurePort = flags.Flag{
-		Long:  "prometheus.secure_port",
+	// FlagProfilingInsecurePort sets the port that Kanali will listen on for incoming requests
+	FlagProfilingInsecurePort = Flag{
+		Long:  "profiling.insecure_port",
 		Short: "",
-		Value: 0,
+		Value: 9090,
 		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
-	// FlagPrometheusServerInsecurePort sets the port that Kanali will listen on for incoming requests
-	FlagPrometheusServerInsecurePort = flags.Flag{
-		Long:  "prometheus.insecure_port",
-		Short: "",
-		Value: 9000,
-		Usage: "Sets the port that Kanali will listen on for incoming requests.",
-	}
-	// FlagPrometheusServerInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests
-	FlagPrometheusServerInsecureBindAddress = flags.Flag{
-		Long:  "prometheus.insecure_bind_address",
-		Short: "",
-		Value: "0.0.0.0",
-		Usage: "Network address that Kanali will listen on for incoming requests.",
-	}
-	// FlagPrometheusServerSecureBindAddress specifies the network address that Kanali will listen on for incoming requests
-	FlagPrometheusServerSecureBindAddress = flags.Flag{
-		Long:  "prometheus.secure_bind_address",
+	// FlagProfilingInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests
+	FlagProfilingInsecureBindAddress = Flag{
+		Long:  "profiling.insecure_bind_address",
 		Short: "",
 		Value: "0.0.0.0",
 		Usage: "Network address that Kanali will listen on for incoming requests.",

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,25 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package options
+package validate
 
 import (
-	"github.com/northwesternmutual/kanali/pkg/flags"
-	"github.com/northwesternmutual/kanali/pkg/log"
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/test/builder"
 )
 
-func init() {
-	KanaliGatewayOptions.Add(
-		FlagProcessLogLevel,
-	)
+func TestIsValidApiKeyBinding(t *testing.T) {
+	assert.Error(t, (&validation{}).IsValidApiKeyBinding(nil))
+
+	apikeybinding, _ := json.Marshal(builder.NewApiKeyBinding("foo", "bar").NewOrDie())
+	assert.Nil(t, (&validation{}).IsValidApiKeyBinding(apikeybinding))
 }
 
-var (
-	// FlagProcessLogLevel sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'
-	FlagProcessLogLevel = flags.Flag{
-		Long:  "process.log_level",
-		Short: "l",
-		Value: log.InfoLevel,
-		Usage: "Sets the logging level. Choose between 'debug', 'info', 'warn', 'error', 'fatal'.",
-	}
-)
+func TestIsValidApiKeyBindingList(t *testing.T) {
+	assert.Error(t, (&validation{}).IsValidApiKeyBindingList(nil))
+
+	list, _ := json.Marshal(&v2.ApiKeyBindingList{
+		Items: []v2.ApiKeyBinding{
+			*builder.NewApiKeyBinding("foo", "bar").NewOrDie(),
+		},
+	})
+	assert.Nil(t, (&validation{}).IsValidApiKeyBindingList(list))
+}

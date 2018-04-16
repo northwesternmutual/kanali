@@ -10,7 +10,7 @@ metadata:
     prometheus.io/scrape: 'true'
     prometheus.io/scheme: 'http'
     prometheus.io/path: '/metrics'
-    prometheus.io/port: '{{.Values.kanali.prometheus.insecurePort}}'
+    prometheus.io/port: '{{.Values.kanali.gateway.prometheus.insecurePort}}'
   {{- end }}
 spec:
   selector:

@@ -24,4 +24,24 @@ import (
 	"github.com/northwesternmutual/kanali/pkg/flags"
 )
 
+func init() {
+	KanaliGatewayOptions.Add(
+		flags.FlagServerSecurePort,
+		flags.FlagServerInsecurePort,
+		flags.FlagServerInsecureBindAddress,
+		flags.FlagServerSecureBindAddress,
+		flags.FlagServerTLSCertFile,
+		flags.FlagServerTLSKeyFile,
+		flags.FlagServerTLSCaFile,
+		flags.FlagProcessLogLevel,
+		flags.FlagProfilingInsecurePort,
+		flags.FlagProfilingInsecureBindAddress,
+		flags.FlagKubernetesKubeConfig,
+		flags.FlagPrometheusServerSecurePort,
+		flags.FlagPrometheusServerInsecurePort,
+		flags.FlagPrometheusServerInsecureBindAddress,
+		flags.FlagPrometheusServerSecureBindAddress,
+	)
+}
+
 var KanaliGatewayOptions = flags.NewFlagSet()

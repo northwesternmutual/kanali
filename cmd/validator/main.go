@@ -29,8 +29,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/northwesternmutual/kanali/cmd/kanali/app"
-	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
+	"github.com/northwesternmutual/kanali/cmd/validator/app"
+	"github.com/northwesternmutual/kanali/cmd/validator/app/options"
 	"github.com/northwesternmutual/kanali/pkg/flags"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	"github.com/northwesternmutual/kanali/pkg/server"
@@ -38,8 +38,8 @@ import (
 )
 
 const (
-	appName             = "kanali"
-	appDescriptionShort = "Kubernetes native API gateway."
+	appName             = "validator"
+	appDescriptionShort = "Dynamic validaiton server for Kanali resources."
 	appDescriptionLong  = appDescriptionShort
 )
 
@@ -51,8 +51,8 @@ var rootCmd = &cobra.Command{
 
 var startCmd = &cobra.Command{
 	Use:   `start`,
-	Short: `Start the API gateway`,
-	Long:  `Start the API gateway`,
+	Short: `Start the` + appName,
+	Long:  `Start the` + appName,
 	Run:   startCmdRun,
 }
 
@@ -80,7 +80,7 @@ func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	if err := options.KanaliGatewayOptions.AddAll(startCmd); err != nil {
+	if err := options.KanaliValidatorOptions.AddAll(startCmd); err != nil {
 		log.WithContext(nil).Fatal(err.Error())
 		os.Exit(1)
 	}

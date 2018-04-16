@@ -30,7 +30,7 @@ kanali:
       secretName: kanali-pki
     image:
       pullPolicy: IfNotPresent
-      name: northwesternmutual/kanali
+      name: northwesternmutual/hyperkanali
       tag: local
     scale:
       minReplicas: 1
@@ -48,11 +48,35 @@ kanali:
         reporter:
           logSpans: true
           localAgentHostPort: "jaeger-agent.kube-system.svc.cluster.local:5775"
-  profiler:
-    insecureBindAddress: 0.0.0.0
-    insecurePort: 9090
-  prometheus:
-    insecureBindAddress: 0.0.0.0
-    insecurePort: 9000
+    profiler:
+      insecureBindAddress: 0.0.0.0
+      insecurePort: 9090
+    prometheus:
+      insecureBindAddress: 0.0.0.0
+      insecurePort: 9000
+      secureBindAddress: 0.0.0.0
+      securePort: 0
+  validator:
+    namespace: default
+    logLevel: info
+    image:
+      pullPolicy: IfNotPresent
+      name: northwesternmutual/hyperkanali
+      tag: local
+    tls:
+      verifyClient: false
+      secretName: kanali-pki
+    scale:
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPU: 500
     secureBindAddress: 0.0.0.0
-    securePort: 0
+    securePort: 443
+    profiler:
+      insecureBindAddress: 0.0.0.0
+      insecurePort: 9090
+    prometheus:
+      insecureBindAddress: 0.0.0.0
+      insecurePort: 9000
+      secureBindAddress: 0.0.0.0
+      securePort: 0

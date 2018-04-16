@@ -18,69 +18,53 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package options
-
-import (
-	"github.com/northwesternmutual/kanali/pkg/flags"
-)
-
-func init() {
-	KanaliGatewayOptions.Add(
-		FlagServerSecurePort,
-		FlagServerInsecurePort,
-		FlagServerInsecureBindAddress,
-		FlagServerSecureBindAddress,
-		FlagServerTLSCertFile,
-		FlagServerTLSKeyFile,
-		FlagServerTLSCaFile,
-	)
-}
+package flags
 
 var (
 	// FlagServerSecurePort sets the port that Kanali will listen on for incoming requests
-	FlagServerSecurePort = flags.Flag{
+	FlagServerSecurePort = Flag{
 		Long:  "server.secure_port",
 		Short: "",
 		Value: 0,
 		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerInsecurePort sets the port that Kanali will listen on for incoming requests
-	FlagServerInsecurePort = flags.Flag{
+	FlagServerInsecurePort = Flag{
 		Long:  "server.insecure_port",
 		Short: "",
 		Value: 8080,
 		Usage: "Sets the port that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests
-	FlagServerInsecureBindAddress = flags.Flag{
+	FlagServerInsecureBindAddress = Flag{
 		Long:  "server.insecure_bind_address",
 		Short: "",
 		Value: "0.0.0.0",
 		Usage: "Network address that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerSecureBindAddress specifies the network address that Kanali will listen on for incoming requests
-	FlagServerSecureBindAddress = flags.Flag{
+	FlagServerSecureBindAddress = Flag{
 		Long:  "server.secure_bind_address",
 		Short: "",
 		Value: "0.0.0.0",
 		Usage: "Network address that Kanali will listen on for incoming requests.",
 	}
 	// FlagServerTLSCertFile specifies the path to x509 certificate for HTTPS servers.
-	FlagServerTLSCertFile = flags.Flag{
+	FlagServerTLSCertFile = Flag{
 		Long:  "server.tls.cert_file",
 		Short: "c",
 		Value: "",
 		Usage: "Path to x509 certificate for HTTPS servers.",
 	}
 	// FlagServerTLSKeyFile pecifies the path to x509 private key matching --tls-cert-file
-	FlagServerTLSKeyFile = flags.Flag{
+	FlagServerTLSKeyFile = Flag{
 		Long:  "server.tls.key_file",
 		Short: "k",
 		Value: "",
 		Usage: "Path to x509 private key matching --server.tls.cert_file.",
 	}
 	// FlagServerTLSCaFile specifies the path to x509 certificate authority bundle for mutual TLS
-	FlagServerTLSCaFile = flags.Flag{
+	FlagServerTLSCaFile = Flag{
 		Long:  "server.tls.ca_file",
 		Short: "",
 		Value: "",

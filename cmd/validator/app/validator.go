@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Northwestern Mutual.
+// Copyright (c) 2018 Northwestern Mutual.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,85 +22,28 @@ package app
 
 import (
 	"context"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
-	"k8s.io/api/core/v1"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
 
-	"github.com/northwesternmutual/kanali/cmd/kanali/app/options"
 	"github.com/northwesternmutual/kanali/pkg/chain"
 	"github.com/northwesternmutual/kanali/pkg/client/clientset/versioned"
-	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions"
-	"github.com/northwesternmutual/kanali/pkg/client/informers/externalversions/internalinterfaces"
-	"github.com/northwesternmutual/kanali/pkg/controller"
-	"github.com/northwesternmutual/kanali/pkg/crds"
-	v2CRDs "github.com/northwesternmutual/kanali/pkg/crds/kanali.io/v2"
 	"github.com/northwesternmutual/kanali/pkg/flags"
 	"github.com/northwesternmutual/kanali/pkg/log"
 	_ "github.com/northwesternmutual/kanali/pkg/metrics"
 	"github.com/northwesternmutual/kanali/pkg/middleware"
-	"github.com/northwesternmutual/kanali/pkg/rsa"
 	"github.com/northwesternmutual/kanali/pkg/run"
 	"github.com/northwesternmutual/kanali/pkg/server"
-	"github.com/northwesternmutual/kanali/pkg/tracer"
 	"github.com/northwesternmutual/kanali/pkg/utils"
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-)
-
-var (
-	resyncPeriod = 5 * time.Minute
 )
 
 func Run(sigCtx context.Context) error {
 	logger := log.WithContext(sigCtx)
 
-	decryptionKey, err := rsa.LoadDecryptionKey(viper.GetString(options.FlagPluginsAPIKeyDecriptionKeyFile.GetLong()))
+	kanaliClientset, err := createClientsets()
 	if err != nil {
 		logger.Fatal(err.Error())
 		return err
-	}
-
-	crdClientset, kanaliClientset, k8sClientset, err := createClientsets()
-	if err != nil {
-		logger.Fatal(err.Error())
-		return err
-	}
-
-	// we need to create a tempory shared informer specific to the kubernetes clientset
-	// so that we can merge it into one shared index informer later.
-	coreV1SharedInformer := informers.NewSharedInformerFactory(k8sClientset, resyncPeriod).Core().V1()
-
-	sharedInformer := externalversions.NewSharedInformerFactory(kanaliClientset, resyncPeriod)
-	sharedInformer.InformerFor(&v1.Service{}, internalinterfaces.NewInformerFunc(func(i versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-		return coreV1SharedInformer.Services().Informer()
-	}))
-	sharedInformer.InformerFor(&v1.Secret{}, internalinterfaces.NewInformerFunc(func(i versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-		return coreV1SharedInformer.Secrets().Informer()
-	}))
-
-	controller.InitEventHandlers(sharedInformer, decryptionKey)
-
-	if err := crds.EnsureCRDs(
-		crdClientset.ApiextensionsV1beta1(),
-		[]*apiextensionsv1beta1.CustomResourceDefinition{
-			v2CRDs.ApiProxyCRD,
-			v2CRDs.ApiKeyCRD,
-			v2CRDs.ApiKeyBindingCRD,
-			v2CRDs.MockTargetCRD,
-		}, nil,
-	); err != nil {
-		logger.Fatal(err.Error())
-		return err
-	}
-
-	tracer, tracerErr := tracer.New()
-	if tracerErr != nil {
-		logger.Warn(tracerErr.Error())
 	}
 
 	gatewayServer := server.Prepare(&server.Options{
@@ -116,7 +59,7 @@ func Run(sigCtx context.Context) error {
 			middleware.Correlation,
 			middleware.Recover,
 			middleware.Metrics,
-		).Link(middleware.Gateway(coreV1SharedInformer)),
+		).Link(middleware.Validator(kanaliClientset)),
 		Logger: logger.Sugar(),
 	})
 
@@ -139,8 +82,6 @@ func Run(sigCtx context.Context) error {
 	ctx, cancel := context.WithCancel(sigCtx)
 
 	var g run.Group
-	g.Add(ctx, run.Always, "shared index informer", run.SharedInformerWrapper(sharedInformer))
-	g.Add(ctx, tracerErr == nil, "tracer", tracer)
 	g.Add(ctx, metricsServer.IsEnabled(), metricsServer.Name(), metricsServer)
 	g.Add(ctx, run.Always, gatewayServer.Name(), gatewayServer)
 	g.Add(ctx, profilingServer.IsEnabled(), profilingServer.Name(), profilingServer)
@@ -148,30 +89,15 @@ func Run(sigCtx context.Context) error {
 	return g.Run()
 }
 
-func createClientsets() (
-	crdClientset *clientset.Clientset,
-	kanaliClientset *versioned.Clientset,
-	k8sClientset *kubernetes.Clientset,
-	err error,
-) {
+func createClientsets() (versioned.Interface, error) {
 	config, err := utils.GetKubernetesRestConfig(viper.GetString(flags.FlagKubernetesKubeConfig.GetLong()))
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 
-	crdClientset, err = clientset.NewForConfig(config)
+	kanaliClientset, err := versioned.NewForConfig(config)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
-
-	kanaliClientset, err = versioned.NewForConfig(config)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	k8sClientset, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return
+	return kanaliClientset, nil
 }

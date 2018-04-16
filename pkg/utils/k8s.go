@@ -18,44 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package builder
+package utils
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-type ApiKeyBuilder struct {
-	curr v2.ApiKey
-}
-
-func NewApiKey(name string) *ApiKeyBuilder {
-	return &ApiKeyBuilder{
-		curr: v2.ApiKey{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "kanali.io/v2",
-				Kind:       "ApiKey",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
-			Spec: v2.ApiKeySpec{
-				Revisions: []v2.Revision{},
-			},
-		},
+func GetKubernetesRestConfig(location string) (*rest.Config, error) {
+	if len(location) > 0 {
+		// user has specified a path to their own kubeconfig file so we'll use that
+		return clientcmd.BuildConfigFromFlags("", location)
 	}
-}
-
-func (b *ApiKeyBuilder) WithRevision(status v2.RevisionStatus, encryptedKey []byte) *ApiKeyBuilder {
-	b.curr.Spec.Revisions = append(b.curr.Spec.Revisions, v2.Revision{
-		Data:   string(encryptedKey),
-		Status: status,
-	})
-
-	return b
-}
-
-func (b *ApiKeyBuilder) NewOrDie() *v2.ApiKey {
-	return &b.curr
+	// use the in cluster config as the user has not specified their own
+	return rest.InClusterConfig()
 }

@@ -18,32 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package options
-
-import (
-	"github.com/northwesternmutual/kanali/pkg/flags"
-)
-
-func init() {
-	KanaliGatewayOptions.Add(
-		FlagProfilingInsecurePort,
-		FlagProfilingInsecureBindAddress,
-	)
-}
+package flags
 
 var (
-	// FlagProfilingInsecurePort sets the port that Kanali will listen on for incoming requests
-	FlagProfilingInsecurePort = flags.Flag{
-		Long:  "profiling.insecure_port",
+	// FlagKubernetesKubeConfig specifies path to kubeconfig file which is only needed if outside a cluster.
+	FlagKubernetesKubeConfig = Flag{
+		Long:  "kubernetes.kubeconfig",
 		Short: "",
-		Value: 9090,
-		Usage: "Sets the port that Kanali will listen on for incoming requests.",
-	}
-	// FlagProfilingInsecureBindAddress specifies the network address that Kanali will listen on for incoming requests
-	FlagProfilingInsecureBindAddress = flags.Flag{
-		Long:  "profiling.insecure_bind_address",
-		Short: "",
-		Value: "0.0.0.0",
-		Usage: "Network address that Kanali will listen on for incoming requests.",
+		Value: "",
+		Usage: "Absolute path to kubeconfig file if outside of a cluster.",
 	}
 )

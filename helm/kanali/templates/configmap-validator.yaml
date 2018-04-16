@@ -1,0 +1,34 @@
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kanali-validator-config
+  namespace: {{default "default" .Values.kanali.validator.namespace}}
+data:
+  config.toml: |-
+    [process]
+    log_level = {{default "info" .Values.kanali.logLevel  | quote}}
+
+    [profiling]
+    insecure_port = {{.Values.kanali.validator.profiler.insecurePort}}
+    insecure_bind_address = "{{.Values.kanali.validator.profiler.insecureBindAddress}}"
+
+    [prometheus]
+    insecure_port = {{default 0 .Values.kanali.validator.prometheus.insecurePort}}
+    insecure_bind_address = "{{default "0.0.0.0" .Values.kanali.validator.prometheus.insecureBindAddress}}"
+    secure_port = {{default 0 .Values.kanali.validator.prometheus.securePort}}
+    secure_bind_address = "{{default "0.0.0.0" .Values.kanali.validator.prometheus.secureBindAddress}}"
+
+    [server]
+    secure_port = {{default 0 .Values.kanali.validator.securePort}}
+    secure_bind_address = "{{default "0.0.0.0" .Values.kanali.validator.secureBindAddress}}"
+
+    {{- if .Values.kanali.validator.securePort }}
+    [server.tls]
+    cert_file = "/etc/pki/tls.crt"
+    key_file = "/etc/pki/tls.key"
+    {{- if .Values.kanali.validator.tls.verifyClient }}
+    ca_file = "/etc/pki/tls.ca"
+    {{- end }}
+    {{- end }}

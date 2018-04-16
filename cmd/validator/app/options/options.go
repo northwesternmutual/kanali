@@ -18,44 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package builder
+package options
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/pkg/flags"
 )
 
-type ApiKeyBuilder struct {
-	curr v2.ApiKey
+func init() {
+	KanaliValidatorOptions.Add(
+		flags.FlagServerSecurePort,
+		flags.FlagServerInsecurePort,
+		flags.FlagServerInsecureBindAddress,
+		flags.FlagServerSecureBindAddress,
+		flags.FlagServerTLSCertFile,
+		flags.FlagServerTLSKeyFile,
+		flags.FlagServerTLSCaFile,
+		flags.FlagProcessLogLevel,
+		flags.FlagProfilingInsecurePort,
+		flags.FlagProfilingInsecureBindAddress,
+		flags.FlagKubernetesKubeConfig,
+		flags.FlagPrometheusServerSecurePort,
+		flags.FlagPrometheusServerInsecurePort,
+		flags.FlagPrometheusServerInsecureBindAddress,
+		flags.FlagPrometheusServerSecureBindAddress,
+	)
 }
 
-func NewApiKey(name string) *ApiKeyBuilder {
-	return &ApiKeyBuilder{
-		curr: v2.ApiKey{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "kanali.io/v2",
-				Kind:       "ApiKey",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
-			Spec: v2.ApiKeySpec{
-				Revisions: []v2.Revision{},
-			},
-		},
-	}
-}
-
-func (b *ApiKeyBuilder) WithRevision(status v2.RevisionStatus, encryptedKey []byte) *ApiKeyBuilder {
-	b.curr.Spec.Revisions = append(b.curr.Spec.Revisions, v2.Revision{
-		Data:   string(encryptedKey),
-		Status: status,
-	})
-
-	return b
-}
-
-func (b *ApiKeyBuilder) NewOrDie() *v2.ApiKey {
-	return &b.curr
-}
+var KanaliValidatorOptions = flags.NewFlagSet()

@@ -18,14 +18,14 @@ data:
     log_level = {{default "info" .Values.kanali.logLevel  | quote}}
 
     [profiling]
-    insecure_port = {{.Values.kanali.profiler.insecurePort}}
-    insecure_bind_address = "{{.Values.kanali.profiler.insecureBindAddress}}"
+    insecure_port = {{.Values.kanali.gateway.profiler.insecurePort}}
+    insecure_bind_address = "{{.Values.kanali.gateway.profiler.insecureBindAddress}}"
 
     [prometheus]
-    insecure_port = {{default 0 .Values.kanali.prometheus.insecurePort}}
-    insecure_bind_address = "{{default "0.0.0.0" .Values.kanali.prometheus.insecureBindAddress}}"
-    secure_port = {{default 0 .Values.kanali.prometheus.securePort}}
-    secure_bind_address = "{{default "0.0.0.0" .Values.kanali.prometheus.secureBindAddress}}"
+    insecure_port = {{default 0 .Values.kanali.gateway.prometheus.insecurePort}}
+    insecure_bind_address = "{{default "0.0.0.0" .Values.kanali.gateway.prometheus.insecureBindAddress}}"
+    secure_port = {{default 0 .Values.kanali.gateway.prometheus.securePort}}
+    secure_bind_address = "{{default "0.0.0.0" .Values.kanali.gateway.prometheus.secureBindAddress}}"
 
     [proxy]
     enable_cluster_ip = true

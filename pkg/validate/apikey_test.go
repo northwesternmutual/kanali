@@ -18,44 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package builder
+package validate
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/northwesternmutual/kanali/pkg/apis/kanali.io/v2"
+	"github.com/northwesternmutual/kanali/test/builder"
 )
 
-type ApiKeyBuilder struct {
-	curr v2.ApiKey
+func TestIsValidApiKey(t *testing.T) {
+	assert.Error(t, (&validation{}).IsValidApiKey(nil))
+
+	apikey, _ := json.Marshal(builder.NewApiKey("foo").NewOrDie())
+	assert.Nil(t, (&validation{}).IsValidApiKey(apikey))
 }
 
-func NewApiKey(name string) *ApiKeyBuilder {
-	return &ApiKeyBuilder{
-		curr: v2.ApiKey{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: "kanali.io/v2",
-				Kind:       "ApiKey",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
-			Spec: v2.ApiKeySpec{
-				Revisions: []v2.Revision{},
-			},
+func TestIsValidApiKeyList(t *testing.T) {
+	assert.Error(t, (&validation{}).IsValidApiKeyList(nil))
+
+	list, _ := json.Marshal(&v2.ApiKeyList{
+		Items: []v2.ApiKey{
+			*builder.NewApiKey("foo").NewOrDie(),
 		},
-	}
-}
-
-func (b *ApiKeyBuilder) WithRevision(status v2.RevisionStatus, encryptedKey []byte) *ApiKeyBuilder {
-	b.curr.Spec.Revisions = append(b.curr.Spec.Revisions, v2.Revision{
-		Data:   string(encryptedKey),
-		Status: status,
 	})
-
-	return b
-}
-
-func (b *ApiKeyBuilder) NewOrDie() *v2.ApiKey {
-	return &b.curr
+	assert.Nil(t, (&validation{}).IsValidApiKeyList(list))
 }
