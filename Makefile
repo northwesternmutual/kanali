@@ -79,6 +79,7 @@ install_ci: install
 	go get golang.org/x/tools/cmd/cover
 	go get golang.org/x/lint/golint
 	go get github.com/kisielk/errcheck
+	go get github.com/mitchellh/gox
 
 .PHONY: codegen_verify
 codegen_verify:
