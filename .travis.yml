@@ -36,6 +36,7 @@ jobs:
     - secure: "HchpFXzNr7cYRX4sj5VcPUMWZ6wMLmo5BJGXFS6NVWE3Xpfi4KiA5yHj4vY97JG78UrMXuv8VkUSlZq2+1L5y26Nfp7dwwHhJFA9H+phe7ByWtxwp5bZqkxYzgvO668JGLK6tFCCer/YwxYPo0YNf/xmAO72nWBtFWBfS2gu5zIVKtyLNm2kQI1P1ywAR2/BBnRceZYEIdIXtJkRD6J0R0xp3q9+OEVCx+khxzvsKtPaoFLL8U69L8CwwSwbeiIWDsvveRq9TPBcMTiw4UIyi09HAuBeSxyKzg5SRY6D+hsxEGsv8jnSwKujNwb1pYwXKGfWwA6OTsI7oaS6rdygfY7WfPdi2mmMGgELcRfSPNchercZewbjLujxwJrxG62XfSSdcVWQSxwQaKsKBK41RCsRrepUTV9YQw1aRHxzGQZSMpTqun7hNhPtycwHSRqZjVq1AJmVVVEKiZVHFqUx96FazL9igJmMLo0yeBWzU6PYC6Nnrc49n1bL/zDtNkeRI3lQGaaIG7g5F1C5ULRBFChyGd85cvBBVlS/XDbngjLoA3tWAf8YhgEPRoo2phBXJPKmEnZ9Ei36pt0nVKaGqEJLp2P49CtoswH1nn5j9x0JWXIHAUeHBZ43PtoJA+b62WCTKw2RnTR1XfwXDOvCLi+wRyPgGDFf/MnIebooejw="
     script:
     - make install_ci
+    - make install
     - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
     - unzip awscli-bundle.zip
     - ./awscli-bundle/install -b ~/bin/aws
