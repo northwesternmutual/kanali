@@ -31,7 +31,9 @@ do
     actual_delimiter="\/"
     desired_delimiter="_"
 
-    gox -osarch=$distro
+    echo "gox -osarch=${distro} ${PATH_IMPORT}/cmd/kanalictl"
+
+    gox -osarch=$distro ${PATH_IMPORT}/cmd/kanalictl
 
     if [[ $distro = *"windows"* ]]; then
       aws s3 mv "${${raw_binary_name}.exe/${actual_delimiter}/${desired_delimiter}}" ${remote_path}.exe
