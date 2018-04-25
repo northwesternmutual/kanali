@@ -35,7 +35,7 @@ do
     gox -osarch=$distro ${PATH_IMPORT}/cmd/kanalictl
 
     if [[ $distro = *"windows"* ]]; then
-      aws s3 mv ${gox_binary_name} ${remote_path}.exe
+      aws s3 mv ${gox_binary_name}.exe ${remote_path}.exe
     else
       aws s3 mv ${gox_binary_name} ${remote_path}
     fi
