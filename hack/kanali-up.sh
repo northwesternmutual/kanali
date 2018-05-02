@@ -32,4 +32,4 @@ kanali start \
   --proxy.enable_mock_responses=true \
   --proxy.tls_common_name_validation=true \
   --plugins.apiKey.header_key="apikey" \
-  --plugins.apiKey.decryption_key_file=$KANALI_PLUGINS_APIKEY_DECRYPTION_KEY_FILE
+  --plugins.apiKey.decryption_key_file=$TEMP_RSA_DIR/private.pem

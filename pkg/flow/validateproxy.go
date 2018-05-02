@@ -64,6 +64,6 @@ func (step validateProxyStep) Do(ctx context.Context, w http.ResponseWriter, r *
 		return next()
 	}
 
-	logger.Warn(errors.ErrorProxyNotFound.Message)
+	logger.Info(errors.ErrorProxyNotFound.Message)
 	return errors.ErrorProxyNotFound
 }
