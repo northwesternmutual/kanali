@@ -31,7 +31,7 @@ kanali:
     image:
       pullPolicy: IfNotPresent
       name: northwesternmutual/hyperkanali
-      tag: local
+      tag: v2.0.0-rc1
     scale:
       minReplicas: 1
       maxReplicas: 5
@@ -62,7 +62,7 @@ kanali:
     image:
       pullPolicy: IfNotPresent
       name: northwesternmutual/hyperkanali
-      tag: local
+      tag: v2.0.0-rc1
     tls:
       verifyClient: false
       secretName: kanali-pki
