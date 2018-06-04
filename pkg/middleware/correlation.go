@@ -35,8 +35,10 @@ import (
 // execeted before other middleware.
 func Correlation(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := log.NewContext(r.Context(), zap.Stringer(tags.HTTPRequestCorrelationId, uuid.NewV4()))
+		id := uuid.NewV4()
+		ctx := log.NewContext(r.Context(), zap.Stringer(tags.HTTPRequestCorrelationId, id))
 		log.WithContext(ctx).Debug("established new correlation id for this request")
+		w.Header().Set(tags.HeaderResponseCorrelationID, id.String())
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
