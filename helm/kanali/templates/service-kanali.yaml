@@ -19,9 +19,15 @@ spec:
   {{- if .Values.kanali.gateway.securePort }}
   - name: https
     port: {{.Values.kanali.gateway.securePort}}
+    {{- if .Values.kanali.gateway.secureNodePort }}
+    nodePort: {{.Values.kanali.gateway.secureNodePort}}
+    {{- end }}
   {{- end }}
   {{- if .Values.kanali.gateway.insecurePort }}
   - name: http
     port: {{.Values.kanali.gateway.insecurePort}}
+    {{- if .Values.kanali.gateway.insecureNodePort }}
+    nodePort: {{.Values.kanali.gateway.insecureNodePort}}
+    {{- end }}
   {{- end }}
   type: NodePort
