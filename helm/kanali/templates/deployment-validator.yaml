@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kanali-validator
-  namespace: {{default "default" .Values.kanali.validator.namespace}}
+  namespace: {{default "default" .Values.validator.namespace}}
 spec:
   selector:
     matchLabels:
@@ -17,26 +17,26 @@ spec:
       serviceAccountName: kanali-validator
       containers:
       - name: validator
-        imagePullPolicy: {{default "IfNotPresent" .Values.kanali.validator.image.pullPolicy}}
-        image: {{.Values.kanali.validator.image.name}}:{{default "latest" .Values.kanali.validator.image.tag}}
+        imagePullPolicy: {{default "IfNotPresent" .Values.validator.image.pullPolicy}}
+        image: {{.Values.validator.image.name}}:{{default "latest" .Values.validator.image.tag}}
         command:
         - /validator
         - start
         ports:
         - name: validator
-          containerPort: {{.Values.kanali.validator.securePort}}
+          containerPort: {{.Values.validator.securePort}}
         - name: prometheus
-          containerPort: {{.Values.kanali.validator.prometheus.insecurePort}}
+          containerPort: {{.Values.validator.prometheus.insecurePort}}
         - name: profiler
-          containerPort: {{.Values.kanali.validator.profiler.insecurePort}}
+          containerPort: {{.Values.validator.profiler.insecurePort}}
         readinessProbe:
           tcpSocket:
-            port: {{.Values.kanali.validator.securePort}}
+            port: {{.Values.validator.securePort}}
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
           tcpSocket:
-            port: {{.Values.kanali.validator.securePort}}
+            port: {{.Values.validator.securePort}}
           initialDelaySeconds: 15
           periodSeconds: 20
         volumeMounts:
@@ -50,13 +50,13 @@ spec:
         projected:
           sources:
           - secret:
-              name: {{default "kanali-pki" .Values.kanali.validator.tls.secretName}}
+              name: {{default "kanali-pki" .Values.validator.tls.secretName}}
               items:
               - key: tls.crt
                 path: tls.crt
               - key: tls.key
                 path: tls.key
-              {{- if .Values.kanali.validator.tls.verifyClient }}
+              {{- if .Values.validator.tls.verifyClient }}
               - key: tls.ca
                 path: tls.ca
               {{- end }}

@@ -24,4 +24,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: kanali-validator
-  namespace: {{default "default" .Values.kanali.validator.namespace}}
+  namespace: {{default "default" .Values.validator.namespace}}

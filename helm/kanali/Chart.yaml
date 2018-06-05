@@ -8,10 +8,10 @@ keywords:
 - kanali
 - ingress
 - api management
-home: https://github.com/northwesternmutual/kanali
+home: https://kanali.io
 icon: https://github.com/northwesternmutual/kanali/blob/master/logo/logo_with_name.png?raw=true
 sources:
-- https://hub.docker.com/r/northwesternmutual/kanali/
+- https://github.com/northwesternmutual/kanali
 maintainers:
 - name: Frank B Greco Jr
   email: frankgreco@northwesternmutual.com
