@@ -1,82 +1,61 @@
-# Default Helm values for kanali and its optional dependent charts.
-
-tags:
-  # if metrics is true, then both the grafana and prometheus charts will be deployed
-  metrics: false
-  # if tracing is true, then the jaeger chart will be deployed
-  tracing: false
-
-prometheus: {}
-  # overwrite prometheus chart value here
-
-jaeger: {}
-  # overwrite prometheus chart value here
-
-grafana: {}
-  # overwrite prometheus chart value here
-
-kanali:
-  namespace: default
-  logLevel: info
-  gateway:
-    securePort: 8443
-    secureBindAddress: 0.0.0.0
-    insecurePort: 0
+namespace: kanali
+logLevel: info
+gateway:
+  securePort: 8443
+  secureBindAddress: 0.0.0.0
+  insecurePort: 0
+  insecureBindAddress: 0.0.0.0
+  rsa:
+    secretName: kanali-rsa
+  tls:
+    verifyClient: false
+    secretName: kanali-pki
+  image:
+    pullPolicy: IfNotPresent
+    name: northwesternmutual/hyperkanali
+    tag: v2.0.0-rc1
+  scale:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPU: 500
+  plugins:
+    apikey:
+      headerKey: apikey
+  jaeger:
+    config:
+      sampler:
+        samplingServerURL: localhost
+      reporter:
+        localAgentHostPort: localhost
+  profiler:
     insecureBindAddress: 0.0.0.0
-    rsa:
-      secretName: kanali-rsa
-    tls:
-      verifyClient: false
-      secretName: kanali-pki
-    image:
-      pullPolicy: IfNotPresent
-      name: northwesternmutual/hyperkanali
-      tag: local
-    scale:
-      minReplicas: 1
-      maxReplicas: 5
-      targetCPU: 500
-    plugins:
-      apikey:
-        headerKey: apikey
-    jaeger:
-      config:
-        sampler:
-          type: const
-          samplingServerURL: jaeger-agent.kube-system.svc.cluster.local
-          param: 1
-        reporter:
-          logSpans: true
-          localAgentHostPort: "jaeger-agent.kube-system.svc.cluster.local:5775"
-    profiler:
-      insecureBindAddress: 0.0.0.0
-      insecurePort: 9090
-    prometheus:
-      insecureBindAddress: 0.0.0.0
-      insecurePort: 9000
-      secureBindAddress: 0.0.0.0
-      securePort: 0
-  validator:
-    namespace: default
-    logLevel: info
-    image:
-      pullPolicy: IfNotPresent
-      name: northwesternmutual/hyperkanali
-      tag: local
-    tls:
-      verifyClient: false
-      secretName: kanali-pki
-    scale:
-      minReplicas: 1
-      maxReplicas: 5
-      targetCPU: 500
+    insecurePort: 9090
+  prometheus:
+    insecureBindAddress: 0.0.0.0
+    insecurePort: 9000
     secureBindAddress: 0.0.0.0
-    securePort: 443
-    profiler:
-      insecureBindAddress: 0.0.0.0
-      insecurePort: 9090
-    prometheus:
-      insecureBindAddress: 0.0.0.0
-      insecurePort: 9000
-      secureBindAddress: 0.0.0.0
-      securePort: 0
+    securePort: 0
+validator:
+  namespace: kanali
+  logLevel: info
+  image:
+    pullPolicy: IfNotPresent
+    name: northwesternmutual/hyperkanali
+    tag: v2.0.0-rc1
+  tls:
+    verifyClient: false
+    secretName: kanali-pki
+  scale:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPU: 500
+  secureBindAddress: 0.0.0.0
+  securePort: 443
+  profiler:
+    insecureBindAddress: 0.0.0.0
+    insecurePort: 9090
+  prometheus:
+    insecureBindAddress: 0.0.0.0
+    insecurePort: 9000
+    secureBindAddress: 0.0.0.0
+    securePort: 0
