@@ -28,8 +28,10 @@ $ helm del --purge my-release
 | `kanali.namespace`                        | Namespace for Kanali resources                       | default                   |
 | `kanali.logLevel`                         | Log level                                            | info                      |
 | `kanali.gateway.securePort`               | HTTPS server port                                    | 8443                      |
+| `kanali.gateway.secureNodePort`           | HTTPS external NodePort                              | 0 (disabled)              |
 | `kanali.gateway.secureBindAddress`        | HTTP server bind address                             | 0.0.0.0                   |
 | `kanali.gateway.insecurePort`             | HTTP server port                                     | 0 (disabled)              |
+| `kanali.gateway.insecureNodePort`         | HTTP external NodePort                               | 0 (disabled)              |
 | `kanali.gateway.insecureBindAddress`      | HTTP server bind address                             | 0.0.0.0                   |
 | `kanali.gateway.rsa.secretName`           | Secret containing private key for API key decryption | kanali-rsa                |
 | `kanali.gateway.tls.secretName`           | Secret containing tls assets for HTTPS server        | kanali-pki                |

@@ -43,6 +43,13 @@ func Metrics(next http.Handler) http.Handler {
 
 		rec := httptest.NewRecorder()
 
+		// This is a workaround until a proper
+		// middleware where the errors fall through
+		// is implemented.
+		for k, v := range w.Header() {
+			rec.Header()[k] = v
+		}
+
 		metrics.RequestInFlightCount.Inc()
 
 		next.ServeHTTP(rec, r)
