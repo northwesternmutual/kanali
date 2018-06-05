@@ -22,6 +22,7 @@ package middleware
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,8 +40,11 @@ func TestCorrelation(t *testing.T) {
 	defer log.SetLogger(zap.New(core)).Restore()
 
 	req, _ := http.NewRequest("GET", "/foo", nil)
+	rec := httptest.NewRecorder()
 	Correlation(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
 		assert.Equal(t, 1, len(logs.All()))
 		assert.Equal(t, tags.HTTPRequestCorrelationId, logs.All()[0].Context[0].Key)
-	})).ServeHTTP(nil, req)
+	})).ServeHTTP(rec, req)
+	assert.True(t, len(rec.HeaderMap.Get(tags.HeaderResponseCorrelationID)) > 0)
 }

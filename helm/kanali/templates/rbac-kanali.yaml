@@ -33,28 +33,3 @@ subjects:
   namespace: {{default "default" .Values.kanali.namespace}}
 
 
----
-apiVersion: kanali.io/v2
-kind: ApiProxy
-metadata:
-  name: example
-spec:
-  source:
-    path: /foo
-  target:
-    path: /
-    backend:
-      endpoint: https://foo.bar.com:8443
-
----
-apiVersion: kanali.io/v2
-kind: ApiProxy
-metadata:
-  name: foo
-spec:
-  source:
-    path: /foo
-  target:
-    path: /
-    backend:
-      endpoint: https://foo.bar.com:8443

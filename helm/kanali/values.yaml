@@ -20,8 +20,10 @@ kanali:
   logLevel: info
   gateway:
     securePort: 8443
+    secureNodePort: 0
     secureBindAddress: 0.0.0.0
     insecurePort: 0
+    insecureNodePort: 0
     insecureBindAddress: 0.0.0.0
     rsa:
       secretName: kanali-rsa
@@ -31,7 +33,7 @@ kanali:
     image:
       pullPolicy: IfNotPresent
       name: northwesternmutual/hyperkanali
-      tag: local
+      tag: v2.0.0-rc1
     scale:
       minReplicas: 1
       maxReplicas: 5
@@ -62,7 +64,7 @@ kanali:
     image:
       pullPolicy: IfNotPresent
       name: northwesternmutual/hyperkanali
-      tag: local
+      tag: v2.0.0-rc1
     tls:
       verifyClient: false
       secretName: kanali-pki
