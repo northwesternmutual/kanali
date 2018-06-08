@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kanali
-  namespace: {{default "default" .Values.kanali.namespace}}
+  namespace: {{default "default" .Values.namespace}}
 spec:
   selector:
     matchLabels:
@@ -17,41 +17,28 @@ spec:
       serviceAccountName: kanali
       containers:
       - name: kanali
-        imagePullPolicy: {{default "IfNotPresent" .Values.kanali.gateway.image.pullPolicy}}
-        image: {{.Values.kanali.gateway.image.name}}:{{default "latest" .Values.kanali.gateway.image.tag}}
+        imagePullPolicy: {{default "IfNotPresent" .Values.gateway.image.pullPolicy}}
+        image: {{.Values.gateway.image.name}}:{{default "latest" .Values.gateway.image.tag}}
         command:
         - /kanali
         - start
         ports:
         - name: gateway
-          containerPort: {{.Values.kanali.gateway.securePort}}
+          containerPort: {{.Values.gateway.securePort}}
         - name: prometheus
-          containerPort: {{.Values.kanali.gateway.prometheus.insecurePort}}
+          containerPort: {{.Values.gateway.prometheus.insecurePort}}
         - name: profiler
-          containerPort: {{.Values.kanali.gateway.profiler.insecurePort}}
-        {{- if .Values.kanali.gateway.securePort }}
+          containerPort: {{.Values.gateway.profiler.insecurePort}}
         readinessProbe:
           tcpSocket:
-            port: {{.Values.kanali.gateway.securePort}}
+            port: {{" "}}{{- if .Values.gateway.securePort }}{{.Values.gateway.securePort}}{{- else }}{{.Values.gateway.insecurePort}}{{- end }}
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
           tcpSocket:
-            port: {{.Values.kanali.gateway.securePort}}
+            port: {{" "}}{{- if .Values.gateway.securePort }}{{.Values.gateway.securePort}}{{- else }}{{.Values.gateway.insecurePort}}{{- end }}
           initialDelaySeconds: 15
           periodSeconds: 20
-        {{- else }}
-        readinessProbe:
-          tcpSocket:
-            port: {{.Values.kanali.gateway.insecurePort}}
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          tcpSocket:
-            port: {{.Values.kanali.gateway.insecurePort}}
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        {{- end }}
         volumeMounts:
         - name: pki
           mountPath: /etc/pki
@@ -62,21 +49,21 @@ spec:
       - name: pki
         projected:
           sources:
-          {{- if .Values.kanali.gateway.securePort }}
+          {{- if .Values.gateway.securePort }}
           - secret:
-              name: {{default "kanali-pki" .Values.kanali.gateway.tls.secretName}}
+              name: {{default "kanali-pki" .Values.gateway.tls.secretName}}
               items:
               - key: tls.crt
                 path: tls.crt
               - key: tls.key
                 path: tls.key
-              {{- if .Values.kanali.gateway.tls.verifyClient }}
+              {{- if .Values.gateway.tls.verifyClient }}
               - key: tls.ca
                 path: tls.ca
               {{- end }}
           {{- end }}
           - secret:
-              name: {{default "kanali-rsa" .Values.kanali.gateway.rsa.secretName}}
+              name: {{default "kanali-rsa" .Values.gateway.rsa.secretName}}
               items:
               - key: key.pem
                 path: key.pem
@@ -85,7 +72,3 @@ spec:
           sources:
           - configMap:
               name: kanali-config
-          {{- if .Values.tags.tracing }}
-          - configMap:
-              name: kanali-tracer-config
-          {{- end }}

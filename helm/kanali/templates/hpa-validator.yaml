@@ -4,12 +4,12 @@ apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
   name: kanali-validator
-  namespace: {{default "default" .Values.kanali.validator.namespace}}
+  namespace: {{default "default" .Values.validator.namespace}}
 spec:
-  maxReplicas: {{.Values.kanali.validator.scale.maxReplicas}}
-  minReplicas: {{.Values.kanali.validator.scale.minReplicas}}
+  maxReplicas: {{.Values.validator.scale.maxReplicas}}
+  minReplicas: {{.Values.validator.scale.minReplicas}}
   scaleTargetRef:
     apiVersion: v1
     kind: Deployment
     name: kanali-validator
-  targetCPUUtilizationPercentage: {{.Values.kanali.validator.scale.targetCPU}}
+  targetCPUUtilizationPercentage: {{.Values.validator.scale.targetCPU}}

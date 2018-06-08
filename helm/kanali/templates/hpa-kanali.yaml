@@ -4,12 +4,12 @@ apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
   name: kanali
-  namespace: {{default "default" .Values.kanali.namespace}}
+  namespace: {{default "default" .Values.namespace}}
 spec:
-  maxReplicas: {{.Values.kanali.gateway.scale.maxReplicas}}
-  minReplicas: {{.Values.kanali.gateway.scale.minReplicas}}
+  maxReplicas: {{.Values.gateway.scale.maxReplicas}}
+  minReplicas: {{.Values.gateway.scale.minReplicas}}
   scaleTargetRef:
     apiVersion: v1
     kind: Deployment
     name: kanali
-  targetCPUUtilizationPercentage: {{.Values.kanali.gateway.scale.targetCPU}}
+  targetCPUUtilizationPercentage: {{.Values.gateway.scale.targetCPU}}

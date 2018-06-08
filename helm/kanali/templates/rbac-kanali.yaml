@@ -30,6 +30,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: kanali
-  namespace: {{default "default" .Values.kanali.namespace}}
-
-
+  namespace: {{default "default" .Values.namespace}}
