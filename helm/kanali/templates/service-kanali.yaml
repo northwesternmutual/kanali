@@ -27,7 +27,7 @@ spec:
   - name: http
     port: {{.Values.kanali.gateway.insecurePort}}
     {{- if .Values.kanali.gateway.insecureNodePort }}
-    nodePort: {{.Values.kanali.gateway.insecureNodePort}}
+    nodePort: {{.Values.kanali.gateway.insecureNodePort}} 
     {{- end }}
   {{- end }}
   type: NodePort
