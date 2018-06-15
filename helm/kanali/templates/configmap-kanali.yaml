@@ -57,3 +57,7 @@ data:
 
     [tracing]
     config_file = ""
+
+    [new_relic]
+    enabled = {{default false .Values.gateway.newRelic.enabled}}
+    license_key = {{.Values.gateway.newRelic.licenseKey}}

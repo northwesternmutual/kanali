@@ -89,3 +89,7 @@ required = [
 [[constraint]]
   name = "github.com/onsi/gomega"
   version = "v1.3.0"
+
+[[constraint]]
+  name = "github.com/newrelic/go-agent"
+  version = "v2.0.0"

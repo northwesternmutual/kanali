@@ -116,6 +116,10 @@ func Run(sigCtx context.Context) error {
 			middleware.Correlation,
 			middleware.Recover,
 			middleware.Metrics,
+			middleware.NewRelic(
+				viper.GetBool(options.FlagNewRelicEnabled.GetLong()),
+				viper.GetString(options.FlagNewRelicLicenseKey.GetLong()),
+			),
 		).Link(middleware.Gateway(coreV1SharedInformer)),
 		Logger: logger.Sugar(),
 	})

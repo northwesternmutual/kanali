@@ -21,6 +21,9 @@
 package tags
 
 const (
+	// AppName is the name of this application
+	AppName = "kanali"
+
 	// Error is the opentracing tag name that represents an error
 	Error = "error"
 
