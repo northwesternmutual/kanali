@@ -17,9 +17,15 @@ spec:
   {{- if .Values.gateway.securePort }}
   - name: https
     port: {{.Values.gateway.securePort}}
+    {{- if .Values.gateway.secureNodePort }}
+    nodePort: {{.Values.gateway.secureNodePort}}
+    {{- end }}
   {{- end }}
   {{- if .Values.gateway.insecurePort }}
   - name: http
     port: {{.Values.gateway.insecurePort}}
+    {{- if .Values.gateway.insecureNodePort }}
+    nodePort: {{.Values.gateway.insecureNodePort}}
+    {{- end }}
   {{- end }}
   type: NodePort
