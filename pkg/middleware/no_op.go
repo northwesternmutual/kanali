@@ -18,8 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package tags
+package middleware
 
-const (
-	HeaderResponseCorrelationID = "X-Kanali-Correlation-Id"
+import (
+	"net/http"
 )
+
+func NoOp(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+	})
+}

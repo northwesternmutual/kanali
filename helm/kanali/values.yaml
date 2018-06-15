@@ -35,6 +35,9 @@ gateway:
     insecurePort: 9000
     secureBindAddress: 0.0.0.0
     securePort: 0
+  newRelic:
+    enabled: false
+    licenseKey: ""
 validator:
   namespace: kanali
   logLevel: info

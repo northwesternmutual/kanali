@@ -18,8 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package tags
+package options
 
-const (
-	HeaderResponseCorrelationID = "X-Kanali-Correlation-Id"
+import (
+	"github.com/northwesternmutual/kanali/pkg/flags"
+)
+
+func init() {
+	KanaliGatewayOptions.Add(
+		FlagNewRelicEnabled,
+		FlagNewRelicLicenseKey,
+	)
+}
+
+var (
+	// FlagNewRelicEnabled determines whether New Relic integration should be enabled.
+	FlagNewRelicEnabled = flags.Flag{
+		Long:  "new_relic.enabled",
+		Short: "",
+		Value: false,
+		Usage: "Should New Relic Integration be enabled.",
+	}
+	// FlagNewRelicLicenseKey is the license key to use for New Relic.
+	FlagNewRelicLicenseKey = flags.Flag{
+		Long:  "new_relic.license_key",
+		Short: "",
+		Value: "",
+		Usage: "The license key to use for New Relic.",
+	}
 )

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Contextual and performant logging using zap.
 - New `MockTarget` resource.
+- Optional New Relic middleware.
 ### Changed
 - Using `client-go@v5.0.0` for Kubernetes client.
 - Using `CRDs` to replace the deprecated `TPRs`.

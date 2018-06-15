@@ -236,6 +236,20 @@
   revision = "b4575eea38cca1123ec2dc90c26529b5c5acfcff"
 
 [[projects]]
+  name = "github.com/newrelic/go-agent"
+  packages = [
+    ".",
+    "internal",
+    "internal/cat",
+    "internal/jsonx",
+    "internal/logger",
+    "internal/sysinfo",
+    "internal/utilization"
+  ]
+  revision = "a5d75f2b4787aa1bbc76688187b2353f8ff581a6"
+  version = "v2.0.0"
+
+[[projects]]
   name = "github.com/oklog/run"
   packages = ["."]
   revision = "4dadeb3030eda0273a12382bb2348ffc7c9d1a39"
@@ -856,6 +870,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "db1a48107765b1b9f1ca3f1f4b5f408d2706f8ad67b5dc1a5d54a7c771073222"
+  inputs-digest = "cfc6c192b02381bfb52e34ca66c907776a72793eca01b95f2ac46fbaf3abb3b1"
   solver-name = "gps-cdcl"
   solver-version = 1
