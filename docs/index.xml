@@ -31,7 +31,7 @@ target how your upstream service will be reached</description>
       
       <guid>/kanali/docs/v2/errorcodes/</guid>
       <description>Introduction If you&amp;rsquo;re visiting this page, changes are that Kanali has given you a response similar to this one:
-{ &amp;quot;status&amp;quot;: 404, &amp;quot;message&amp;quot;: &amp;quot;No ApiProxy resource was not found that matches the request.&amp;quot;, &amp;quot;code&amp;quot;: 0, &amp;quot;details&amp;quot;: &amp;quot;Visit https://kanali.io/docs/v2/errorcodes/#00 for more details.&amp;quot; }  As promised in that response, the table below contains detailed information about each unique error code.
+{ &amp;quot;status&amp;quot;: 404, &amp;quot;message&amp;quot;: &amp;quot;No ApiProxy resource was not found that matches the request.&amp;quot;, &amp;quot;code&amp;quot;: 0, &amp;quot;details&amp;quot;: &amp;quot;Visit https://northwesternmutual.github.io/kanali/docs/v2/errorcodes/#00 for more details.&amp;quot; }  As promised in that response, the table below contains detailed information about each unique error code.
 Details 00 Status: 404
 Message: No ApiProxy resource was not found that matches the request.</description>
     </item>
