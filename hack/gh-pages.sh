@@ -7,7 +7,7 @@ git worktree prune
 rm -rf .git/worktrees/public/
 
 echo "Checking out gh-pages branch into public"
-git worktree add -B gh-pages-static-gen public origin/gh-pages
+git worktree add -B gh-pages-hugo-gen public origin/gh-pages
 
 echo "Removing existing files"
 rm -rf public/*
@@ -19,7 +19,7 @@ hugo
 cd ..
 
 echo "Updating gh-pages branch"
-git add -f --all && git commit -m "Publishing to gh-pages-static-gen (publish.sh)"
+git add -f --all && git commit -m "Publishing to gh-pages-hugo-gen (publish.sh)"
 
 echo "Ready to push"
 cd ..
