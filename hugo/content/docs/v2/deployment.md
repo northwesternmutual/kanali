@@ -70,14 +70,14 @@ $ curl --insecure $(minikube service kanali-gateway --url --format="https://{{.I
   "status": 404,
   "message": "No ApiProxy resource was not found that matches the request.",
   "code": 0,
-  "details": "Visit https://kanali.io/docs/v2/errorcodes for more details."
+  "details": "Visit https://northwesternmutual.github.io/kanali/docs/v2/errorcodes for more details."
 }
 ```
 
-**Configurations!** You have successfully bootstrapped Kanali using Helm. To learn more, visit the [tutorial](https://kanali.io/tutorial).
+**Configurations!** You have successfully bootstrapped Kanali using Helm. To learn more, visit the [tutorial](https://northwesternmutual.github.io/kanali/tutorial).
 
 ### Manual
 
 If you like to deploy Kanali a different way, there are just a few things you need to know.
 
-Kanali's artifact is a [Docker](https://www.docker.com/) image. When starting this container, you will need to specify your own configuration arguments if you would like to overwrite the defaults. This can be accomplished by specifying one or more flags, environment variables and/or configuration file updates. Specific details for these configuration items can be found [here](https://kanali.io/docs/v2/flags).
+Kanali's artifact is a [Docker](https://www.docker.com/) image. When starting this container, you will need to specify your own configuration arguments if you would like to overwrite the defaults. This can be accomplished by specifying one or more flags, environment variables and/or configuration file updates. Specific details for these configuration items can be found [here](https://northwesternmutual.github.io/kanali/docs/v2/flags).

@@ -24,9 +24,9 @@ Notable features:
 
 ## Getting Started
 
-Find complete documentation at [kanali.io](https://kanali.io).
+Find complete documentation at [https://northwesternmutual.github.io/kanali](https://northwesternmutual.github.io/kanali).
 
-Try our [interactive tutorial](https://kanali.io/tutorial).
+Try our [interactive tutorial](https://northwesternmutual.github.io/kanali/tutorial).
 
 ## Media
 

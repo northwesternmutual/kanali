@@ -16,7 +16,7 @@ If you're visiting this page, changes are that Kanali has given you a response s
   "status": 404,
   "message": "No ApiProxy resource was not found that matches the request.",
   "code": 0,
-  "details": "Visit https://kanali.io/docs/v2/errorcodes/#00 for more details."
+  "details": "Visit https://northwesternmutual.github.io/kanali/docs/v2/errorcodes/#00 for more details."
 }
 ```
 As promised in that response, the table below contains detailed information about each unique error code.
