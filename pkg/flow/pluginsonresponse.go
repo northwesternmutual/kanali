@@ -41,7 +41,7 @@ func PluginsOnResponseStep() Step {
 	return pluginsOnResponseStep{}
 }
 
-// GetName retruns the name of the PluginsOnResponseStep step
+// Name retruns the name of the PluginsOnResponseStep step
 func (step pluginsOnResponseStep) Name() string {
 	return "Plugin OnResponse"
 }
