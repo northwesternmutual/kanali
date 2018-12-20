@@ -50,7 +50,7 @@ func init() {
 	localSchemeBuilder.Register(addKnownTypes)
 }
 
-// Adds the list of known types to api.Scheme.
+// addKnownTypes adds the list of known types to api.Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&ApiKey{},

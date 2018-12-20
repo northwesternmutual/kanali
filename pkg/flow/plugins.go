@@ -49,7 +49,7 @@ var (
 	}
 )
 
-// join will return the path to the compiled plugin.
+// combinePath; join will return the path to the compiled plugin.
 // While this path is not guaranteed to be absolute,
 // the plugin package will make it absolute:
 // https://github.com/golang/go/blob/master/src/plugin/plugin_dlopen.go#L56-L60

@@ -139,7 +139,7 @@ func validateApiKey(rule *v2.Rule, method string) bool {
 	return rule.Global || validateGranularRules(method, rule.Granular)
 }
 
-// check to see wheather a given HTTP method can be found
+// validateGranularRules checks to see wheather a given HTTP method can be found
 // in the list of HTTP methods belonging to a spec.GranularProxy
 func validateGranularRules(method string, rule v2.GranularProxy) bool {
 	if len(rule.Verbs) < 1 {

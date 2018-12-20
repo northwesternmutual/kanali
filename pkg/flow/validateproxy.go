@@ -43,7 +43,7 @@ func ValidateProxyStep() Step {
 	return validateProxyStep{}
 }
 
-// GetName retruns the name of the ValidateProxyStep step
+// Name retruns the name of the ValidateProxyStep step
 func (step validateProxyStep) Name() string {
 	return "Validate Proxy"
 }

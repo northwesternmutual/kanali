@@ -64,7 +64,7 @@ func TestWithContext(t *testing.T) {
 	assert.Equal(t, logger, WithContext(ctx))
 }
 
-// There is no way actually test this yet.
+// TestAddMetrics; There is no way actually test this yet.
 // But I still want the code coverage :)
 // https://github.com/prometheus/client_golang/issues/58
 func TestAddMetrics(t *testing.T) {
