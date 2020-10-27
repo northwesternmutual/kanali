@@ -1,3 +1,5 @@
+# **DEPRECATED** - no longer being maintained
+
 <p align="center">
 <img src="logo/logo_with_name.png" alt="Kanali" title="Kanali" width="50%" />
 </p>
